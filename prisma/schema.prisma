@@ -1,0 +1,221 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String             @id @default(uuid()) @db.Uuid
+  email            String             @unique @db.VarChar(255)
+  passwordHash     String             @map("password_hash") @db.VarChar(255)
+  name             String             @db.VarChar(255)
+  role             UserRole           @default(EDITOR)
+  isActive         Boolean            @default(true) @map("is_active")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  createdApiKeys   ApiKey[]           @relation("ApiKeyCreator")
+  restoredBackups  BackupRestoreLog[] @relation("BackupRestorer")
+  createdBackups   Backup[]           @relation("BackupCreator")
+  contentRevisions ContentRevision[]
+  createdMedia     Media[]            @relation("MediaCreator")
+  createdPages     Page[]             @relation("PageCreator")
+  createdProducts  Product[]          @relation("ProductCreator")
+
+  @@map("users")
+}
+
+model Category {
+  id          String            @id @default(uuid()) @db.Uuid
+  name        String            @db.VarChar(255)
+  slug        String            @unique @db.VarChar(255)
+  description String?
+  parentId    String?           @map("parent_id") @db.Uuid
+  sortOrder   Int               @default(0) @map("sort_order")
+  isActive    Boolean           @default(true) @map("is_active")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  parent      Category?         @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[]        @relation("CategoryHierarchy")
+  products    ProductCategory[]
+
+  @@map("categories")
+}
+
+model Product {
+  id                String            @id @default(uuid()) @db.Uuid
+  name              String            @db.VarChar(255)
+  slug              String            @unique @db.VarChar(255)
+  description       String?
+  shortDescription  String?           @map("short_description")
+  price             Decimal           @db.Decimal(10, 2)
+  comparePrice      Decimal?          @map("compare_price") @db.Decimal(10, 2)
+  sku               String?           @unique @db.VarChar(100)
+  inventoryQuantity Int               @default(0) @map("inventory_quantity")
+  weight            Decimal?          @db.Decimal(8, 2)
+  dimensions        Json?
+  status            ProductStatus     @default(DRAFT)
+  featured          Boolean           @default(false)
+  seoTitle          String?           @map("seo_title") @db.VarChar(255)
+  seoDescription    String?           @map("seo_description")
+  createdBy         String            @map("created_by") @db.Uuid
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  categories        ProductCategory[]
+  media             ProductMedia[]
+  creator           User              @relation("ProductCreator", fields: [createdBy], references: [id])
+
+  @@map("products")
+}
+
+model ProductCategory {
+  productId  String   @map("product_id") @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@map("product_categories")
+}
+
+model Media {
+  id           String         @id @default(uuid()) @db.Uuid
+  filename     String         @db.VarChar(255)
+  originalName String         @map("original_name") @db.VarChar(255)
+  mimeType     String         @map("mime_type") @db.VarChar(100)
+  fileSize     Int            @map("file_size")
+  width        Int?
+  height       Int?
+  altText      String?        @map("alt_text") @db.VarChar(255)
+  folder       String         @default("uploads") @db.VarChar(255)
+  createdBy    String         @map("created_by") @db.Uuid
+  createdAt    DateTime       @default(now()) @map("created_at")
+  creator      User           @relation("MediaCreator", fields: [createdBy], references: [id])
+  products     ProductMedia[]
+
+  @@map("media")
+}
+
+model ProductMedia {
+  productId String  @map("product_id") @db.Uuid
+  mediaId   String  @map("media_id") @db.Uuid
+  sortOrder Int     @default(0) @map("sort_order")
+  isPrimary Boolean @default(false) @map("is_primary")
+  media     Media   @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([productId, mediaId])
+  @@map("product_media")
+}
+
+model Page {
+  id             String     @id @default(uuid()) @db.Uuid
+  title          String     @db.VarChar(255)
+  slug           String     @unique @db.VarChar(255)
+  content        String?
+  excerpt        String?
+  status         PageStatus @default(DRAFT)
+  template       String     @default("default") @db.VarChar(100)
+  seoTitle       String?    @map("seo_title") @db.VarChar(255)
+  seoDescription String?    @map("seo_description")
+  publishedAt    DateTime?  @map("published_at")
+  createdBy      String     @map("created_by") @db.Uuid
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  creator        User       @relation("PageCreator", fields: [createdBy], references: [id])
+
+  @@map("pages")
+}
+
+model ContentRevision {
+  id           String   @id @default(uuid()) @db.Uuid
+  contentType  String   @map("content_type") @db.VarChar(50)
+  contentId    String   @map("content_id") @db.Uuid
+  revisionData Json     @map("revision_data")
+  createdBy    String   @map("created_by") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+  creator      User     @relation(fields: [createdBy], references: [id])
+
+  @@map("content_revisions")
+}
+
+model ApiKey {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String        @db.VarChar(255)
+  keyHash     String        @unique @map("key_hash") @db.VarChar(64)
+  permissions String[]      @db.VarChar(100)
+  isActive    Boolean       @default(true) @map("is_active")
+  lastUsed    DateTime?     @map("last_used")
+  createdBy   String        @map("created_by") @db.Uuid
+  createdAt   DateTime      @default(now()) @map("created_at")
+  expiresAt   DateTime?     @map("expires_at")
+  creator     User          @relation("ApiKeyCreator", fields: [createdBy], references: [id])
+  usageLogs   ApiUsageLog[]
+
+  @@map("api_keys")
+}
+
+model ApiUsageLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  apiKeyId     String   @map("api_key_id") @db.Uuid
+  endpoint     String   @db.VarChar(255)
+  method       String   @db.VarChar(10)
+  statusCode   Int      @map("status_code")
+  responseTime Int      @map("response_time")
+  userAgent    String?  @map("user_agent")
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
+  timestamp    DateTime @default(now())
+  apiKey       ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  @@map("api_usage_logs")
+}
+
+model Backup {
+  id          String             @id @default(uuid()) @db.Uuid
+  type        String             @db.VarChar(20)
+  filename    String             @db.VarChar(255)
+  size        BigInt
+  compressed  Boolean            @default(false)
+  encrypted   Boolean            @default(false)
+  checksum    String             @db.VarChar(64)
+  version     String             @db.VarChar(20)
+  description String?
+  createdBy   String             @map("created_by") @db.Uuid
+  createdAt   DateTime           @default(now()) @map("created_at")
+  restoreLogs BackupRestoreLog[]
+  creator     User               @relation("BackupCreator", fields: [createdBy], references: [id])
+
+  @@map("backups")
+}
+
+model BackupRestoreLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  backupId   String   @map("backup_id") @db.Uuid
+  restoredBy String   @map("restored_by") @db.Uuid
+  restoredAt DateTime @default(now()) @map("restored_at")
+  backup     Backup   @relation(fields: [backupId], references: [id], onDelete: Cascade)
+  restorer   User     @relation("BackupRestorer", fields: [restoredBy], references: [id])
+
+  @@map("backup_restore_logs")
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PageStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}

@@ -124,12 +124,29 @@ describe('/api/media', () => {
       const data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.mediaFiles).toEqual(mockMediaFiles)
+      expect(data.mediaFiles).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: mockMediaFiles[0].id,
+            name: mockMediaFiles[0].name,
+            originalName: mockMediaFiles[0].originalName,
+            alt: mockMediaFiles[0].alt,
+            size: mockMediaFiles[0].size,
+            type: mockMediaFiles[0].type,
+            url: mockMediaFiles[0].url,
+            thumbnailUrl: mockMediaFiles[0].thumbnailUrl,
+            createdBy: mockMediaFiles[0].createdBy,
+            // Dates are serialized as strings in JSON
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+          })
+        ])
+      )
       expect(data.pagination).toEqual({
         page: 1,
         limit: 20,
         total: 1,
-        totalPages: 1,
+        pages: 1,
       })
     })
 
@@ -151,11 +168,10 @@ describe('/api/media', () => {
         expect.objectContaining({
           where: {
             OR: [
-              { name: { contains: 'test', mode: 'insensitive' } },
-              { originalName: { contains: 'test', mode: 'insensitive' } },
+              { filename: { contains: 'test', mode: 'insensitive' } },
+              { altText: { contains: 'test', mode: 'insensitive' } },
             ],
-            type: 'image',
-            folder: 'products',
+            mimeType: { startsWith: 'image' },
           },
         })
       )

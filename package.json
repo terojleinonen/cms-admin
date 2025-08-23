@@ -16,12 +16,16 @@
     "db:reset": "prisma migrate reset",
     "db:push": "prisma db push",
     "db:migrate-ecommerce": "tsx scripts/migrate-ecommerce-data.ts",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "test": "node scripts/run-tests.js all",
+    "test:unit": "node scripts/run-tests.js unit",
+    "test:integration": "node scripts/run-tests.js integration",
+    "test:components": "node scripts/run-tests.js components",
+    "test:e2e": "node scripts/run-tests.js e2e",
+    "test:watch": "node scripts/run-tests.js all --watch",
     "test:coverage": "jest --coverage",
     "test:db": "jest tests/database",
     "test:api": "jest tests/api",
-    "test:integration": "jest tests/integration"
+    "test:verbose": "node scripts/run-tests.js all --verbose"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

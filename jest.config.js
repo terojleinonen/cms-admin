@@ -24,7 +24,9 @@ const config = {
       setupFilesAfterEnv: ['<rootDir>/tests/setup-node.ts'],
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/app/$1',
+        '^@/app/(.*)$': '<rootDir>/app/$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        '@auth/prisma-adapter': '<rootDir>/__mocks__/@auth/prisma-adapter.js',
       },
     },
     {
@@ -48,12 +50,14 @@ const config = {
       setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/app/$1',
+        '^@/app/(.*)$': '<rootDir>/app/$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        '@auth/prisma-adapter': '<rootDir>/__mocks__/@auth/prisma-adapter.js',
       },
     }
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(@auth/prisma-adapter|@testing-library|next-auth|@auth)/)',
+    'node_modules/(?!(@auth/prisma-adapter|@testing-library|next-auth|@auth|uuid|minisearch)/)',
   ],
   collectCoverageFrom: [
     'app/**/*.{ts,tsx}',
@@ -74,11 +78,6 @@ const config = {
       lines: 70,
       statements: 70,
     },
-  },
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/app/$1',
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   testTimeout: 30000,
 }

@@ -1,55 +1,60 @@
-# CMS Testing Implementation - Task 19
+# CMS Testing Guide
 
-This document provides comprehensive information about the testing implementation for the Kin Workspace CMS system.
+This document provides comprehensive information about the testing strategy, setup, and execution for the CMS application.
 
-## Overview
+## Testing Strategy
 
-Task 19 implements a complete testing suite covering all aspects of the CMS application:
+Our testing approach follows the testing pyramid with four main layers:
 
-- **Unit Tests**: Test individual functions and utilities
-- **Integration Tests**: Test complete workflows and API interactions
-- **Component Tests**: Test React components with user interactions
-- **End-to-End Tests**: Test critical user workflows
-- **Database Tests**: Test database operations and error handling
+### 1. Unit Tests
+- **Purpose**: Test individual functions, utilities, and services in isolation
+- **Location**: `__tests__/lib/`
+- **Coverage**: All utility functions, services, and business logic
+- **Run with**: `npm run test:unit`
+
+### 2. Integration Tests
+- **Purpose**: Test API endpoints and database interactions
+- **Location**: `__tests__/api/`
+- **Coverage**: All API routes, authentication, and data persistence
+- **Run with**: `npm run test:integration`
+
+### 3. Component Tests
+- **Purpose**: Test React components with user interactions
+- **Location**: `__tests__/components/`
+- **Coverage**: UI components, forms, and user interactions
+- **Run with**: `npm run test:components`
+
+### 4. End-to-End Tests
+- **Purpose**: Test complete user workflows and business processes
+- **Location**: `__tests__/e2e/`
+- **Coverage**: Critical user journeys and system integration
+- **Run with**: `npm run test:e2e`
 
 ## Test Structure
 
 ```
-tests/
-├── api/                    # API endpoint tests
-│   ├── categories.test.ts
-│   ├── media.test.ts
-│   ├── products.test.ts
-│   └── users.test.ts
-├── auth/                   # Authentication tests
-│   ├── auth-schemas.test.ts
-│   └── auth-utils-simple.test.ts
+__tests__/
+├── api/                    # API integration tests
+│   ├── categories-integration.test.ts
+│   ├── products-integration.test.ts
+│   └── ...
 ├── components/             # React component tests
-│   ├── categories.test.tsx
-│   ├── layout.test.tsx
-│   ├── media-advanced.test.tsx
-│   ├── pages.test.tsx
-│   ├── product-media.test.tsx
-│   ├── products.test.tsx
-│   ├── rich-text-editor.test.tsx
-│   └── users.test.tsx
-├── database/               # Database tests
-│   ├── connection.test.ts
-│   └── error-handling.test.ts
-├── e2e/                    # End-to-end tests
-│   └── admin-dashboard.test.ts
-├── integration/            # Integration tests
-│   ├── auth-flow.test.ts
-│   ├── media-workflow.test.ts
-│   └── product-management.test.ts
-├── utils/                  # Utility function tests
-│   ├── error-handling.test.ts
+│   ├── MediaGrid.test.tsx
+│   ├── ProductForm.test.tsx
+│   └── ...
+├── e2e/                   # End-to-end workflow tests
+│   ├── product-management-workflow.test.ts
+│   ├── user-authentication-flow.test.ts
+│   └── ...
+├── lib/                   # Unit tests for utilities
+│   ├── auth-utils.test.ts
+│   ├── media-utils.test.ts
 │   ├── password-utils.test.ts
-│   └── validation-schemas.test.ts
-├── helpers/                # Test helpers
-│   └── auth-helpers.ts
-├── run-all-tests.js        # Comprehensive test runner
-└── setup.ts                # Jest setup configuration
+│   ├── search.test.ts
+│   └── ...
+└── helpers/               # Test utilities and helpers
+    ├── test-helpers.ts
+    └── auth-helpers.ts
 ```
 
 ## Running Tests
@@ -60,433 +65,402 @@ tests/
 # Run all tests
 npm test
 
-# Run tests with coverage
-npm run test:coverage
+# Run specific test types
+npm run test:unit          # Unit tests only
+npm run test:integration   # API integration tests
+npm run test:components    # React component tests
+npm run test:e2e          # End-to-end tests
 
-# Run specific test suites
-npm run test:db          # Database tests only
-npm run test:api         # API tests only
-npm run test:integration # Integration tests only
-
-# Watch mode for development
-npm run test:watch
-
-# Run comprehensive test suite (Task 19)
-node tests/run-all-tests.js
+# Development commands
+npm run test:watch        # Watch mode for development
+npm run test:coverage     # Generate coverage report
+npm run test:verbose      # Verbose output for debugging
 ```
 
-### Test Projects
-
-The Jest configuration uses projects to separate different types of tests:
-
-- **unit**: Utility functions and services (`tests/utils/`, `tests/auth/`)
-- **components**: React components (`tests/components/`)
-- **api**: API endpoints (`tests/api/`)
-- **integration**: Workflow tests (`tests/integration/`)
-- **e2e**: End-to-end tests (`tests/e2e/`)
-- **database**: Database tests (`tests/database/`)
-
-### Running Specific Projects
+### Advanced Usage
 
 ```bash
-# Run only unit tests
-npm test -- --selectProjects=unit
+# Run specific test file
+npx jest __tests__/lib/password-utils.test.ts
 
-# Run only component tests
-npm test -- --selectProjects=components
+# Run tests matching pattern
+npx jest --testNamePattern="should validate password"
 
-# Run only integration tests
-npm test -- --selectProjects=integration
+# Run tests with coverage for specific files
+npx jest --coverage --collectCoverageFrom="app/lib/password-utils.ts"
+
+# Update snapshots
+npx jest --updateSnapshot
+
+# Run tests in specific environment
+npx jest --testEnvironment=jsdom __tests__/components/
 ```
 
-## Test Categories
+## Test Configuration
 
-### 1. Unit Tests
+### Jest Configuration
+- **Config file**: `jest.config.js`
+- **Environments**: Node.js for API/unit tests, jsdom for component tests
+- **Coverage threshold**: 70% for branches, functions, lines, and statements
+- **Timeout**: 30 seconds for most tests, 60 seconds for E2E tests
 
-**Location**: `tests/utils/`, `tests/auth/`
-**Environment**: Node.js
-**Purpose**: Test individual functions in isolation
+### Environment Setup
+- **Database**: Uses test database with automatic cleanup
+- **Authentication**: Mocked NextAuth sessions
+- **File system**: Mocked for media operations
+- **External APIs**: Mocked to avoid external dependencies
 
-#### Validation Schemas (`tests/utils/validation-schemas.test.ts`)
-- Tests all Zod validation schemas
-- Validates input sanitization and error handling
-- Covers edge cases and boundary conditions
+## Writing Tests
 
-#### Password Utils (`tests/utils/password-utils.test.ts`)
-- Tests password hashing and verification
-- Tests secure password generation
-- Includes integration tests with real bcrypt
+### Test Structure Guidelines
 
-#### Error Handling (`tests/utils/error-handling.test.ts`)
-- Tests custom error classes
-- Tests error response generation
-- Tests error serialization and context preservation
-
-### 2. API Tests
-
-**Location**: `tests/api/`
-**Environment**: Node.js
-**Purpose**: Test API endpoints with mocked dependencies
-
-#### Features Tested:
-- **Authentication**: Login, registration, session management
-- **Authorization**: Role-based access control
-- **CRUD Operations**: Create, read, update, delete for all entities
-- **Validation**: Input validation and error responses
-- **Search & Filtering**: Query parameters and result filtering
-- **Pagination**: Limit, offset, and total count handling
-
-#### Example Test Structure:
 ```typescript
-describe('/api/users', () => {
-  describe('GET /api/users', () => {
-    it('should return users list for admin user', async () => {
-      // Mock session, database, test endpoint
+describe('Feature/Component Name', () => {
+  // Setup and teardown
+  beforeEach(() => {
+    // Reset mocks, create test data
+  })
+
+  afterEach(() => {
+    // Cleanup test data
+  })
+
+  describe('Specific functionality', () => {
+    it('should do something specific', () => {
+      // Arrange
+      const input = 'test input'
+      
+      // Act
+      const result = functionUnderTest(input)
+      
+      // Assert
+      expect(result).toBe('expected output')
     })
-    
-    it('should deny access for non-admin users', async () => {
-      // Test authorization
+
+    it('should handle error cases', () => {
+      // Test error scenarios
+      expect(() => functionUnderTest(null)).toThrow()
     })
   })
 })
 ```
 
-### 3. Component Tests
+### Unit Test Examples
 
-**Location**: `tests/components/`
-**Environment**: jsdom
-**Purpose**: Test React components with user interactions
-
-#### Testing Approach:
-- Uses React Testing Library
-- Tests user interactions and accessibility
-- Mocks external dependencies
-- Focuses on behavior over implementation
-
-#### Components Tested:
-- **Layout Components**: Sidebar, Header, Breadcrumbs
-- **Form Components**: User forms, product forms, category forms
-- **Data Display**: Tables, cards, lists
-- **Interactive Elements**: Buttons, modals, dropdowns
-
-### 4. Integration Tests
-
-**Location**: `tests/integration/`
-**Environment**: Node.js
-**Purpose**: Test complete workflows with real database
-
-#### Workflows Tested:
-
-##### Authentication Flow (`auth-flow.test.ts`)
-- Complete registration → login → profile access workflow
-- Password validation and security
-- Account activation/deactivation
-- Token-based authentication
-
-##### Product Management (`product-management.test.ts`)
-- Product creation → listing → update → deletion workflow
-- Category association and management
-- Search and filtering functionality
-- Data validation and integrity
-
-##### Media Workflow (`media-workflow.test.ts`)
-- File upload → processing → thumbnail generation workflow
-- Media organization and bulk operations
-- File type validation and security
-- Search and filtering
-
-### 5. End-to-End Tests
-
-**Location**: `tests/e2e/`
-**Environment**: Node.js
-**Purpose**: Test critical user workflows
-
-#### Admin Dashboard E2E (`admin-dashboard.test.ts`)
-- Complete admin workflow from login to content management
-- Role-based feature access
-- Data consistency across user roles
-- Cross-functional workflow testing
-
-### 6. Database Tests
-
-**Location**: `tests/database/`
-**Environment**: Node.js
-**Purpose**: Test database operations and error handling
-
-#### Features Tested:
-- Connection management
-- Transaction handling
-- Error recovery
-- Data integrity constraints
-
-## Test Configuration
-
-### Jest Configuration (`jest.config.js`)
-
-```javascript
-{
-  preset: 'ts-jest',
-  testEnvironment: 'jsdom', // Default for components
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80,
-    },
-  },
-  projects: [
-    // Separate environments for different test types
-  ]
-}
+```typescript
+// Testing utility functions
+describe('Password Utilities', () => {
+  it('should hash password securely', async () => {
+    const password = 'testPassword123!'
+    const hash = await hashPassword(password)
+    
+    expect(hash).toBeDefined()
+    expect(hash).not.toBe(password)
+    expect(await verifyPassword(password, hash)).toBe(true)
+  })
+})
 ```
 
-### Test Setup (`tests/setup.ts`)
+### Integration Test Examples
 
-- Global test configuration
-- Custom Jest matchers
-- Mock configurations
-- Database test utilities
+```typescript
+// Testing API endpoints
+describe('Products API', () => {
+  it('should create product with valid data', async () => {
+    const productData = {
+      name: 'Test Product',
+      price: 99.99,
+      status: 'PUBLISHED'
+    }
 
-### Environment Variables
+    const request = new NextRequest('/api/products', {
+      method: 'POST',
+      body: JSON.stringify(productData)
+    })
 
-```bash
-# Test database (separate from development)
-DATABASE_URL=postgresql://cms_user:secure_password@localhost:5432/kin_workspace_cms_test
+    const response = await POST(request)
+    expect(response.status).toBe(201)
+    
+    const result = await response.json()
+    expect(result.product.name).toBe(productData.name)
+  })
+})
+```
 
-# Test environment
-NODE_ENV=test
+### Component Test Examples
+
+```typescript
+// Testing React components
+describe('MediaGrid Component', () => {
+  it('should render media items', () => {
+    render(<MediaGrid media={mockMedia} />)
+    
+    expect(screen.getByText('Image 1.jpg')).toBeInTheDocument()
+    expect(screen.getByText('1.0 MB')).toBeInTheDocument()
+  })
+
+  it('should handle media selection', async () => {
+    const onSelect = jest.fn()
+    render(<MediaGrid media={mockMedia} onMediaSelect={onSelect} />)
+    
+    await userEvent.click(screen.getByRole('checkbox'))
+    expect(onSelect).toHaveBeenCalledWith(mockMedia[0])
+  })
+})
+```
+
+### E2E Test Examples
+
+```typescript
+// Testing complete workflows
+describe('Product Management Workflow', () => {
+  it('should create product with categories and media', async () => {
+    // 1. Create category
+    const categoryResponse = await createCategory(categoryData)
+    
+    // 2. Upload media
+    const mediaResponse = await uploadMedia(mediaData)
+    
+    // 3. Create product with relationships
+    const productResponse = await createProduct({
+      ...productData,
+      categoryIds: [category.id],
+      mediaIds: [media.id]
+    })
+    
+    // 4. Verify complete product creation
+    expect(productResponse.status).toBe(201)
+    // ... additional assertions
+  })
+})
+```
+
+## Test Helpers and Utilities
+
+### Available Helpers
+
+```typescript
+// Test data creation
+const user = await createTestUser({ role: 'ADMIN' })
+const product = await createTestProduct({ name: 'Test Product' })
+const category = await createTestCategory({ name: 'Test Category' })
+
+// Authentication mocking
+const session = createTestSession(user)
+mockGetServerSession(session)
+
+// Database cleanup
+await cleanupTestData()
+
+// API response assertions
+await assertApiResponse(response, 200, {
+  product: { name: 'Test Product' }
+})
+```
+
+### Custom Matchers
+
+```typescript
+// UUID validation
+expect(result.id).toBeValidUUID()
+
+// Email validation
+expect(user.email).toBeValidEmail()
+```
+
+## Mocking Strategy
+
+### External Dependencies
+- **NextAuth**: Mocked for authentication testing
+- **Prisma**: Mocked for unit tests, real database for integration tests
+- **File System**: Mocked to avoid actual file operations
+- **Sharp**: Mocked for image processing tests
+- **External APIs**: Mocked to ensure test isolation
+
+### Mock Examples
+
+```typescript
+// Mock NextAuth
+jest.mock('next-auth/next', () => ({
+  getServerSession: jest.fn()
+}))
+
+// Mock Prisma
+jest.mock('@/lib/db', () => ({
+  prisma: {
+    user: {
+      create: jest.fn(),
+      findUnique: jest.fn()
+    }
+  }
+}))
+
+// Mock file operations
+jest.mock('fs', () => ({
+  promises: {
+    writeFile: jest.fn(),
+    unlink: jest.fn()
+  }
+}))
 ```
 
 ## Coverage Requirements
 
-### Target Coverage: 80%
+### Minimum Coverage Thresholds
+- **Branches**: 70%
+- **Functions**: 70%
+- **Lines**: 70%
+- **Statements**: 70%
 
-- **Branches**: 80%
-- **Functions**: 80%
-- **Lines**: 80%
-- **Statements**: 80%
+### Coverage Reports
+- **HTML Report**: `coverage/lcov-report/index.html`
+- **LCOV Report**: `coverage/lcov.info`
+- **Text Summary**: Displayed in terminal
 
-### Coverage Exclusions
+### Excluded from Coverage
+- Type definitions (`*.d.ts`)
+- Layout components (`layout.tsx`)
+- Page components (`page.tsx`)
+- Loading and error components
 
-Files excluded from coverage requirements:
-- Layout files (`layout.tsx`)
-- Page files (`page.tsx`)
-- Loading/error pages
-- Type definition files
+## Continuous Integration
 
-### Generating Coverage Reports
+### GitHub Actions Integration
+```yaml
+- name: Run Tests
+  run: |
+    npm run test:unit
+    npm run test:integration
+    npm run test:components
 
-```bash
-# Generate coverage report
-npm run test:coverage
-
-# View HTML coverage report
-open coverage/lcov-report/index.html
+- name: Upload Coverage
+  uses: codecov/codecov-action@v3
+  with:
+    file: ./coverage/lcov.info
 ```
-
-## Continuous Testing
 
 ### Pre-commit Hooks
-
-```bash
-# Install husky for git hooks
-npm install --save-dev husky
-
-# Add pre-commit test hook
-npx husky add .husky/pre-commit "npm test"
-```
-
-### CI/CD Integration
-
-#### GitHub Actions Example:
-
-```yaml
-name: Test Suite
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Run tests
-        run: npm run test:coverage
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-      
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-```
-
-## Test Data Management
-
-### Test Database
-
-- Separate test database to avoid conflicts
-- Automatic cleanup between tests
-- Seeded with minimal required data
-
-### Mock Data
-
-- Consistent mock data across tests
-- Helper functions for creating test entities
-- Realistic data that matches production patterns
-
-### Test Isolation
-
-- Each test is independent
-- Database cleanup between tests
-- No shared state between test suites
-
-## Best Practices
-
-### Writing Tests
-
-1. **Descriptive Names**: Test names should clearly describe what is being tested
-2. **Arrange-Act-Assert**: Structure tests with clear setup, execution, and verification
-3. **Single Responsibility**: Each test should verify one specific behavior
-4. **Edge Cases**: Include tests for boundary conditions and error scenarios
-
-### Test Organization
-
-1. **Group Related Tests**: Use `describe` blocks to group related functionality
-2. **Setup and Teardown**: Use `beforeEach`/`afterEach` for test preparation
-3. **Shared Utilities**: Extract common test logic into helper functions
-4. **Clear Assertions**: Use specific assertions with meaningful error messages
-
-### Performance
-
-1. **Parallel Execution**: Tests run in parallel where possible
-2. **Efficient Mocking**: Mock external dependencies to improve speed
-3. **Database Optimization**: Use transactions for faster database tests
-4. **Selective Testing**: Run only relevant tests during development
-
-## Debugging Tests
-
-### Common Issues
-
-1. **Database Connection**: Ensure test database is running and accessible
-2. **Environment Variables**: Check test environment configuration
-3. **Mock Conflicts**: Verify mocks are properly cleared between tests
-4. **Async Operations**: Ensure proper handling of promises and async code
-
-### Debugging Commands
-
-```bash
-# Run tests in debug mode
-npm test -- --verbose
-
-# Run specific test file
-npm test -- tests/api/users.test.ts
-
-# Run tests with increased timeout
-npm test -- --testTimeout=60000
-
-# Run tests without coverage (faster)
-npm test -- --coverage=false
-```
-
-### VS Code Integration
-
 ```json
 {
-  "type": "node",
-  "request": "launch",
-  "name": "Jest Debug",
-  "program": "${workspaceFolder}/node_modules/.bin/jest",
-  "args": ["--runInBand"],
-  "console": "integratedTerminal",
-  "internalConsoleOptions": "neverOpen"
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run test:unit && npm run lint"
+    }
+  }
 }
 ```
 
-## Task 19 Completion Criteria
+## Debugging Tests
 
-### ✅ Requirements Met
+### Common Issues and Solutions
 
-- [x] **Unit tests for all utility functions and services**
-  - Password utilities with bcrypt integration
-  - Validation schemas with comprehensive edge cases
-  - Error handling with custom error classes
+1. **Test Database Connection**
+   ```bash
+   # Ensure test database is running
+   docker run -d --name postgres-test -p 5433:5432 -e POSTGRES_DB=test postgres:16
+   ```
 
-- [x] **Integration tests for API endpoints**
-  - Complete authentication workflow
-  - Product management lifecycle
-  - Media upload and processing workflow
+2. **Mock Issues**
+   ```typescript
+   // Clear mocks between tests
+   beforeEach(() => {
+     jest.clearAllMocks()
+   })
+   ```
 
-- [x] **Component tests for React components**
-  - Layout components with user interactions
-  - Form components with validation
-  - Data display components
+3. **Async Test Issues**
+   ```typescript
+   // Use proper async/await
+   it('should handle async operation', async () => {
+     await expect(asyncFunction()).resolves.toBe(expected)
+   })
+   ```
 
-- [x] **End-to-end tests for critical user workflows**
-  - Admin dashboard complete workflow
-  - Role-based access control testing
-  - Cross-functional data consistency
+4. **Component Test Issues**
+   ```typescript
+   // Wait for async updates
+   await waitFor(() => {
+     expect(screen.getByText('Updated')).toBeInTheDocument()
+   })
+   ```
 
-- [x] **Continuous testing pipeline setup**
-  - Jest configuration with multiple projects
-  - Coverage thresholds and reporting
-  - Automated test runner with reporting
+### Debug Commands
 
-### Success Metrics
+```bash
+# Run single test with debug output
+npx jest --verbose __tests__/lib/password-utils.test.ts
 
-- **Test Coverage**: 80%+ across all metrics
-- **Test Reliability**: All tests pass consistently
-- **Test Performance**: Complete suite runs in under 5 minutes
-- **Test Maintainability**: Clear structure and documentation
+# Run tests with Node.js debugger
+node --inspect-brk node_modules/.bin/jest --runInBand
 
-## Maintenance
+# Run tests with coverage for specific file
+npx jest --coverage --collectCoverageFrom="app/lib/auth-utils.ts" __tests__/lib/auth-utils.test.ts
+```
 
-### Adding New Tests
+## Best Practices
 
-1. Identify the appropriate test category
-2. Follow existing patterns and naming conventions
-3. Include both positive and negative test cases
-4. Update coverage requirements if needed
+### Test Organization
+- Group related tests with `describe` blocks
+- Use descriptive test names that explain the expected behavior
+- Follow the AAA pattern: Arrange, Act, Assert
+- Keep tests focused and test one thing at a time
 
-### Updating Existing Tests
+### Test Data Management
+- Use test helpers for consistent data creation
+- Clean up test data after each test
+- Use realistic but minimal test data
+- Avoid hardcoded IDs or timestamps
 
-1. Maintain backward compatibility where possible
-2. Update related tests when changing functionality
-3. Ensure test descriptions remain accurate
-4. Verify coverage is maintained
+### Mocking Guidelines
+- Mock external dependencies, not internal code
+- Use real implementations for integration tests
+- Keep mocks simple and focused
+- Reset mocks between tests
 
-### Regular Maintenance
+### Performance Considerations
+- Run unit tests frequently during development
+- Run integration tests before commits
+- Run E2E tests in CI/CD pipeline
+- Use test parallelization for faster execution
 
-- Review and update test data periodically
-- Monitor test performance and optimize slow tests
-- Update dependencies and fix deprecation warnings
-- Review coverage reports and identify gaps
+## Troubleshooting
 
-## Resources
+### Common Error Messages
 
-- [Jest Documentation](https://jestjs.io/docs/getting-started)
-- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
-- [Testing Best Practices](https://github.com/goldbergyoni/javascript-testing-best-practices)
-- [Prisma Testing Guide](https://www.prisma.io/docs/guides/testing)
+1. **"Cannot find module"**
+   - Check import paths and module resolution
+   - Ensure mock files are in correct location
 
----
+2. **"Database connection failed"**
+   - Verify test database is running
+   - Check DATABASE_URL environment variable
 
-**Task 19 Status**: ✅ **COMPLETED**
+3. **"Timeout exceeded"**
+   - Increase test timeout for slow operations
+   - Check for unresolved promises
 
-All testing requirements have been implemented with comprehensive coverage across unit tests, integration tests, component tests, and end-to-end tests. The continuous testing pipeline is configured and ready for production use.
+4. **"Mock function not called"**
+   - Verify mock setup and implementation
+   - Check if function is actually being called
+
+### Getting Help
+
+- Check existing tests for examples
+- Review Jest documentation for advanced features
+- Use `console.log` for debugging test data
+- Run tests with `--verbose` flag for detailed output
+
+## Future Improvements
+
+### Planned Enhancements
+- Visual regression testing with Chromatic
+- Performance testing with Lighthouse CI
+- Accessibility testing with jest-axe
+- API contract testing with Pact
+- Load testing with Artillery
+
+### Test Automation
+- Automatic test generation for new API endpoints
+- Snapshot testing for component props
+- Property-based testing for complex algorithms
+- Mutation testing for test quality assessment

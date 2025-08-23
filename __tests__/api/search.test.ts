@@ -20,8 +20,8 @@ jest.mock('next-auth', () => ({
 }))
 
 // Mock the search service
-jest.mock('@/lib/search-service', () => ({
-  SearchService: mockSearchService,
+jest.mock('@/lib/search', () => ({
+  searchService: mockSearchService,
 }))
 
 // Mock handlers - these would need to be implemented

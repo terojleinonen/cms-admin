@@ -1,52 +1,65 @@
+import { NextResponse } from 'next/server'
+import { performHealthChecks, logger, performanceMonitor } from '@/lib/monitoring'
+
 /**
- * Health check API endpoint
- * Provides system health status including database connectivity
+ * Health check endpoint for monitoring system status
+ * GET /api/health
  */
-
-import { NextRequest, NextResponse } from 'next/server'
-import { getDatabaseHealth } from '@/app/lib/db'
-
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Check database health
-    const dbHealth = await getDatabaseHealth()
+    const startTime = Date.now()
     
-    // Determine overall system health
-    const isHealthy = dbHealth.connected
-    const status = isHealthy ? 'healthy' : 'unhealthy'
-    const statusCode = isHealthy ? 200 : 503
-
-    const healthData = {
-      status,
-      timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || '0.1.0',
-      environment: process.env.NODE_ENV || 'development',
-      services: {
-        database: {
-          status: dbHealth.connected ? 'up' : 'down',
-          latency: dbHealth.latency,
-          error: dbHealth.error,
-        },
-        api: {
-          status: 'up',
-          port: process.env.PORT || 3001,
-        },
-      },
-      uptime: process.uptime(),
+    // Perform health checks
+    const checks = await performHealthChecks()
+    
+    // Calculate overall status
+    const hasUnhealthy = checks.some(check => check.status === 'unhealthy')
+    const hasDegraded = checks.some(check => check.status === 'degraded')
+    
+    let overallStatus: 'healthy' | 'degraded' | 'unhealthy'
+    if (hasUnhealthy) {
+      overallStatus = 'unhealthy'
+    } else if (hasDegraded) {
+      overallStatus = 'degraded'
+    } else {
+      overallStatus = 'healthy'
     }
 
-    return NextResponse.json(healthData, { status: statusCode })
+    const responseTime = Date.now() - startTime
+
+    // Record performance metric
+    performanceMonitor.recordMetric('health_check_duration', responseTime, 'ms')
+
+    const response = {
+      status: overallStatus,
+      timestamp: new Date().toISOString(),
+      responseTime,
+      checks,
+      version: process.env.npm_package_version || '1.0.0',
+      environment: process.env.NODE_ENV || 'development'
+    }
+
+    // Log health check
+    logger.info('Health check performed', {
+      status: overallStatus,
+      responseTime,
+      checksCount: checks.length
+    })
+
+    // Return appropriate HTTP status
+    const httpStatus = overallStatus === 'healthy' ? 200 : 
+                      overallStatus === 'degraded' ? 200 : 503
+
+    return NextResponse.json(response, { status: httpStatus })
+
   } catch (error) {
-    console.error('Health check failed:', error)
-    
-    return NextResponse.json(
-      {
-        status: 'unhealthy',
-        timestamp: new Date().toISOString(),
-        error: 'Health check failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 503 }
-    )
+    logger.error('Health check failed', error instanceof Error ? error : new Error(String(error)))
+
+    return NextResponse.json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error',
+      checks: []
+    }, { status: 503 })
   }
 }

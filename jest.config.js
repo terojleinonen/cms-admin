@@ -25,6 +25,7 @@ const config = {
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/app/$1',
         '^@/app/(.*)$': '<rootDir>/app/$1',
+        '^@/lib/db$': '<rootDir>/__mocks__/@/lib/db.ts',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         '@auth/prisma-adapter': '<rootDir>/__mocks__/@auth/prisma-adapter.js',
       },
@@ -51,6 +52,7 @@ const config = {
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/app/$1',
         '^@/app/(.*)$': '<rootDir>/app/$1',
+        '^@/lib/db$': '<rootDir>/__mocks__/@/lib/db.ts',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         '@auth/prisma-adapter': '<rootDir>/__mocks__/@auth/prisma-adapter.js',
       },

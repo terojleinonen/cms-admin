@@ -27,37 +27,37 @@ const colors = {
 const testSuites = [
   {
     name: 'Unit Tests',
-    command: 'npm run test -- --selectProjects=unit',
+    command: 'npm run test:unit',
     description: 'Tests for utility functions and services',
     critical: true
   },
   {
     name: 'Database Tests',
-    command: 'npm run test -- --selectProjects=database',
+    command: 'npm run test:db',
     description: 'Database connection and error handling tests',
     critical: true
   },
   {
     name: 'API Tests',
-    command: 'npm run test -- --selectProjects=api',
+    command: 'npm run test:api',
     description: 'API endpoint tests with mocked dependencies',
     critical: true
   },
   {
     name: 'Component Tests',
-    command: 'npm run test -- --selectProjects=components',
+    command: 'npm run test:components',
     description: 'React component tests with React Testing Library',
     critical: false
   },
   {
     name: 'Integration Tests',
-    command: 'npm run test -- --selectProjects=integration',
+    command: 'npm run test:integration',
     description: 'End-to-end workflow tests with real database',
     critical: true
   },
   {
     name: 'E2E Tests',
-    command: 'npm run test -- --selectProjects=e2e',
+    command: 'npm run test:e2e',
     description: 'Critical user workflow tests',
     critical: true
   }

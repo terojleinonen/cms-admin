@@ -60,7 +60,7 @@ console.log(`\n🧪 Running ${config.description}...\n`)
 // Build Jest command
 const jestArgs = [
   '--config', 'jest.config.js',
-  '--testPathPattern', config.pattern,
+  config.pattern,
 ]
 
 if (config.coverage) {

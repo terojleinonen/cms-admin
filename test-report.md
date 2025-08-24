@@ -1,6 +1,6 @@
 # CMS Testing Implementation Report
 
-**Generated:** 2025-08-11T18:47:56.845Z
+**Generated:** 2025-08-24T19:23:30.699Z
 **Task:** 19 - Testing Implementation
 
 ## Test Suite Results
@@ -13,16 +13,11 @@
 ```
 
 > kin-workspace-cms@0.1.0 test
-> jest --selectProjects=unit
+> node scripts/run-tests.js all --selectProjects=unit
 
-You provided values for --selectProjects but a project does not have a name.
-Set displayName in the config of all projects in order to disable this warning.
-You provided values for --selectProjects but no projects were found matching the selection.
-No tests found, exiting with code 1
-Run with `--passWithNoTests` to exit with code 0
-In /Users/teroleinonen/software projects/Kin Workspace/cms
-  0 files checked across 0 projects. Run with `--verbose` for more details.
-Pattern:  - 0 matches
+
+🧪 Running All Tests...
+
 
 ```
 
@@ -36,16 +31,11 @@ Pattern:  - 0 matches
 ```
 
 > kin-workspace-cms@0.1.0 test
-> jest --selectProjects=database
+> node scripts/run-tests.js all --selectProjects=database
 
-You provided values for --selectProjects but a project does not have a name.
-Set displayName in the config of all projects in order to disable this warning.
-You provided values for --selectProjects but no projects were found matching the selection.
-No tests found, exiting with code 1
-Run with `--passWithNoTests` to exit with code 0
-In /Users/teroleinonen/software projects/Kin Workspace/cms
-  0 files checked across 0 projects. Run with `--verbose` for more details.
-Pattern:  - 0 matches
+
+🧪 Running All Tests...
+
 
 ```
 
@@ -59,16 +49,11 @@ Pattern:  - 0 matches
 ```
 
 > kin-workspace-cms@0.1.0 test
-> jest --selectProjects=api
+> node scripts/run-tests.js all --selectProjects=api
 
-You provided values for --selectProjects but a project does not have a name.
-Set displayName in the config of all projects in order to disable this warning.
-You provided values for --selectProjects but no projects were found matching the selection.
-No tests found, exiting with code 1
-Run with `--passWithNoTests` to exit with code 0
-In /Users/teroleinonen/software projects/Kin Workspace/cms
-  0 files checked across 0 projects. Run with `--verbose` for more details.
-Pattern:  - 0 matches
+
+🧪 Running All Tests...
+
 
 ```
 
@@ -82,16 +67,11 @@ Pattern:  - 0 matches
 ```
 
 > kin-workspace-cms@0.1.0 test
-> jest --selectProjects=components
+> node scripts/run-tests.js all --selectProjects=components
 
-You provided values for --selectProjects but a project does not have a name.
-Set displayName in the config of all projects in order to disable this warning.
-You provided values for --selectProjects but no projects were found matching the selection.
-No tests found, exiting with code 1
-Run with `--passWithNoTests` to exit with code 0
-In /Users/teroleinonen/software projects/Kin Workspace/cms
-  0 files checked across 0 projects. Run with `--verbose` for more details.
-Pattern:  - 0 matches
+
+🧪 Running All Tests...
+
 
 ```
 
@@ -105,16 +85,11 @@ Pattern:  - 0 matches
 ```
 
 > kin-workspace-cms@0.1.0 test
-> jest --selectProjects=integration
+> node scripts/run-tests.js all --selectProjects=integration
 
-You provided values for --selectProjects but a project does not have a name.
-Set displayName in the config of all projects in order to disable this warning.
-You provided values for --selectProjects but no projects were found matching the selection.
-No tests found, exiting with code 1
-Run with `--passWithNoTests` to exit with code 0
-In /Users/teroleinonen/software projects/Kin Workspace/cms
-  0 files checked across 0 projects. Run with `--verbose` for more details.
-Pattern:  - 0 matches
+
+🧪 Running All Tests...
+
 
 ```
 
@@ -128,16 +103,11 @@ Pattern:  - 0 matches
 ```
 
 > kin-workspace-cms@0.1.0 test
-> jest --selectProjects=e2e
+> node scripts/run-tests.js all --selectProjects=e2e
 
-You provided values for --selectProjects but a project does not have a name.
-Set displayName in the config of all projects in order to disable this warning.
-You provided values for --selectProjects but no projects were found matching the selection.
-No tests found, exiting with code 1
-Run with `--passWithNoTests` to exit with code 0
-In /Users/teroleinonen/software projects/Kin Workspace/cms
-  0 files checked across 0 projects. Run with `--verbose` for more details.
-Pattern:  - 0 matches
+
+🧪 Running All Tests...
+
 
 ```
 

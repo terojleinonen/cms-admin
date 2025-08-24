@@ -1,12 +1,18 @@
 /**
  * Public Single Product API
- * Provides read-only access to a single published product by slug
+ * Provides read-only access to a single published product by slug or ID
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
+
+// Helper function to check if string is a valid UUID
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
 
 export async function GET(
   request: NextRequest,
@@ -15,11 +21,13 @@ export async function GET(
   try {
     const { slug } = await params
 
+    // Determine if the parameter is an ID (UUID) or slug
+    const isId = isValidUUID(slug)
+    
     const product = await prisma.product.findUnique({
-      where: {
-        slug,
-        status: 'PUBLISHED' // Only return published products
-      },
+      where: isId 
+        ? { id: slug, status: 'PUBLISHED' }
+        : { slug, status: 'PUBLISHED' },
       include: {
         categories: {
           include: {

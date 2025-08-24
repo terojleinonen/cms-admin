@@ -1,16 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  ChartBarIcon,
-  UsersIcon,
-  ShoppingBagIcon,
-  CurrencyDollarIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
-  EyeIcon,
-  ClockIcon
-} from '@heroicons/react/24/outline'
 
 interface AnalyticsData {
   totalRevenue: number
@@ -60,28 +50,24 @@ export default function AnalyticsDashboard() {
       name: 'Total Revenue',
       value: loading ? '...' : `$${data.totalRevenue.toLocaleString()}`,
       change: data.revenueChange,
-      icon: CurrencyDollarIcon,
       color: 'bg-dusty-sage'
     },
     {
       name: 'Total Orders',
       value: loading ? '...' : data.totalOrders.toString(),
       change: data.ordersChange,
-      icon: ShoppingBagIcon,
       color: 'bg-warm-beige'
     },
     {
       name: 'Total Customers',
       value: loading ? '...' : data.totalCustomers.toString(),
       change: data.customersChange,
-      icon: UsersIcon,
       color: 'bg-slate-gray'
     },
     {
       name: 'Total Products',
       value: loading ? '...' : data.totalProducts.toString(),
       change: data.productsChange,
-      icon: ChartBarIcon,
       color: 'bg-matte-black'
     }
   ]
@@ -106,21 +92,16 @@ export default function AnalyticsDashboard() {
                 </p>
               </div>
               <div className={`p-3 rounded-lg ${stat.color}`}>
-                <stat.icon className="h-6 w-6 text-soft-white" />
+                <div className="h-6 w-6 bg-soft-white rounded"></div>
               </div>
             </div>
             
             {!loading && (
               <div className="mt-4 flex items-center">
-                {stat.change > 0 ? (
-                  <TrendingUpIcon className="h-4 w-4 text-dusty-sage mr-1" />
-                ) : (
-                  <TrendingDownIcon className="h-4 w-4 text-red-500 mr-1" />
-                )}
                 <span className={`text-sm font-medium ${
                   stat.change > 0 ? 'text-dusty-sage' : 'text-red-500'
                 }`}>
-                  {stat.change > 0 ? '+' : ''}{stat.change}%
+                  {stat.change > 0 ? '↗' : '↘'} {stat.change > 0 ? '+' : ''}{stat.change}%
                 </span>
                 <span className="text-sm text-slate-gray ml-1 font-inter">vs last month</span>
               </div>
@@ -138,7 +119,7 @@ export default function AnalyticsDashboard() {
           </h3>
           <div className="h-64 bg-warm-beige/20 rounded-lg flex items-center justify-center">
             <div className="text-center">
-              <ChartBarIcon className="h-12 w-12 text-slate-gray mx-auto mb-2" />
+              <div className="h-12 w-12 bg-slate-gray rounded mx-auto mb-2"></div>
               <p className="text-slate-gray font-inter">Revenue chart will be displayed here</p>
             </div>
           </div>
@@ -151,7 +132,7 @@ export default function AnalyticsDashboard() {
           </h3>
           <div className="h-64 bg-dusty-sage/10 rounded-lg flex items-center justify-center">
             <div className="text-center">
-              <ShoppingBagIcon className="h-12 w-12 text-slate-gray mx-auto mb-2" />
+              <div className="h-12 w-12 bg-slate-gray rounded mx-auto mb-2"></div>
               <p className="text-slate-gray font-inter">Orders trend chart will be displayed here</p>
             </div>
           </div>
@@ -181,7 +162,7 @@ export default function AnalyticsDashboard() {
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-dusty-sage rounded-full flex items-center justify-center">
-                  <ShoppingBagIcon className="h-4 w-4 text-soft-white" />
+                  <span className="text-soft-white text-xs">🛒</span>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-matte-black font-inter">New order received</p>
@@ -191,7 +172,7 @@ export default function AnalyticsDashboard() {
               
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-warm-beige rounded-full flex items-center justify-center">
-                  <UsersIcon className="h-4 w-4 text-matte-black" />
+                  <span className="text-matte-black text-xs">👤</span>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-matte-black font-inter">New customer registered</p>
@@ -201,7 +182,7 @@ export default function AnalyticsDashboard() {
               
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-slate-gray rounded-full flex items-center justify-center">
-                  <EyeIcon className="h-4 w-4 text-soft-white" />
+                  <span className="text-soft-white text-xs">👁</span>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-matte-black font-inter">Product viewed 50+ times</p>

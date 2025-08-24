@@ -5,8 +5,9 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import Breadcrumbs from './Breadcrumbs'
@@ -18,6 +19,14 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { data: session, status } = useSession()
+  const router = useRouter()
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/login')
+    }
+  }, [status, router])
 
   // Show loading state while session is loading
   if (status === 'loading') {
@@ -28,17 +37,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     )
   }
 
-  // Redirect to login if not authenticated (handled by middleware, but good fallback)
+  // Show loading state while redirecting to login
   if (status === 'unauthenticated') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-soft-white">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-matte-black mb-2 font-satoshi">
-            Authentication Required
+            Redirecting to login...
           </h2>
-          <p className="text-slate-gray font-inter">
-            Please sign in to access the CMS.
-          </p>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-dusty-sage mx-auto mt-4"></div>
         </div>
       </div>
     )

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
-import { prisma } from '@/lib/db'
+import { authOptions } from '@/app/lib/auth'
+import { prisma } from '@/app/lib/prisma'
 import { z } from 'zod'
 
 const updateMediaSchema = z.object({
@@ -13,7 +13,7 @@ const updateMediaSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -21,8 +21,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const media = await prisma.media.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         uploadedBy: {
           select: { id: true, name: true, email: true }
@@ -43,7 +44,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -51,11 +52,12 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const validatedData = updateMediaSchema.parse(body)
 
     const media = await prisma.media.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!media) {
@@ -63,7 +65,7 @@ export async function PUT(
     }
 
     const updatedMedia = await prisma.media.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
       include: {
         uploadedBy: {
@@ -84,7 +86,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -92,8 +94,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const media = await prisma.media.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!media) {
@@ -101,7 +104,7 @@ export async function DELETE(
     }
 
     await prisma.media.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({ message: 'Media deleted successfully' })

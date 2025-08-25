@@ -7,16 +7,17 @@ export const metadata: Metadata = {
 }
 
 interface SearchPageProps {
-  searchParams: {
+  searchParams: Promise<{
     q?: string
     type?: string
     category?: string
     status?: string
-  }
+  }>
 }
 
-export default function SearchPage({ searchParams }: SearchPageProps) {
-  const initialQuery = searchParams.q || ''
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  const params = await searchParams
+  const initialQuery = params.q || ''
 
   return (
     <div className="space-y-6">

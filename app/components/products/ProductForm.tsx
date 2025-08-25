@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Product, ProductFormData } from '@/lib/types'
+import { Product, ProductFormData } from '@/app/lib/types'
 import CategorySelector from '@/app/components/categories/CategorySelector'
 import RichTextEditorWithMedia from '@/app/components/editor/RichTextEditorWithMedia'
 

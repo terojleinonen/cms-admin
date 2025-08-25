@@ -3,7 +3,7 @@
  * Handles analytics data collection and reporting
  */
 
-import { prisma } from '@/lib/db';
+import { prisma } from '@/app/lib/prisma';
 
 interface TimeframeData {
   startDate: Date;

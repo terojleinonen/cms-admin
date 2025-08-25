@@ -4,8 +4,19 @@
  */
 
 import { UserRole } from '@prisma/client'
+
+// Mock the database and password utils before importing
+jest.mock('@/lib/db')
+jest.mock('@/lib/password-utils', () => ({
+  hashPassword: jest.fn().mockResolvedValue('mock-hashed-password'),
+  verifyPassword: jest.fn().mockResolvedValue(true),
+}))
+
 import { prisma } from '@/lib/db'
 import { hashPassword } from '@/lib/password-utils'
+
+// Import NextAuth helpers
+import { authHelpers } from '../../__tests__/helpers/nextauth-helpers'
 
 export interface MockUserData {
   email?: string
@@ -39,3 +50,17 @@ export function createMockSession(user: any) {
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
   }
 }
+
+// Re-export NextAuth helpers for convenience
+export const {
+  setMockSession,
+  setMockSessionByRole,
+  clearMockSession,
+  resetMocks,
+  mockAdminSession,
+  mockEditorSession,
+  mockViewerSession,
+  createMockToken,
+  mockAuthenticatedRequest,
+  mockUnauthenticatedRequest
+} = authHelpers

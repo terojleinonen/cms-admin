@@ -19,6 +19,10 @@ import {
   ChartBarIcon,
   CogIcon,
   XMarkIcon,
+  MagnifyingGlassIcon,
+  ServerIcon,
+  ShieldCheckIcon,
+  ShoppingBagIcon,
 } from '@heroicons/react/24/outline'
 import { UserRole } from '@prisma/client'
 import clsx from 'clsx'
@@ -47,6 +51,12 @@ const navigation: NavigationItem[] = [
     name: 'Products',
     href: '/admin/products',
     icon: CubeIcon,
+    requiredRole: UserRole.EDITOR,
+  },
+  {
+    name: 'Orders',
+    href: '/orders',
+    icon: ShoppingBagIcon,
     requiredRole: UserRole.EDITOR,
   },
   {
@@ -86,6 +96,40 @@ const navigation: NavigationItem[] = [
   },
 ]
 
+// Admin-only navigation items (shown in a separate section)
+const adminNavigation: NavigationItem[] = [
+  {
+    name: 'API Management',
+    href: '/admin/api',
+    icon: ServerIcon,
+    requiredRole: UserRole.ADMIN,
+  },
+  {
+    name: 'Backup & Restore',
+    href: '/admin/backup',
+    icon: ShieldCheckIcon,
+    requiredRole: UserRole.ADMIN,
+  },
+  {
+    name: 'Performance',
+    href: '/admin/performance',
+    icon: ChartBarIcon,
+    requiredRole: UserRole.ADMIN,
+  },
+  {
+    name: 'Search Management',
+    href: '/admin/search',
+    icon: MagnifyingGlassIcon,
+    requiredRole: UserRole.ADMIN,
+  },
+  {
+    name: 'Workflow',
+    href: '/admin/workflow',
+    icon: DocumentTextIcon,
+    requiredRole: UserRole.ADMIN,
+  },
+]
+
 function hasPermission(userRole: UserRole | undefined, requiredRole?: UserRole): boolean {
   if (!requiredRole) return true
   if (!userRole) return false
@@ -107,6 +151,10 @@ function SidebarContent({ userRole }: { userRole?: UserRole }) {
     hasPermission(userRole, item.requiredRole)
   )
 
+  const filteredAdminNavigation = adminNavigation.filter(item => 
+    hasPermission(userRole, item.requiredRole)
+  )
+
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
@@ -125,7 +173,8 @@ function SidebarContent({ userRole }: { userRole?: UserRole }) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1 bg-slate-gray">
+      <nav className="flex-1 px-4 py-6 space-y-1 bg-slate-gray overflow-y-auto">
+        {/* Main Navigation */}
         {filteredNavigation.map((item) => {
           const isActive = pathname === item.href
           
@@ -155,6 +204,48 @@ function SidebarContent({ userRole }: { userRole?: UserRole }) {
             </Link>
           )
         })}
+
+        {/* Admin Section */}
+        {filteredAdminNavigation.length > 0 && (
+          <>
+            <div className="pt-6 pb-2">
+              <div className="px-3">
+                <h3 className="text-xs font-semibold text-warm-beige uppercase tracking-wider font-inter">
+                  Admin Tools
+                </h3>
+              </div>
+            </div>
+            {filteredAdminNavigation.map((item) => {
+              const isActive = pathname === item.href
+              
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={clsx(
+                    'sidebar-link',
+                    isActive && 'active'
+                  )}
+                >
+                  <item.icon
+                    className={clsx(
+                      'mr-3 h-5 w-5 flex-shrink-0',
+                      isActive
+                        ? 'text-soft-white'
+                        : 'text-warm-beige'
+                    )}
+                  />
+                  {item.name}
+                  {item.badge && (
+                    <span className="ml-auto inline-block py-0.5 px-2 text-xs font-medium rounded-full bg-dusty-sage text-soft-white font-inter">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              )
+            })}
+          </>
+        )}
       </nav>
 
       {/* User role indicator */}

@@ -9,7 +9,6 @@ import { authOptions } from '@/app/lib/auth'
 import { prisma } from '@/app/lib/prisma'
 import { z } from 'zod'
 
-// Validation schema for page updates
 const updatePageSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255, 'Title too long').optional(),
   slug: z.string().min(1, 'Slug is required').max(255, 'Slug too long')
@@ -29,13 +28,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const page = await prisma.page.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         creator: {
           select: {
@@ -62,12 +62,13 @@ export async function GET(
   }
 }
 
-// PUT /api/pages/[id] - Update page
+// PUT /api/pages/[id] - Update specific page
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -78,7 +79,7 @@ export async function PUT(
 
     // Check if page exists
     const existingPage = await prisma.page.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!existingPage) {
@@ -99,21 +100,23 @@ export async function PUT(
       }
     }
 
-    // Handle published date logic
-    let publishedAt = existingPage.publishedAt
-    if (validatedData.status === 'PUBLISHED' && !existingPage.publishedAt) {
-      publishedAt = new Date()
-    } else if (validatedData.publishedAt !== undefined) {
-      publishedAt = validatedData.publishedAt ? new Date(validatedData.publishedAt) : null
+    // Prepare update data
+    const updateData: any = { ...validatedData }
+    
+    // Handle publishedAt
+    if (validatedData.publishedAt !== undefined) {
+      updateData.publishedAt = validatedData.publishedAt ? new Date(validatedData.publishedAt) : null
+    }
+
+    // Auto-set publishedAt when status changes to PUBLISHED
+    if (validatedData.status === 'PUBLISHED' && existingPage.status !== 'PUBLISHED' && !updateData.publishedAt) {
+      updateData.publishedAt = new Date()
     }
 
     // Update page
     const updatedPage = await prisma.page.update({
-      where: { id: params.id },
-      data: {
-        ...validatedData,
-        publishedAt
-      },
+      where: { id },
+      data: updateData,
       include: {
         creator: {
           select: {
@@ -143,12 +146,13 @@ export async function PUT(
   }
 }
 
-// DELETE /api/pages/[id] - Delete page
+// DELETE /api/pages/[id] - Delete specific page
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -156,7 +160,7 @@ export async function DELETE(
 
     // Check if page exists
     const existingPage = await prisma.page.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!existingPage) {
@@ -165,7 +169,7 @@ export async function DELETE(
 
     // Delete page
     await prisma.page.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({ message: 'Page deleted successfully' })

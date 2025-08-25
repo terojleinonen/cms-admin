@@ -5,6 +5,10 @@
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals'
 import { NextRequest } from 'next/server'
+
+// Mock the database before importing anything that uses it
+jest.mock('@/lib/db')
+
 import { GET, POST } from '@/api/categories/route'
 import { GET as GetSingle, PUT as UpdateSingle, DELETE as DeleteSingle } from '@/api/categories/[id]/route'
 import { prisma } from '@/lib/db'

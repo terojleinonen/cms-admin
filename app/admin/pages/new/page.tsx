@@ -1,25 +1,32 @@
 /**
  * New Page Creation Page
- * Interface for creating new content pages with rich text editor
+ * Interface for creating new content pages
  */
 
 'use client'
 
+import { useRouter } from 'next/navigation'
 import PageForm from '@/app/components/pages/PageForm'
+import { Page } from '@/app/lib/types'
 
 export default function NewPagePage() {
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Create Page</h1>
-        <p className="text-gray-600">
-          Create a new content page with rich text editing
-        </p>
-      </div>
+  const router = useRouter()
 
-      {/* Form */}
-      <PageForm />
+  const handleSave = (page: Page) => {
+    // Redirect to edit page after creation
+    router.push(`/admin/pages/${page.id}/edit`)
+  }
+
+  const handleCancel = () => {
+    router.push('/admin/pages')
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <PageForm
+        onSave={handleSave}
+        onCancel={handleCancel}
+      />
     </div>
   )
 }

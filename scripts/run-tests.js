@@ -12,30 +12,22 @@ const path = require('path')
 const TEST_CONFIGS = {
   unit: {
     description: 'Unit Tests (Utilities and Services)',
-    pattern: '__tests__/lib/**/*.test.ts',
+    project: 'node',
     coverage: true,
   },
   integration: {
-    description: 'Integration Tests (API Endpoints)',
-    pattern: '__tests__/api/**/*.test.ts',
+    description: 'Integration Tests (API Endpoints and Database)',
+    project: 'node',
     coverage: true,
-    timeout: 30000,
+    timeout: 60000,
   },
   components: {
     description: 'Component Tests (React Components)',
-    pattern: '__tests__/components/**/*.test.tsx',
+    project: 'jsdom',
     coverage: true,
-    environment: 'jsdom',
-  },
-  e2e: {
-    description: 'End-to-End Tests (User Workflows)',
-    pattern: '__tests__/e2e/**/*.test.ts',
-    coverage: false,
-    timeout: 60000,
   },
   all: {
     description: 'All Tests',
-    pattern: '__tests__/**/*.test.{ts,tsx}',
     coverage: true,
   },
 }
@@ -57,11 +49,31 @@ const config = TEST_CONFIGS[testType]
 
 console.log(`\n🧪 Running ${config.description}...\n`)
 
+// Setup test database for integration tests
+if (testType === 'integration' || testType === 'all') {
+  console.log('🔧 Setting up test database...')
+  try {
+    const { execSync } = require('child_process')
+    execSync('node scripts/setup-test-database.js', {
+      stdio: 'inherit',
+      env: { ...process.env, NODE_ENV: 'test' }
+    })
+    console.log('✅ Test database ready\n')
+  } catch (error) {
+    console.error('❌ Failed to setup test database:', error.message)
+    process.exit(1)
+  }
+}
+
 // Build Jest command
 const jestArgs = [
   '--config', 'jest.config.js',
-  config.pattern,
 ]
+
+// Add project filter if specified
+if (config.project && testType !== 'all') {
+  jestArgs.push('--selectProjects', config.project)
+}
 
 if (config.coverage) {
   jestArgs.push('--coverage')

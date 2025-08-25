@@ -5,8 +5,8 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
-import { GET as analyticsHandler } from '@/app/api/analytics/route';
-import { GET as exportHandler } from '@/app/api/analytics/export/route';
+import { GET as analyticsHandler } from '../../app/api/analytics/route';
+import { GET as exportHandler } from '../../app/api/analytics/export/route';
 
 // Mock next-auth
 jest.mock('next-auth', () => ({
@@ -14,8 +14,39 @@ jest.mock('next-auth', () => ({
 }));
 
 // Mock the auth options
-jest.mock('@/lib/auth', () => ({
+jest.mock('../../app/lib/auth', () => ({
   authOptions: {}
+}));
+
+// Mock the database module directly
+jest.mock('@/lib/db', () => ({
+  prisma: {
+    product: {
+      count: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn()
+    },
+    page: {
+      count: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn()
+    },
+    media: {
+      count: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn()
+    },
+    user: {
+      count: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn()
+    },
+    contentRevision: {
+      count: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn()
+    }
+  }
 }));
 
 // Mock Prisma Client
@@ -44,10 +75,10 @@ jest.mock('@prisma/client', () => ({
 }));
 
 import { getServerSession } from 'next-auth';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/db';
 
 const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
-const mockPrisma = new PrismaClient() as jest.Mocked<PrismaClient>;
+const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 
 describe('Analytics API', () => {
   beforeEach(() => {
@@ -62,26 +93,55 @@ describe('Analytics API', () => {
         role: 'ADMIN'
       }
     } as any);
+
+    // Reset all Prisma mocks to default values
+    if (mockPrisma.product?.count) mockPrisma.product.count.mockResolvedValue(0);
+    if (mockPrisma.page?.count) mockPrisma.page.count.mockResolvedValue(0);
+    if (mockPrisma.media?.count) mockPrisma.media.count.mockResolvedValue(0);
+    if (mockPrisma.user?.count) mockPrisma.user.count.mockResolvedValue(0);
+    if (mockPrisma.media?.findMany) mockPrisma.media.findMany.mockResolvedValue([]);
+    if (mockPrisma.product?.findMany) mockPrisma.product.findMany.mockResolvedValue([]);
+    if (mockPrisma.page?.findMany) mockPrisma.page.findMany.mockResolvedValue([]);
+    if (mockPrisma.contentRevision?.findMany) mockPrisma.contentRevision.findMany.mockResolvedValue([]);
+    if (mockPrisma.product?.findUnique) mockPrisma.product.findUnique.mockResolvedValue(null);
+    if (mockPrisma.page?.findUnique) mockPrisma.page.findUnique.mockResolvedValue(null);
+    if (mockPrisma.contentRevision?.count) mockPrisma.contentRevision.count.mockResolvedValue(0);
   });
 
   describe('GET /api/analytics', () => {
     it('should return dashboard metrics', async () => {
-      // Mock database responses
-      mockPrisma.product.count.mockResolvedValueOnce(25); // total products
-      mockPrisma.page.count.mockResolvedValueOnce(15); // total pages
-      mockPrisma.media.count.mockResolvedValueOnce(100); // total media
-      mockPrisma.user.count.mockResolvedValueOnce(5); // total users
-      mockPrisma.product.count.mockResolvedValueOnce(20); // published products
-      mockPrisma.page.count.mockResolvedValueOnce(12); // published pages
-      mockPrisma.product.count.mockResolvedValueOnce(5); // draft products
-      mockPrisma.page.count.mockResolvedValueOnce(3); // draft pages
-      mockPrisma.product.count.mockResolvedValueOnce(3); // recent products
-      mockPrisma.page.count.mockResolvedValueOnce(2); // recent pages
-      mockPrisma.media.findMany.mockResolvedValueOnce([
-        { fileSize: 1024000 },
-        { fileSize: 2048000 },
-        { fileSize: 512000 }
-      ] as any);
+      // Mock database responses in the order they are called
+      if (mockPrisma.product?.count) {
+        mockPrisma.product.count
+          .mockResolvedValueOnce(25) // total products
+          .mockResolvedValueOnce(20) // published products
+          .mockResolvedValueOnce(5)  // draft products
+          .mockResolvedValueOnce(3); // recent products
+      }
+      
+      if (mockPrisma.page?.count) {
+        mockPrisma.page.count
+          .mockResolvedValueOnce(15) // total pages
+          .mockResolvedValueOnce(12) // published pages
+          .mockResolvedValueOnce(3)  // draft pages
+          .mockResolvedValueOnce(2); // recent pages
+      }
+      
+      if (mockPrisma.media?.count) {
+        mockPrisma.media.count.mockResolvedValueOnce(100); // total media
+      }
+      
+      if (mockPrisma.user?.count) {
+        mockPrisma.user.count.mockResolvedValueOnce(5); // total users
+      }
+      
+      if (mockPrisma.media?.findMany) {
+        mockPrisma.media.findMany.mockResolvedValueOnce([
+          { fileSize: 1024000 },
+          { fileSize: 2048000 },
+          { fileSize: 512000 }
+        ] as any);
+      }
 
       const request = new NextRequest('http://localhost:3001/api/analytics?type=metrics');
       const response = await analyticsHandler(request);

@@ -42,12 +42,17 @@ describe('Authentication Flow Integration', () => {
         name: testName,
         email: testEmail,
         password: testPassword,
+        confirmPassword: testPassword,
         role: 'EDITOR'
       })
     })
 
     const registerResponse = await registerUser(registerRequest)
     const registerData = await registerResponse.json()
+
+    if (registerResponse.status !== 201) {
+      console.log('Registration failed:', registerData)
+    }
 
     expect(registerResponse.status).toBe(201)
     expect(registerData.user.email).toBe(testEmail)
@@ -104,6 +109,7 @@ describe('Authentication Flow Integration', () => {
       name: 'Test User',
       email: testEmail,
       password: 'SecurePassword123!',
+      confirmPassword: 'SecurePassword123!',
       role: 'EDITOR'
     }
 
@@ -174,6 +180,7 @@ describe('Authentication Flow Integration', () => {
         name: 'Inactive User',
         email: testEmail,
         password: testPassword,
+        confirmPassword: testPassword,
         role: 'EDITOR'
       })
     })

@@ -16,19 +16,37 @@ const config = {
       transform: {
         '^.+\\.(ts|tsx)$': ['ts-jest', {
           tsconfig: {
+            target: 'es2020',
+            module: 'commonjs',
             esModuleInterop: true,
             allowSyntheticDefaultImports: true,
+            moduleResolution: 'node',
+            resolveJsonModule: true,
+            isolatedModules: true,
           },
+          useESM: false,
         }],
       },
       setupFilesAfterEnv: ['<rootDir>/tests/setup-node.ts'],
+      globalSetup: '<rootDir>/tests/global-setup.js',
+      globalTeardown: '<rootDir>/tests/global-teardown.js',
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/app/$1',
         '^@/app/(.*)$': '<rootDir>/app/$1',
+        '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
+        '^@/api/(.*)$': '<rootDir>/app/api/$1',
+        '^@/components/(.*)$': '<rootDir>/app/components/$1',
         '^@/lib/db$': '<rootDir>/__mocks__/@/lib/db.ts',
+        '^\\.\\./lib/db$': '<rootDir>/__mocks__/@/lib/db.ts',
+        '^\\.\\./\\.\\./lib/db$': '<rootDir>/__mocks__/@/lib/db.ts',
+        '\\./db$': '<rootDir>/__mocks__/@/lib/db.ts',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         '@auth/prisma-adapter': '<rootDir>/__mocks__/@auth/prisma-adapter.js',
+        'next-auth$': '<rootDir>/__mocks__/next-auth.js',
+        'next-auth/next$': '<rootDir>/__mocks__/next-auth/next.js',
+        'next-auth/providers/credentials$': '<rootDir>/__mocks__/next-auth/providers/credentials.js',
       },
+      extensionsToTreatAsEsm: []
     },
     {
       displayName: 'jsdom',
@@ -42,27 +60,46 @@ const config = {
       transform: {
         '^.+\\.(ts|tsx)$': ['ts-jest', {
           tsconfig: {
+            target: 'es2020',
+            module: 'commonjs',
             jsx: 'react-jsx',
             esModuleInterop: true,
             allowSyntheticDefaultImports: true,
+            moduleResolution: 'node',
+            resolveJsonModule: true,
+            isolatedModules: true,
           },
+          useESM: false,
         }],
       },
       setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/app/$1',
         '^@/app/(.*)$': '<rootDir>/app/$1',
+        '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
+        '^@/api/(.*)$': '<rootDir>/app/api/$1',
+        '^@/components/(.*)$': '<rootDir>/app/components/$1',
         '^@/lib/db$': '<rootDir>/__mocks__/@/lib/db.ts',
+        '^\\.\\./lib/db$': '<rootDir>/__mocks__/@/lib/db.ts',
+        '^\\.\\./\\.\\./lib/db$': '<rootDir>/__mocks__/@/lib/db.ts',
+        '\\./db$': '<rootDir>/__mocks__/@/lib/db.ts',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         '@auth/prisma-adapter': '<rootDir>/__mocks__/@auth/prisma-adapter.js',
+        'next-auth$': '<rootDir>/__mocks__/next-auth.js',
+        'next-auth/next$': '<rootDir>/__mocks__/next-auth/next.js',
+        'next-auth/providers/credentials$': '<rootDir>/__mocks__/next-auth/providers/credentials.js',
       },
+      extensionsToTreatAsEsm: []
     }
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(@auth/prisma-adapter|@testing-library|next-auth|@auth|uuid|minisearch)/)',
+    'node_modules/(?!(@auth/prisma-adapter|@testing-library|next-auth|@auth|uuid|minisearch|jose|openid-client|oauth|oidc-token-hash|@panva|preact)/)',
   ],
+  setupFiles: ['<rootDir>/tests/jest-setup.ts'],
   collectCoverageFrom: [
-    'app/**/*.{ts,tsx}',
+    'app/lib/**/*.{ts,tsx}',
+    'app/api/**/*.{ts,tsx}',
+    'app/components/**/*.{ts,tsx}',
     '!app/**/*.d.ts',
     '!app/**/types.ts',
     '!app/**/layout.tsx',
@@ -75,13 +112,15 @@ const config = {
   coverageReporters: ['text', 'lcov', 'html'],
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70,
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
     },
   },
   testTimeout: 30000,
+  maxWorkers: '50%',
+  verbose: false,
 }
 
 module.exports = config

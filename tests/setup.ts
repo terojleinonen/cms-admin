@@ -6,6 +6,9 @@
 import { PrismaClient } from '@prisma/client'
 import '@testing-library/jest-dom'
 
+// Initialize NextAuth mocks
+import './setup-nextauth'
+
 // Mock ResizeObserver for Headless UI components
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),

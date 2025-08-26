@@ -54,7 +54,7 @@ describe('MediaGrid', () => {
     render(<MediaGrid {...defaultProps} />)
     
     expect(screen.getByText('test image.jpg')).toBeInTheDocument()
-    expect(screen.getByText('IMAGE')).toBeInTheDocument()
+    expect(screen.getByText('image')).toBeInTheDocument()
     expect(screen.getByText('1 KB')).toBeInTheDocument()
   })
 
@@ -75,8 +75,9 @@ describe('MediaGrid', () => {
   it('should call onSelectMedia when clicking on media', () => {
     render(<MediaGrid {...defaultProps} />)
     
-    const mediaItem = screen.getByText('test image.jpg')
-    fireEvent.click(mediaItem)
+    // Click on the media preview area (the image container)
+    const mediaPreview = screen.getByAltText('Test image')
+    fireEvent.click(mediaPreview)
     
     expect(defaultProps.onSelectMedia).toHaveBeenCalledWith(mockMediaFiles[0])
   })

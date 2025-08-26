@@ -13,6 +13,14 @@ const mockSearchService = {
   getPopularTerms: jest.fn(),
 }
 
+jest.mock('@/app/lib/search', () => ({
+  searchService: mockSearchService,
+  getSuggestions: jest.fn(),
+  getSearchService: () => mockSearchService,
+  trackSearchEvent: jest.fn(),
+  getSearchAnalytics: jest.fn(),
+}))
+
 // Mock next-auth
 const mockGetServerSession = jest.fn()
 jest.mock('next-auth', () => ({
@@ -24,11 +32,10 @@ jest.mock('@/lib/search', () => ({
   searchService: mockSearchService,
 }))
 
-// Mock handlers - these would need to be implemented
-const searchHandler = jest.fn()
-const suggestionsHandler = jest.fn()
-const analyticsHandler = jest.fn()
-const analyticsGetHandler = jest.fn()
+// Import actual handlers
+import { GET as searchHandler } from '@/app/api/search/route'
+import { GET as suggestionsHandler } from '@/app/api/search/suggestions/route'
+import { POST as analyticsHandler, GET as analyticsGetHandler } from '@/app/api/search/analytics/route'
 
 describe('Search API', () => {
   beforeEach(() => {
@@ -37,7 +44,21 @@ describe('Search API', () => {
     
     // Default session mock
     mockGetServerSession.mockResolvedValue({
-      user: { id: 'user-1', email: 'test@example.com' }
+      user: { id: 'user-1', email: 'test@example.com', role: 'ADMIN' }
+    })
+
+    // Setup search service mocks
+    const { getSuggestions, trackSearchEvent, getSearchAnalytics } = require('@/app/lib/search')
+    getSuggestions.mockResolvedValue(['product', 'products', 'production'])
+    trackSearchEvent.mockResolvedValue(undefined)
+    getSearchAnalytics.mockResolvedValue({
+      totalSearches: 100,
+      uniqueQueries: 50,
+      averageResultsPerQuery: 5.2,
+      topQueries: [
+        { query: 'product', count: 25 },
+        { query: 'category', count: 15 }
+      ]
     })
   })
 
@@ -101,7 +122,7 @@ describe('Search API', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('Query parameter is required')
+      expect(data.error).toContain('Invalid search parameters')
     })
 
     it('should return 401 for unauthenticated requests', async () => {

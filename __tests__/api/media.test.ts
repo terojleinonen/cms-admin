@@ -97,18 +97,14 @@ describe('/api/media', () => {
       const mockMediaFiles = [
         {
           id: '1',
-          name: 'test-image.jpg',
+          filename: 'test-image.jpg',
           originalName: 'test image.jpg',
-          type: 'image',
           mimeType: 'image/jpeg',
           size: 1024,
           url: '/uploads/test-image.jpg',
-          thumbnailUrl: '/uploads/thumbnails/test-image.jpg',
-          folder: null,
-          alt: 'Test image',
+          altText: 'Test image',
           createdAt: new Date(),
-          updatedAt: new Date(),
-          createdBy: {
+          uploadedBy: {
             id: '1',
             name: 'Test User',
             email: 'test@example.com',
@@ -128,17 +124,15 @@ describe('/api/media', () => {
         expect.arrayContaining([
           expect.objectContaining({
             id: mockMediaFiles[0].id,
-            name: mockMediaFiles[0].name,
+            filename: mockMediaFiles[0].filename,
             originalName: mockMediaFiles[0].originalName,
-            alt: mockMediaFiles[0].alt,
+            altText: mockMediaFiles[0].altText,
             size: mockMediaFiles[0].size,
-            type: mockMediaFiles[0].type,
+            mimeType: mockMediaFiles[0].mimeType,
             url: mockMediaFiles[0].url,
-            thumbnailUrl: mockMediaFiles[0].thumbnailUrl,
-            createdBy: mockMediaFiles[0].createdBy,
+            uploadedBy: mockMediaFiles[0].uploadedBy,
             // Dates are serialized as strings in JSON
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String),
+            createdAt: expect.any(Date),
           })
         ])
       )

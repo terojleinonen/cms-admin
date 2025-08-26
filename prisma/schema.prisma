@@ -201,6 +201,19 @@ model BackupRestoreLog {
   @@map("backup_restore_logs")
 }
 
+model SearchEvent {
+  id           String    @id @default(uuid()) @db.Uuid
+  query        String    @db.VarChar(255)
+  resultsCount Int       @map("results_count")
+  userId       String?   @map("user_id") @db.Uuid
+  filters      Json?
+  userAgent    String?   @map("user_agent")
+  ipAddress    String?   @map("ip_address") @db.VarChar(45)
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@map("search_events")
+}
+
 enum UserRole {
   ADMIN
   EDITOR

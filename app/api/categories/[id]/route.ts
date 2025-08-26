@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
-import { authOptions } from '../../../lib/auth-config'
-import { prisma } from '../../../lib/db'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 // Validation schema for updates
@@ -33,8 +33,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const category = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         children: {
           orderBy: { sortOrder: 'asc' },
@@ -88,12 +89,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const validatedData = updateCategorySchema.parse(body)
 
     // Check if category exists
     const existingCategory = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!existingCategory) {
@@ -118,7 +120,7 @@ export async function PUT(
     }
 
     // Prevent setting self as parent (circular reference)
-    if (validatedData.parentId === params.id) {
+    if (validatedData.parentId === id) {
       return NextResponse.json(
         { error: 'Category cannot be its own parent' },
         { status: 400 }
@@ -141,7 +143,7 @@ export async function PUT(
       // Check for circular reference by traversing up the parent chain
       let currentParent = parentCategory
       while (currentParent) {
-        if (currentParent.id === params.id) {
+        if (currentParent.id === id) {
           return NextResponse.json(
             { error: 'Cannot create circular reference in category hierarchy' },
             { status: 400 }
@@ -161,7 +163,7 @@ export async function PUT(
     }
 
     const category = await prisma.category.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
       include: {
         children: {
@@ -208,9 +210,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     // Check if category exists
     const category = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         children: true,
         _count: {
@@ -245,7 +248,7 @@ export async function DELETE(
     }
 
     await prisma.category.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ message: 'Category deleted successfully' })

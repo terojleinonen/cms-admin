@@ -119,8 +119,15 @@ const config = {
     },
   },
   testTimeout: 30000,
-  maxWorkers: '50%',
+  maxWorkers: '75%',
   verbose: false,
+  cache: true,
+  cacheDirectory: '<rootDir>/node_modules/.cache/jest',
+  detectOpenHandles: false,
+  forceExit: false,
+  // Performance optimizations
+  workerIdleMemoryLimit: '512MB',
+  maxConcurrency: 5,
 }
 
 module.exports = config

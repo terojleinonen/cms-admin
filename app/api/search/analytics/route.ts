@@ -1,239 +1,147 @@
 /**
  * Search Analytics API
- * Tracks search behavior and provides analytics data
+ * Handles search analytics tracking and reporting
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/lib/auth'
+import { trackSearchEvent, getSearchAnalytics } from '@/app/lib/search'
+import { z } from 'zod'
 
-// In-memory storage for demo purposes
-// In production, use a proper database
-const searchAnalytics = {
-  queries: new Map<string, { count: number; lastSearched: Date; results: number }>(),
-  popularTerms: new Map<string, number>(),
-  noResultsQueries: new Set<string>(),
-  clickThroughs: new Map<string, { query: string; resultId: string; position: number; timestamp: Date }[]>()
-};
-
-// Validation schemas
-const trackSearchSchema = z.object({
+// Validation schema for search analytics events
+const searchEventSchema = z.object({
+  action: z.enum(['search', 'click', 'suggestion']),
   query: z.string().min(1),
-  resultsCount: z.number().min(0),
+  resultsCount: z.number().min(0).optional(),
+  clickedResultId: z.string().optional(),
   searchTime: z.number().min(0).optional(),
-  filters: z.object({
-    types: z.array(z.string()).optional(),
-    category: z.array(z.string()).optional(),
-    status: z.array(z.string()).optional()
-  }).optional()
-});
+  filters: z.record(z.any()).optional()
+})
 
-const trackClickSchema = z.object({
-  query: z.string().min(1),
-  resultId: z.string().min(1),
-  position: z.number().min(0),
-  resultType: z.string().min(1)
-});
+// Validation schema for analytics queries
+const analyticsQuerySchema = z.object({
+  type: z.enum(['overview', 'detailed']).optional().default('overview'),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  limit: z.number().min(1).max(1000).optional().default(100)
+})
 
 // POST /api/search/analytics - Track search events
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions)
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json();
-    const { action, ...data } = body;
+    const body = await request.json()
+    const validatedEvent = searchEventSchema.parse(body)
 
-    switch (action) {
-      case 'search':
-        return handleSearchTracking(data);
-      case 'click':
-        return handleClickTracking(data);
-      default:
-        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-    }
+    // Extract additional context from request
+    const userAgent = request.headers.get('user-agent') || undefined
+    const ipAddress = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     undefined
+
+    // Track the search event
+    await trackSearchEvent({
+      query: validatedEvent.query,
+      resultsCount: validatedEvent.resultsCount || 0,
+      userId: session.user.id,
+      filters: validatedEvent.filters,
+      userAgent,
+      ipAddress,
+      searchTime: validatedEvent.searchTime
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Search event tracked successfully'
+    })
+
   } catch (error) {
-    console.error('Error tracking search analytics:', error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid event data', details: error.errors },
+        { status: 400 }
+      )
+    }
+
+    console.error('Error tracking search event:', error)
     return NextResponse.json(
-      { error: 'Failed to track analytics' },
+      { error: 'Failed to track search event' },
       { status: 500 }
-    );
+    )
   }
 }
 
-// GET /api/search/analytics - Get analytics data
+// GET /api/search/analytics - Get search analytics
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions)
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') || 'overview';
-    const limit = parseInt(searchParams.get('limit') || '10');
-
-    switch (type) {
-      case 'overview':
-        return getOverviewAnalytics();
-      case 'popular-terms':
-        return getPopularTerms(limit);
-      case 'no-results':
-        return getNoResultsQueries(limit);
-      case 'click-through':
-        return getClickThroughAnalytics();
-      default:
-        return NextResponse.json({ error: 'Invalid analytics type' }, { status: 400 });
+    const { searchParams } = new URL(request.url)
+    const queryOptions = {
+      type: (searchParams.get('type') as 'overview' | 'detailed') || 'overview',
+      startDate: searchParams.get('startDate') || undefined,
+      endDate: searchParams.get('endDate') || undefined,
+      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 100
     }
+
+    // Validate query parameters
+    const validatedOptions = analyticsQuerySchema.parse(queryOptions)
+
+    // Parse dates if provided
+    const options: any = {
+      limit: validatedOptions.limit
+    }
+
+    if (validatedOptions.startDate) {
+      options.startDate = new Date(validatedOptions.startDate)
+    }
+    if (validatedOptions.endDate) {
+      options.endDate = new Date(validatedOptions.endDate)
+    }
+
+    // Get analytics data
+    const analytics = await getSearchAnalytics(validatedOptions.type, options)
+
+    if (validatedOptions.type === 'overview') {
+      return NextResponse.json({
+        overview: analytics,
+        type: 'overview',
+        period: {
+          startDate: validatedOptions.startDate,
+          endDate: validatedOptions.endDate
+        }
+      })
+    } else {
+      return NextResponse.json({
+        ...analytics,
+        type: 'detailed',
+        period: {
+          startDate: validatedOptions.startDate,
+          endDate: validatedOptions.endDate
+        }
+      })
+    }
+
   } catch (error) {
-    console.error('Error getting search analytics:', error);
-    return NextResponse.json(
-      { error: 'Failed to get analytics' },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleSearchTracking(data: any) {
-  const validatedData = trackSearchSchema.parse(data);
-  const { query, resultsCount, searchTime, filters } = validatedData;
-
-  // Update query statistics
-  const existing = searchAnalytics.queries.get(query) || { count: 0, lastSearched: new Date(), results: 0 };
-  searchAnalytics.queries.set(query, {
-    count: existing.count + 1,
-    lastSearched: new Date(),
-    results: resultsCount
-  });
-
-  // Track popular terms (extract individual words)
-  const terms = query.toLowerCase().split(/\\s+/).filter(term => term.length > 2);
-  terms.forEach(term => {
-    const count = searchAnalytics.popularTerms.get(term) || 0;
-    searchAnalytics.popularTerms.set(term, count + 1);
-  });
-
-  // Track no-results queries
-  if (resultsCount === 0) {
-    searchAnalytics.noResultsQueries.add(query);
-  }
-
-  return NextResponse.json({ success: true });
-}
-
-async function handleClickTracking(data: any) {
-  const validatedData = trackClickSchema.parse(data);
-  const { query, resultId, position, resultType } = validatedData;
-
-  // Track click-through data
-  const userId = 'anonymous'; // In production, use actual user ID
-  const existing = searchAnalytics.clickThroughs.get(userId) || [];
-  existing.push({
-    query,
-    resultId,
-    position,
-    timestamp: new Date()
-  });
-  searchAnalytics.clickThroughs.set(userId, existing);
-
-  return NextResponse.json({ success: true });
-}
-
-async function getOverviewAnalytics() {
-  const totalSearches = Array.from(searchAnalytics.queries.values())
-    .reduce((sum, data) => sum + data.count, 0);
-  
-  const uniqueQueries = searchAnalytics.queries.size;
-  const noResultsCount = searchAnalytics.noResultsQueries.size;
-  const noResultsRate = uniqueQueries > 0 ? (noResultsCount / uniqueQueries) * 100 : 0;
-
-  // Calculate average results per query
-  const totalResults = Array.from(searchAnalytics.queries.values())
-    .reduce((sum, data) => sum + data.results, 0);
-  const avgResultsPerQuery = uniqueQueries > 0 ? totalResults / uniqueQueries : 0;
-
-  // Get recent search trends (last 7 days)
-  const recentSearches = Array.from(searchAnalytics.queries.entries())
-    .filter(([_, data]) => {
-      const daysDiff = (Date.now() - data.lastSearched.getTime()) / (1000 * 60 * 60 * 24);
-      return daysDiff <= 7;
-    })
-    .length;
-
-  return NextResponse.json({
-    overview: {
-      totalSearches,
-      uniqueQueries,
-      noResultsCount,
-      noResultsRate: Math.round(noResultsRate * 100) / 100,
-      avgResultsPerQuery: Math.round(avgResultsPerQuery * 100) / 100,
-      recentSearches
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid query parameters', details: error.errors },
+        { status: 400 }
+      )
     }
-  });
-}
 
-async function getPopularTerms(limit: number) {
-  const popularTerms = Array.from(searchAnalytics.popularTerms.entries())
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, limit)
-    .map(([term, count]) => ({ term, count }));
-
-  return NextResponse.json({ popularTerms });
-}
-
-async function getNoResultsQueries(limit: number) {
-  const noResultsQueries = Array.from(searchAnalytics.noResultsQueries)
-    .slice(0, limit)
-    .map(query => ({
-      query,
-      count: searchAnalytics.queries.get(query)?.count || 1,
-      lastSearched: searchAnalytics.queries.get(query)?.lastSearched || new Date()
-    }))
-    .sort((a, b) => b.count - a.count);
-
-  return NextResponse.json({ noResultsQueries });
-}
-
-async function getClickThroughAnalytics() {
-  const allClicks = Array.from(searchAnalytics.clickThroughs.values()).flat();
-  
-  // Calculate click-through rate by position
-  const positionStats = new Map<number, { clicks: number, searches: number }>();
-  
-  allClicks.forEach(click => {
-    const existing = positionStats.get(click.position) || { clicks: 0, searches: 0 };
-    positionStats.set(click.position, {
-      clicks: existing.clicks + 1,
-      searches: existing.searches + 1 // Simplified - in reality, track searches separately
-    });
-  });
-
-  const clickThroughRates = Array.from(positionStats.entries())
-    .map(([position, stats]) => ({
-      position,
-      clicks: stats.clicks,
-      rate: stats.searches > 0 ? (stats.clicks / stats.searches) * 100 : 0
-    }))
-    .sort((a, b) => a.position - b.position);
-
-  // Most clicked queries
-  const queryClicks = new Map<string, number>();
-  allClicks.forEach(click => {
-    const count = queryClicks.get(click.query) || 0;
-    queryClicks.set(click.query, count + 1);
-  });
-
-  const topClickedQueries = Array.from(queryClicks.entries())
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 10)
-    .map(([query, clicks]) => ({ query, clicks }));
-
-  return NextResponse.json({
-    clickThroughRates,
-    topClickedQueries,
-    totalClicks: allClicks.length
-  });
+    console.error('Error retrieving search analytics:', error)
+    return NextResponse.json(
+      { error: 'Failed to retrieve analytics' },
+      { status: 500 }
+    )
+  }
 }

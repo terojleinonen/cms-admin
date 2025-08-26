@@ -508,7 +508,7 @@ describe('MediaPicker', () => {
       const user = userEvent.setup()
       render(<MediaPicker {...defaultProps} multiple={true} />)
       
-      await waitFor(() => {
+      await waitFor(async () => {
         const cancelButton = screen.getByRole('button', { name: /cancel/i })
         await user.click(cancelButton)
       })

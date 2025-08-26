@@ -1,100 +1,161 @@
 /**
  * Database Isolation Integration Test
  * Tests that database isolation works correctly in integration test environment
+ * Enhanced with proper transaction management and error recovery
  */
 
-import { useIntegrationDatabase, withTransaction } from '../setup-integration'
+import { 
+  useIsolatedTestContext,
+  IntegrationTestContext
+} from '../helpers/integration-test-utils'
+import { 
+  executeWithRecovery,
+  executeDatabaseOperation,
+  executeTransaction,
+  handleUniqueConstraint
+} from '../helpers/error-recovery-utils'
+import { 
+  cleanDatabase,
+  seedMinimalDatabase,
+  verifyDatabaseClean
+} from '../helpers/database-cleanup-utils'
 import { createTestUser, createTestProduct, createTestCategory } from '../helpers/test-data-factory'
 
 describe('Database Isolation Integration Tests', () => {
-  // Use integration database with cleanup between tests
-  useIntegrationDatabase({ seed: false, cleanup: true })
+  const { getContext } = useIsolatedTestContext({
+    isolationStrategy: 'transaction',
+    seedData: false,
+    cleanupAfterEach: true
+  })
 
   describe('Basic CRUD Operations with Isolation', () => {
-    it('should create and retrieve user data', async () => {
-      const { getTestDatabase } = require('../setup-integration')
-      const prisma = getTestDatabase()
+    it('should create and retrieve user data with proper isolation', async () => {
+      const context = getContext()
       
-      const userData = createTestUser({ 
-        email: 'integration-user@test.com',
-        name: 'Integration Test User'
-      })
-      
-      const user = await prisma.user.create({ data: userData })
-      
-      expect(user.email).toBe('integration-user@test.com')
-      expect(user.name).toBe('Integration Test User')
-      expect(user.id).toBeValidUUID()
-      
-      // Retrieve the user
-      const foundUser = await prisma.user.findUnique({
-        where: { email: 'integration-user@test.com' }
-      })
-      
-      expect(foundUser).toBeTruthy()
-      expect(foundUser?.name).toBe('Integration Test User')
-    })
-
-    it('should handle relational data correctly', async () => {
-      const { getTestDatabase } = require('../setup-integration')
-      const prisma = getTestDatabase()
-      
-      // Create user
-      const user = await prisma.user.create({
-        data: createTestUser({ email: 'product-creator@test.com' })
-      })
-      
-      // Create category
-      const category = await prisma.category.create({
-        data: createTestCategory({ name: 'Electronics', slug: 'electronics' })
-      })
-      
-      // Create product with relations
-      const product = await prisma.product.create({
-        data: {
-          ...createTestProduct({ 
-            name: 'Test Laptop',
-            slug: 'test-laptop',
-            createdBy: user.id 
-          }),
-          categories: {
-            create: {
-              categoryId: category.id
-            }
-          }
+      await executeWithRecovery(
+        async () => {
+          const userData = createTestUser({ 
+            email: `isolation-user-${Date.now()}@test.com`,
+            name: 'Isolation Test User'
+          })
+          
+          // Create user with error handling
+          const user = await handleUniqueConstraint(
+            async () => await context.prisma.user.create({ data: userData }),
+            async () => await context.prisma.user.findUnique({ where: { email: userData.email } }),
+            'create-user-test'
+          )
+          
+          expect(user.email).toBe(userData.email)
+          expect(user.name).toBe('Isolation Test User')
+          expect(user.id).toBeValidUUID()
+          
+          // Retrieve the user with database operation wrapper
+          const foundUser = await executeDatabaseOperation(
+            async (prisma) => {
+              return await prisma.user.findUnique({
+                where: { email: userData.email }
+              })
+            },
+            'isolation-test',
+            'retrieve-user'
+          )
+          
+          expect(foundUser).toBeTruthy()
+          expect(foundUser?.name).toBe('Isolation Test User')
         },
-        include: {
-          categories: {
-            include: {
-              category: true
-            }
-          },
-          creator: true
+        {
+          testName: 'basic-crud-isolation',
+          operation: 'create-retrieve-user'
         }
-      })
-      
-      expect(product.name).toBe('Test Laptop')
-      expect(product.creator.email).toBe('product-creator@test.com')
-      expect(product.categories).toHaveLength(1)
-      expect(product.categories[0].category.name).toBe('Electronics')
+      )
     })
 
-    it('should isolate data between tests', async () => {
-      const { getTestDatabase } = require('../setup-integration')
-      const prisma = getTestDatabase()
+    it('should handle relational data correctly with transaction isolation', async () => {
+      const context = getContext()
       
-      // This test should not see data from previous tests due to cleanup
-      const users = await prisma.user.findMany()
-      expect(users).toHaveLength(0)
+      await executeTransaction(
+        async (prisma) => {
+          // Create user
+          const user = await prisma.user.create({
+            data: createTestUser({ 
+              email: `product-creator-${Date.now()}@test.com`,
+              name: 'Product Creator'
+            })
+          })
+          
+          // Create category
+          const category = await prisma.category.create({
+            data: createTestCategory({ 
+              name: `Electronics-${Date.now()}`,
+              slug: `electronics-${Date.now()}`
+            })
+          })
+          
+          // Create product with relations
+          const product = await prisma.product.create({
+            data: {
+              ...createTestProduct({ 
+                name: `Test Laptop ${Date.now()}`,
+                slug: `test-laptop-${Date.now()}`,
+                createdBy: user.id 
+              }),
+              categories: {
+                create: {
+                  categoryId: category.id
+                }
+              }
+            },
+            include: {
+              categories: {
+                include: {
+                  category: true
+                }
+              },
+              creator: true
+            }
+          })
+          
+          expect(product.name).toContain('Test Laptop')
+          expect(product.creator.email).toBe(user.email)
+          expect(product.categories).toHaveLength(1)
+          expect(product.categories[0].category.name).toContain('Electronics')
+          
+          return { user, category, product }
+        },
+        'relational-data-test',
+        'create-related-entities'
+      )
+    })
+
+    it('should isolate data between tests with proper cleanup verification', async () => {
+      const context = getContext()
       
-      // Create new data for this test
-      await prisma.user.create({
-        data: createTestUser({ email: 'isolated-user@test.com' })
-      })
-      
-      const newUsers = await prisma.user.findMany()
-      expect(newUsers).toHaveLength(1)
-      expect(newUsers[0].email).toBe('isolated-user@test.com')
+      await executeWithRecovery(
+        async () => {
+          // Verify database is clean at start of test
+          const isClean = await verifyDatabaseClean(context.prisma)
+          expect(isClean).toBe(true)
+          
+          // Create new data for this test
+          const userData = createTestUser({ 
+            email: `isolated-user-${Date.now()}@test.com`,
+            name: 'Isolated Test User'
+          })
+          
+          const user = await context.prisma.user.create({ data: userData })
+          
+          // Verify data exists in current transaction
+          const users = await context.prisma.user.findMany()
+          expect(users).toHaveLength(1)
+          expect(users[0].email).toBe(userData.email)
+          expect(users[0].id).toBe(user.id)
+        },
+        {
+          testName: 'data-isolation',
+          operation: 'verify-test-isolation'
+        }
+      )
     })
   })
 

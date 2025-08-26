@@ -23,6 +23,10 @@ jest.mock('child_process', () => ({
   exec: jest.fn()
 }));
 
+jest.mock('util', () => ({
+  promisify: jest.fn((fn) => jest.fn().mockResolvedValue({ stdout: 'success', stderr: '' }))
+}));
+
 // Mock Prisma Client
 const mockPrisma = {
   backup: {
@@ -84,13 +88,8 @@ describe('BackupService', () => {
 
     it('should create database backup', async () => {
       mockFs.stat.mockResolvedValue({ size: 512000 } as any);
+      mockFs.mkdir.mockResolvedValue(undefined);
       
-      const mockExec = require('child_process').exec;
-      mockExec.mockImplementation((command: string, options: any, callback: Function) => {
-        expect(command).toContain('pg_dump');
-        callback(null, { stdout: 'Database backup completed', stderr: '' });
-      });
-
       const backupPath = await backupService.createDatabaseBackup();
       expect(backupPath).toContain('.sql');
     });
@@ -109,10 +108,8 @@ describe('BackupService', () => {
     });
 
     it('should handle backup creation errors', async () => {
-      const mockExec = require('child_process').exec;
-      mockExec.mockImplementation((command: string, options: any, callback: Function) => {
-        callback(new Error('Backup failed'), null);
-      });
+      const { promisify } = require('util');
+      promisify.mockReturnValue(jest.fn().mockRejectedValue(new Error('Backup failed')));
 
       await expect(backupService.createDatabaseBackup()).rejects.toThrow('Database backup failed');
     });

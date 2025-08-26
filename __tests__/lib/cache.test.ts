@@ -144,6 +144,9 @@ describe('CacheService', () => {
 
   describe('Memory Management', () => {
     it('should enforce memory limits with LRU eviction', async () => {
+      // Reset singleton to allow new configuration
+      CacheService.resetInstance();
+      
       // Create cache with small limit
       const smallCache = CacheService.getInstance({
         defaultTTL: 300,

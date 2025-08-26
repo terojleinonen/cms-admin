@@ -181,13 +181,13 @@ describe('Breadcrumbs Component', () => {
   })
 
   it('marks current page as non-clickable', () => {
-    mockUsePathname.mockReturnValue('/products')
+    mockUsePathname.mockReturnValue('/admin/products')
     
     render(<Breadcrumbs />)
 
     const productsText = screen.getByText('Products')
     expect(productsText.tagName).toBe('SPAN')
-    expect(productsText).toHaveClass('text-gray-900')
+    expect(productsText).toHaveClass('text-matte-black')
   })
 
   it('renders home icon for dashboard link', () => {

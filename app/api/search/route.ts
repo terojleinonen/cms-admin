@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     const validatedOptions = searchSchema.parse(searchOptions)
 
     // Perform search
-    const searchResults = searchService.search(validatedOptions)
+    const searchResults = await searchService.search(validatedOptions)
 
     return NextResponse.json({
       ...searchResults,

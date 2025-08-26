@@ -2,6 +2,24 @@
 
 This document provides comprehensive information about the testing strategy, setup, and execution for the CMS application.
 
+## 📚 Complete Testing Documentation
+
+For detailed testing information, see our comprehensive testing documentation:
+
+### [📋 Testing Documentation Index](./docs/TESTING_DOCUMENTATION_INDEX.md)
+**Complete guide to all testing documentation and resources**
+
+### Key Documents:
+- **[Testing Guidelines & Best Practices](./docs/TESTING_GUIDELINES.md)** - Core standards, patterns, and best practices
+- **[Test Setup & Configuration Guide](./docs/TEST_SETUP_GUIDE.md)** - Environment setup and configuration
+- **[Test Structure & Organization Guide](./docs/TEST_STRUCTURE_GUIDE.md)** - File organization and naming conventions
+- **[Test Debugging Guide](./docs/TEST_DEBUGGING_GUIDE.md)** - Troubleshooting and debugging techniques
+- **[Testing Onboarding Guide](./docs/TESTING_ONBOARDING_GUIDE.md)** - New developer learning path
+
+---
+
+## Quick Reference
+
 ## Testing Strategy
 
 Our testing approach follows the testing pyramid with four main layers:

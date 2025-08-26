@@ -1,0 +1,219 @@
+name: 🧪 Test Failure Report
+description: Report a test failure or testing issue
+title: "[Test Failure]: "
+labels: ["test-failure", "ci", "bug"]
+assignees: ["qa-team"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a test failure! 🧪
+        
+        This helps us maintain code quality and reliability.
+
+  - type: dropdown
+    id: failure-type
+    attributes:
+      label: Failure Type
+      description: What type of test failure is this?
+      options:
+        - Unit Test Failure
+        - Integration Test Failure
+        - Component Test Failure
+        - E2E Test Failure
+        - Performance Test Failure
+        - Flaky Test
+        - Test Infrastructure Issue
+        - Coverage Issue
+    validations:
+      required: true
+
+  - type: input
+    id: test-name
+    attributes:
+      label: Test Name/Path
+      description: Name or path of the failing test
+      placeholder: e.g., "tests/api/products.test.ts" or "Product creation should validate required fields"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Where is the test failing?
+      options:
+        - Local Development
+        - CI/CD Pipeline
+        - Pull Request Checks
+        - Staging Environment
+        - Production Monitoring
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Failure Frequency
+      description: How often does this test fail?
+      options:
+        - Always fails
+        - Intermittent (flaky)
+        - Failed once
+        - Recently started failing
+        - Fails in specific conditions
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-message
+    attributes:
+      label: Error Message
+      description: The exact error message from the test failure
+      render: shell
+      placeholder: Paste the complete error message here...
+    validations:
+      required: true
+
+  - type: textarea
+    id: test-output
+    attributes:
+      label: Test Output/Logs
+      description: Complete test output or relevant log entries
+      render: shell
+      placeholder: Paste test output, stack traces, or log entries...
+
+  - type: input
+    id: commit-hash
+    attributes:
+      label: Commit Hash
+      description: The commit where the failure occurred
+      placeholder: e.g., abc123def456
+
+  - type: input
+    id: workflow-run
+    attributes:
+      label: Workflow Run URL
+      description: Link to the failing CI/CD run (if applicable)
+      placeholder: https://github.com/owner/repo/actions/runs/123456789
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Reproduction Steps
+      description: Steps to reproduce the test failure locally
+      placeholder: |
+        1. Run `npm test`
+        2. Execute specific test file
+        3. Observe failure
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Test Behavior
+      description: What should the test do when passing?
+      placeholder: Describe what the test should validate when working correctly...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact Level
+      description: How does this failure impact development?
+      options:
+        - Low - Single test, doesn't block development
+        - Medium - Multiple tests or affects feature development
+        - High - Blocks CI/CD pipeline or major functionality
+        - Critical - Prevents deployments or indicates serious bug
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: affected-areas
+    attributes:
+      label: Affected Areas
+      description: What areas might be affected by this test failure?
+      options:
+        - label: Authentication system
+        - label: Product management
+        - label: Media handling
+        - label: User management
+        - label: API endpoints
+        - label: Database operations
+        - label: UI components
+        - label: Performance
+        - label: Security features
+
+  - type: textarea
+    id: recent-changes
+    attributes:
+      label: Recent Changes
+      description: Any recent code changes that might be related?
+      placeholder: |
+        - Recent commits that might have caused this
+        - New features or refactoring
+        - Dependency updates
+        - Configuration changes
+
+  - type: textarea
+    id: investigation
+    attributes:
+      label: Investigation Notes
+      description: Any investigation or debugging you've already done
+      placeholder: |
+        - What you've tried to fix it
+        - Potential root causes identified
+        - Related issues or patterns noticed
+
+  - type: checkboxes
+    id: test-categories
+    attributes:
+      label: Test Categories Affected
+      description: Which test categories are impacted?
+      options:
+        - label: Unit tests (mocked dependencies)
+        - label: Integration tests (real database)
+        - label: Component tests (React Testing Library)
+        - label: API tests (endpoint validation)
+        - label: Authentication tests
+        - label: Database tests
+        - label: Performance tests
+        - label: Security tests
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Temporary Workaround
+      description: Any temporary workaround being used?
+      placeholder: |
+        - Skip the test temporarily
+        - Modified test conditions
+        - Alternative test approach
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Fix Priority
+      description: How urgently should this be fixed?
+      options:
+        - Low - Can be addressed in next sprint
+        - Medium - Should be fixed soon
+        - High - Needs immediate attention
+        - Critical - Blocking development/deployment
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information
+      placeholder: |
+        - Related test failures
+        - System configuration details
+        - Browser/environment specifics
+        - Screenshots or recordings

@@ -1,0 +1,383 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ main, develop ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Job 1: PR Validation
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+          
+      - name: Check for test files
+        run: |
+          # Check if PR includes test files for new features
+          git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.(test|spec)\.(ts|tsx|js|jsx)$' || {
+            echo "⚠️ No test files found in this PR"
+            echo "Consider adding tests for new functionality"
+          }
+          
+      - name: Check file changes
+        run: |
+          echo "Files changed in this PR:"
+          git diff --name-only origin/${{ github.base_ref }}...HEAD
+
+  # Job 2: Quick Tests (Fast feedback)
+  quick-tests:
+    name: Quick Tests
+    runs-on: ubuntu-latest
+    needs: pr-validation
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run linting
+        run: npm run lint
+        
+      - name: Run type checking
+        run: npm run type-check
+        
+      - name: Run fast unit tests
+        run: npm run test:fast
+        env:
+          NODE_ENV: test
+
+  # Job 3: Changed Files Testing
+  changed-files-tests:
+    name: Test Changed Files
+    runs-on: ubuntu-latest
+    needs: quick-tests
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: cms_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Setup test database
+        run: npm run test:db:setup
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/cms_test
+          NODE_ENV: test
+          
+      - name: Get changed files
+        id: changed-files
+        run: |
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          # Find related test files
+          TEST_FILES=""
+          for file in $CHANGED_FILES; do
+            if [[ $file == *.ts || $file == *.tsx ]]; then
+              # Look for corresponding test files
+              base_name=$(basename "$file" .ts)
+              base_name=$(basename "$base_name" .tsx)
+              dir_name=$(dirname "$file")
+              
+              # Check multiple test file patterns
+              possible_tests=(
+                "tests/${dir_name}/${base_name}.test.ts"
+                "tests/${dir_name}/${base_name}.test.tsx"
+                "__tests__/${dir_name}/${base_name}.test.ts"
+                "__tests__/${dir_name}/${base_name}.test.tsx"
+                "${dir_name}/${base_name}.test.ts"
+                "${dir_name}/${base_name}.test.tsx"
+              )
+              
+              for test_file in "${possible_tests[@]}"; do
+                if [[ -f "$test_file" ]]; then
+                  TEST_FILES="$TEST_FILES $test_file"
+                fi
+              done
+            fi
+          done
+          
+          echo "test-files=$TEST_FILES" >> $GITHUB_OUTPUT
+          
+      - name: Run tests for changed files
+        if: steps.changed-files.outputs.test-files != ''
+        run: |
+          echo "Running tests for changed files: ${{ steps.changed-files.outputs.test-files }}"
+          npx jest ${{ steps.changed-files.outputs.test-files }} --coverage --coverageDirectory=coverage-pr
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/cms_test
+          NODE_ENV: test
+          NEXTAUTH_SECRET: test-secret-key-for-ci
+          NEXTAUTH_URL: http://localhost:3001
+          
+      - name: Upload PR coverage
+        if: steps.changed-files.outputs.test-files != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-coverage
+          path: coverage-pr/
+          retention-days: 7
+
+  # Job 4: Coverage Comparison
+  coverage-comparison:
+    name: Coverage Comparison
+    runs-on: ubuntu-latest
+    needs: changed-files-tests
+    if: always()
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: cms_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Setup test database
+        run: npm run test:db:setup
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/cms_test
+          NODE_ENV: test
+          
+      - name: Run full test suite with coverage
+        run: npm run test:coverage
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/cms_test
+          NODE_ENV: test
+          NEXTAUTH_SECRET: test-secret-key-for-ci
+          NEXTAUTH_URL: http://localhost:3001
+          
+      - name: Store PR coverage
+        run: |
+          mkdir -p coverage-data
+          cp coverage/coverage-summary.json coverage-data/pr-coverage.json
+          
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          
+      - name: Install dependencies (base)
+        run: npm ci
+        
+      - name: Setup test database (base)
+        run: npm run test:db:setup
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/cms_test
+          NODE_ENV: test
+          
+      - name: Run base branch tests
+        run: npm run test:coverage
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/cms_test
+          NODE_ENV: test
+          NEXTAUTH_SECRET: test-secret-key-for-ci
+          NEXTAUTH_URL: http://localhost:3001
+          
+      - name: Store base coverage
+        run: |
+          cp coverage/coverage-summary.json coverage-data/base-coverage.json
+          
+      - name: Compare coverage
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const prCoverage = JSON.parse(fs.readFileSync('coverage-data/pr-coverage.json', 'utf8'));
+              const baseCoverage = JSON.parse(fs.readFileSync('coverage-data/base-coverage.json', 'utf8'));
+              
+              const prTotal = prCoverage.total;
+              const baseTotal = baseCoverage.total;
+              
+              const coverageComparison = {
+                lines: {
+                  pr: prTotal.lines.pct,
+                  base: baseTotal.lines.pct,
+                  diff: prTotal.lines.pct - baseTotal.lines.pct
+                },
+                branches: {
+                  pr: prTotal.branches.pct,
+                  base: baseTotal.branches.pct,
+                  diff: prTotal.branches.pct - baseTotal.branches.pct
+                },
+                functions: {
+                  pr: prTotal.functions.pct,
+                  base: baseTotal.functions.pct,
+                  diff: prTotal.functions.pct - baseTotal.functions.pct
+                },
+                statements: {
+                  pr: prTotal.statements.pct,
+                  base: baseTotal.statements.pct,
+                  diff: prTotal.statements.pct - baseTotal.statements.pct
+                }
+              };
+              
+              const formatDiff = (diff) => {
+                const sign = diff >= 0 ? '+' : '';
+                const emoji = diff >= 0 ? '📈' : '📉';
+                return `${emoji} ${sign}${diff.toFixed(2)}%`;
+              };
+              
+              const comment = `
+              ## 📊 Coverage Report
+              
+              | Metric | Base | PR | Change |
+              |--------|------|----|---------| 
+              | Lines | ${baseTotal.lines.pct}% | ${prTotal.lines.pct}% | ${formatDiff(coverageComparison.lines.diff)} |
+              | Branches | ${baseTotal.branches.pct}% | ${prTotal.branches.pct}% | ${formatDiff(coverageComparison.branches.diff)} |
+              | Functions | ${baseTotal.functions.pct}% | ${prTotal.functions.pct}% | ${formatDiff(coverageComparison.functions.diff)} |
+              | Statements | ${baseTotal.statements.pct}% | ${prTotal.statements.pct}% | ${formatDiff(coverageComparison.statements.diff)} |
+              
+              ${coverageComparison.lines.diff < -1 ? '⚠️ **Warning:** Coverage decreased by more than 1%' : ''}
+              ${coverageComparison.lines.diff > 1 ? '🎉 **Great:** Coverage increased!' : ''}
+              `;
+              
+              // Post comment on PR
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: comment
+              });
+              
+              // Fail if coverage drops significantly
+              if (coverageComparison.lines.diff < -5) {
+                core.setFailed('Coverage dropped by more than 5%');
+              }
+              
+            } catch (error) {
+              console.log('Could not compare coverage:', error.message);
+            }
+
+  # Job 5: PR Status Check
+  pr-status:
+    name: PR Status Check
+    runs-on: ubuntu-latest
+    needs: [quick-tests, changed-files-tests, coverage-comparison]
+    if: always()
+    
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "Job statuses:"
+          echo "- Quick Tests: ${{ needs.quick-tests.result }}"
+          echo "- Changed Files Tests: ${{ needs.changed-files-tests.result }}"
+          echo "- Coverage Comparison: ${{ needs.coverage-comparison.result }}"
+          
+          if [[ "${{ needs.quick-tests.result }}" != "success" ]]; then
+            echo "❌ Quick tests failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.changed-files-tests.result }}" == "failure" ]]; then
+            echo "❌ Tests for changed files failed"
+            exit 1
+          fi
+          
+          echo "✅ All required checks passed!"
+          
+      - name: Update PR status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ needs.quick-tests.result }}' === 'success' && 
+                          '${{ needs.changed-files-tests.result }}' !== 'failure' ? 'success' : 'failure';
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state: status,
+              target_url: `${context.payload.repository.html_url}/actions/runs/${context.runId}`,
+              description: status === 'success' ? 'All tests passed' : 'Some tests failed',
+              context: 'ci/pr-checks'
+            });

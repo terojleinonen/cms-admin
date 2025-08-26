@@ -1,0 +1,238 @@
+name: Test Failure Notifications
+
+on:
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types:
+      - completed
+
+jobs:
+  notify-on-failure:
+    name: Notify on Test Failures
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Get workflow run details
+        id: workflow-details
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflowRun = context.payload.workflow_run;
+            const jobs = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: workflowRun.id
+            });
+            
+            const failedJobs = jobs.data.jobs.filter(job => job.conclusion === 'failure');
+            const failedJobNames = failedJobs.map(job => job.name).join(', ');
+            
+            core.setOutput('failed-jobs', failedJobNames);
+            core.setOutput('run-url', workflowRun.html_url);
+            core.setOutput('commit-sha', workflowRun.head_sha);
+            core.setOutput('branch', workflowRun.head_branch);
+            
+            return {
+              failedJobs: failedJobNames,
+              runUrl: workflowRun.html_url,
+              commitSha: workflowRun.head_sha,
+              branch: workflowRun.head_branch
+            };
+            
+      - name: Create issue for test failures
+        if: github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failedJobs = '${{ steps.workflow-details.outputs.failed-jobs }}';
+            const runUrl = '${{ steps.workflow-details.outputs.run-url }}';
+            const commitSha = '${{ steps.workflow-details.outputs.commit-sha }}';
+            const branch = '${{ steps.workflow-details.outputs.branch }}';
+            
+            const issueTitle = `🚨 Test Failures on ${branch} branch`;
+            const issueBody = `
+            ## Test Failure Report
+            
+            **Branch:** ${branch}
+            **Commit:** ${commitSha}
+            **Failed Jobs:** ${failedJobs}
+            **Workflow Run:** ${runUrl}
+            
+            ### Failed Jobs
+            ${failedJobs}
+            
+            ### Action Required
+            - [ ] Investigate test failures
+            - [ ] Fix failing tests
+            - [ ] Verify fix with new commit
+            - [ ] Close this issue when resolved
+            
+            ### Links
+            - [View Workflow Run](${runUrl})
+            - [View Commit](https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${commitSha})
+            
+            ---
+            *This issue was automatically created by the CI system.*
+            `;
+            
+            // Check if there's already an open issue for test failures
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci-failure,automated'
+            });
+            
+            if (existingIssues.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body: issueBody,
+                labels: ['ci-failure', 'automated', 'bug']
+              });
+            } else {
+              // Update existing issue
+              const existingIssue = existingIssues.data[0];
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: `## New Test Failure\n\n${issueBody}`
+              });
+            }
+            
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#dev-alerts'
+          text: |
+            🚨 Test failures detected in ${{ github.repository }}
+            
+            **Branch:** ${{ steps.workflow-details.outputs.branch }}
+            **Failed Jobs:** ${{ steps.workflow-details.outputs.failed-jobs }}
+            **Commit:** ${{ steps.workflow-details.outputs.commit-sha }}
+            
+            [View Details](${{ steps.workflow-details.outputs.run-url }})
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  close-resolved-issues:
+    name: Close Resolved Test Issues
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: Close resolved test failure issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Find open CI failure issues
+            const openIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci-failure,automated'
+            });
+            
+            // Close them with a success comment
+            for (const issue of openIssues.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `✅ Tests are now passing! Automatically closing this issue.\n\n**Resolved by:** ${context.payload.workflow_run.head_sha}`
+              });
+              
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+            }
+
+  generate-test-report:
+    name: Generate Test Report
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download workflow artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id
+            });
+            
+            console.log('Available artifacts:', artifacts.data.artifacts.map(a => a.name));
+            
+      - name: Generate comprehensive test report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflowRun = context.payload.workflow_run;
+            const jobs = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: workflowRun.id
+            });
+            
+            const jobResults = jobs.data.jobs.map(job => ({
+              name: job.name,
+              status: job.conclusion,
+              duration: Math.round((new Date(job.completed_at) - new Date(job.started_at)) / 1000),
+              url: job.html_url
+            }));
+            
+            const totalDuration = jobResults.reduce((sum, job) => sum + job.duration, 0);
+            const passedJobs = jobResults.filter(job => job.status === 'success').length;
+            const failedJobs = jobResults.filter(job => job.status === 'failure').length;
+            
+            const report = `
+            # Test Execution Report
+            
+            **Workflow:** ${workflowRun.name}
+            **Branch:** ${workflowRun.head_branch}
+            **Commit:** ${workflowRun.head_sha}
+            **Trigger:** ${workflowRun.event}
+            **Status:** ${workflowRun.conclusion}
+            **Duration:** ${Math.round(totalDuration / 60)} minutes
+            
+            ## Summary
+            - ✅ Passed: ${passedJobs}
+            - ❌ Failed: ${failedJobs}
+            - 📊 Total Jobs: ${jobResults.length}
+            
+            ## Job Details
+            ${jobResults.map(job => 
+              `- ${job.status === 'success' ? '✅' : '❌'} **${job.name}** (${job.duration}s) - [View](${job.url})`
+            ).join('\n')}
+            
+            ---
+            *Generated at ${new Date().toISOString()}*
+            `;
+            
+            // Save report as a comment on the commit
+            if (workflowRun.event === 'push') {
+              await github.rest.repos.createCommitComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: workflowRun.head_sha,
+                body: report
+              });
+            }
+            
+            console.log('Test report generated:', report);

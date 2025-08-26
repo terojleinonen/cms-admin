@@ -1,0 +1,84 @@
+# CODEOWNERS file for automatic review assignment
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners - these users will be requested for review on all PRs
+* @team-lead
+
+# Frontend Components and UI
+/app/components/ @frontend-team @ui-team
+/app/pages/ @frontend-team
+/app/globals.css @ui-team
+/styles/ @ui-team
+/tailwind.config.js @ui-team
+
+# Backend API and Business Logic
+/app/api/ @backend-team @api-team
+/app/lib/ @backend-team
+/middleware.ts @backend-team @security-team
+
+# Database and Data Models
+/prisma/ @database-team @backend-team
+/app/lib/db.ts @database-team
+/app/lib/prisma.ts @database-team
+
+# Authentication and Security
+/app/lib/auth* @security-team @backend-team
+/app/api/auth/ @security-team @backend-team
+/app/components/auth/ @security-team @frontend-team
+
+# Testing Infrastructure
+/tests/ @qa-team @testing-team
+/__tests__/ @qa-team @testing-team
+*.test.* @qa-team
+*.spec.* @qa-team
+/jest.config.js @qa-team @devops-team
+/__mocks__/ @qa-team
+
+# CI/CD and DevOps
+/.github/ @devops-team @team-lead
+/docker* @devops-team
+/scripts/ @devops-team
+/.env* @devops-team @security-team
+
+# Configuration Files
+/package.json @devops-team @team-lead
+/package-lock.json @devops-team
+/tsconfig.json @devops-team @backend-team
+/next.config.js @devops-team @frontend-team
+/postcss.config.js @ui-team @devops-team
+
+# Documentation
+/docs/ @tech-writers @team-lead
+README.md @tech-writers @team-lead
+*.md @tech-writers
+
+# Specific Feature Areas
+/app/components/products/ @product-team @frontend-team
+/app/api/products/ @product-team @backend-team
+/app/components/media/ @media-team @frontend-team
+/app/api/media/ @media-team @backend-team
+/app/components/analytics/ @analytics-team @frontend-team
+/app/api/analytics/ @analytics-team @backend-team
+
+# Performance and Monitoring
+/app/lib/monitoring.ts @performance-team @backend-team
+/app/lib/performance.ts @performance-team @backend-team
+/app/lib/cache.ts @performance-team @backend-team
+
+# Image Processing and Media
+/app/lib/image-processing.ts @media-team @backend-team
+/app/lib/media-utils.ts @media-team @backend-team
+/public/uploads/ @media-team
+
+# Search and Analytics
+/app/lib/search.ts @search-team @backend-team
+/app/lib/analytics.ts @analytics-team @backend-team
+
+# Backup and Data Management
+/app/lib/backup.ts @data-team @backend-team
+/scripts/migrate-* @data-team @database-team
+
+# Security-sensitive files (require security team review)
+/app/lib/security.ts @security-team
+/app/lib/password-utils.ts @security-team
+/app/lib/rate-limit.ts @security-team

@@ -39,7 +39,17 @@
     "test:db:create": "node scripts/setup-test-database.js create",
     "test:db:migrate": "node scripts/setup-test-database.js migrate",
     "test:db:reset": "node scripts/setup-test-database.js reset",
-    "test:db:validate": "node scripts/setup-test-database.js validate"
+    "test:db:validate": "node scripts/setup-test-database.js validate",
+    "test:monitor": "tsx tests/monitoring/cli.ts",
+    "test:monitor:health": "tsx tests/monitoring/cli.ts health",
+    "test:monitor:coverage": "tsx tests/monitoring/cli.ts coverage",
+    "test:monitor:performance": "tsx tests/monitoring/cli.ts performance",
+    "test:monitor:quality": "tsx tests/monitoring/cli.ts quality",
+    "test:monitor:maintenance": "tsx tests/monitoring/cli.ts maintenance",
+    "test:monitor:dashboard": "tsx tests/monitoring/cli.ts dashboard",
+    "test:monitor:config": "tsx tests/monitoring/cli.ts config",
+    "test:ci": "tsx tests/monitoring/github-actions-integration.ts run",
+    "test:ci:setup": "tsx tests/monitoring/github-actions-integration.ts generate-workflow"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

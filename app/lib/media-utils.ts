@@ -7,6 +7,7 @@ import sharp from 'sharp'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { z } from 'zod'
+import { ImageProcessingService, type ImageProcessingOptions } from './image-processing'
 
 // Supported image formats
 export const SUPPORTED_IMAGE_FORMATS = ['jpeg', 'jpg', 'png', 'webp', 'svg'] as const
@@ -114,6 +115,14 @@ export async function getImageMetadata(filePath: string) {
 }
 
 /**
+ * Gets comprehensive image metadata using enhanced image processing service
+ */
+export async function getEnhancedImageMetadata(filePath: string) {
+  const imageService = ImageProcessingService.getInstance()
+  return await imageService.extractMetadata(filePath)
+}
+
+/**
  * Generates thumbnails for an image
  */
 export async function generateThumbnails(
@@ -190,6 +199,42 @@ export async function optimizeImage(inputPath: string, outputPath: string): Prom
   } catch (error) {
     throw new Error(`Failed to optimize image: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
+}
+
+/**
+ * Enhanced image optimization using the image processing service
+ */
+export async function optimizeImageEnhanced(
+  inputPath: string, 
+  outputPath: string, 
+  options: ImageProcessingOptions = {}
+): Promise<void> {
+  const imageService = ImageProcessingService.getInstance()
+  await imageService.optimizeImage(inputPath, outputPath, options)
+}
+
+/**
+ * Generate responsive image variants
+ */
+export async function generateResponsiveImages(
+  inputPath: string,
+  outputDir: string,
+  baseFilename: string
+) {
+  const imageService = ImageProcessingService.getInstance()
+  return await imageService.generateResponsiveVariants(inputPath, outputDir, baseFilename)
+}
+
+/**
+ * Generate modern format alternatives (WebP and AVIF)
+ */
+export async function generateModernFormats(
+  inputPath: string,
+  outputDir: string,
+  baseFilename: string
+) {
+  const imageService = ImageProcessingService.getInstance()
+  return await imageService.generateModernFormats(inputPath, outputDir, baseFilename)
 }
 
 /**

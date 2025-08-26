@@ -1,5 +1,5 @@
 /**
- * Cache service for improved performance
+ * Comprehensive Cache service for improved performance
  */
 
 import { PrismaClient } from '@prisma/client'
@@ -9,49 +9,124 @@ export interface CacheEntry<T = any> {
   value: T
   expiresAt: Date
   createdAt: Date
+  lastAccessed: Date
 }
 
-export interface CacheOptions {
-  ttl?: number // Time to live in seconds
-  maxSize?: number // Maximum number of entries
+export interface CacheConfig {
+  defaultTTL?: number // Time to live in seconds
+  maxMemoryItems?: number // Maximum number of entries in memory
+  enableRedis?: boolean // Enable Redis support
+  redisUrl?: string // Redis connection URL
+}
+
+export interface CacheStats {
+  totalItems: number
+  memoryUsage: number
+  hitRate: number
+  totalHits: number
+  totalMisses: number
+}
+
+export interface ProductQueryParams {
+  page?: number
+  limit?: number
+  status?: string
+  categoryId?: string
+  search?: string
+}
+
+export interface ProductsResult {
+  products: any[]
+  total: number
+  page: number
+  limit: number
+}
+
+export interface CategoryQueryParams {
+  includeProducts?: boolean
+  isActive?: boolean
+}
+
+export interface ImageMetadata {
+  width?: number
+  height?: number
+  format?: string
+  size?: number
+  quality?: number
+}
+
+export interface ImageOptions {
+  width?: number
+  height?: number
+  format?: string
+  quality?: number
+  fit?: string
+}
+
+export interface CachedImage {
+  processedPath: string
+  metadata: ImageMetadata
+  createdAt: number
 }
 
 /**
- * In-memory cache implementation
+ * In-memory cache implementation with LRU eviction
  */
 export class MemoryCache {
   private cache = new Map<string, CacheEntry>()
   private maxSize: number
+  private stats = {
+    hits: 0,
+    misses: 0
+  }
 
-  constructor(options: CacheOptions = {}) {
-    this.maxSize = options.maxSize || 1000
+  constructor(maxSize: number = 1000) {
+    this.maxSize = maxSize
   }
 
   set<T>(key: string, value: T, ttl: number = 300): void {
-    // Remove oldest entries if cache is full
-    if (this.cache.size >= this.maxSize) {
-      const oldestKey = this.cache.keys().next().value
-      this.cache.delete(oldestKey)
+    const now = new Date()
+    const expiresAt = new Date(Date.now() + ttl * 1000)
+    
+    // If key already exists, delete it first to update insertion order
+    if (this.cache.has(key)) {
+      this.cache.delete(key)
+    } else if (this.cache.size >= this.maxSize) {
+      // Remove oldest entry (first in insertion order) if cache is full
+      const firstKey = this.cache.keys().next().value
+      if (firstKey) {
+        this.cache.delete(firstKey)
+      }
     }
 
-    const expiresAt = new Date(Date.now() + ttl * 1000)
     this.cache.set(key, {
       key,
       value,
       expiresAt,
-      createdAt: new Date()
+      createdAt: now,
+      lastAccessed: now
     })
   }
 
   get<T>(key: string): T | null {
     const entry = this.cache.get(key)
-    if (!entry) return null
+    if (!entry) {
+      this.stats.misses++
+      return null
+    }
 
     // Check if expired
     if (entry.expiresAt < new Date()) {
       this.cache.delete(key)
+      this.stats.misses++
       return null
     }
+
+    // Move to end (most recently used) by deleting and re-inserting
+    this.cache.delete(key)
+    entry.lastAccessed = new Date()
+    this.cache.set(key, entry)
+    this.stats.hits++
 
     return entry.value as T
   }
@@ -62,6 +137,8 @@ export class MemoryCache {
 
   clear(): void {
     this.cache.clear()
+    this.stats.hits = 0
+    this.stats.misses = 0
   }
 
   size(): number {
@@ -71,87 +148,204 @@ export class MemoryCache {
   keys(): string[] {
     return Array.from(this.cache.keys())
   }
+
+  getStats(): { hits: number; misses: number } {
+    return { ...this.stats }
+  }
+
+  invalidatePattern(pattern: string): void {
+    const regex = new RegExp(pattern.replace('*', '.*'))
+    const keysToDelete: string[] = []
+    
+    for (const key of this.cache.keys()) {
+      if (regex.test(key)) {
+        keysToDelete.push(key)
+      }
+    }
+    
+    keysToDelete.forEach(key => this.cache.delete(key))
+  }
 }
 
 /**
- * Database-backed cache implementation
+ * Database-backed cache implementation for query results
  */
 export class DatabaseCache {
-  constructor(private prisma: PrismaClient) {}
+  private memoryCache: MemoryCache
 
-  async set<T>(key: string, value: T, ttl: number = 300): Promise<void> {
-    const expiresAt = new Date(Date.now() + ttl * 1000)
+  constructor(private prisma: PrismaClient) {
+    this.memoryCache = new MemoryCache(500) // Smaller cache for database results
+  }
+
+  async getProducts(params: ProductQueryParams): Promise<ProductsResult> {
+    const cacheKey = `products:${JSON.stringify(params)}`
     
-    await this.prisma.cache.upsert({
-      where: { key },
-      update: {
-        value: JSON.stringify(value),
-        expiresAt
-      },
-      create: {
-        key,
-        value: JSON.stringify(value),
-        expiresAt
+    // Try memory cache first
+    const cached = this.memoryCache.get<ProductsResult>(cacheKey)
+    if (cached) {
+      return cached
+    }
+
+    // Fetch from database
+    const { page = 1, limit = 10, status, categoryId, search } = params
+    const skip = (page - 1) * limit
+
+    const where: any = {}
+    if (status) where.status = status
+    if (categoryId) where.categoryId = categoryId
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' }
+      }),
+      this.prisma.product.count({ where })
+    ])
+
+    const result: ProductsResult = {
+      products,
+      total,
+      page,
+      limit
+    }
+
+    // Cache the result
+    this.memoryCache.set(cacheKey, result, 300) // 5 minutes TTL
+
+    return result
+  }
+
+  async getProduct(id: string): Promise<any | null> {
+    const cacheKey = `product:${id}`
+    
+    // Try memory cache first
+    const cached = this.memoryCache.get<any>(cacheKey)
+    if (cached) {
+      return cached
+    }
+
+    // Fetch from database
+    const product = await this.prisma.product.findFirst({
+      where: { id },
+      include: {
+        category: true,
+        media: true
       }
     })
+
+    if (product) {
+      // Cache the result
+      this.memoryCache.set(cacheKey, product, 600) // 10 minutes TTL
+    }
+
+    return product
+  }
+
+  async getCategories(params: CategoryQueryParams): Promise<any[]> {
+    const cacheKey = `categories:${JSON.stringify(params)}`
+    
+    // Try memory cache first
+    const cached = this.memoryCache.get<any[]>(cacheKey)
+    if (cached) {
+      return cached
+    }
+
+    // Fetch from database
+    const { includeProducts = false, isActive } = params
+    const where: any = {}
+    if (isActive !== undefined) where.isActive = isActive
+
+    const categories = await this.prisma.category.findMany({
+      where,
+      include: {
+        products: includeProducts
+      },
+      orderBy: { name: 'asc' }
+    })
+
+    // Cache the result
+    this.memoryCache.set(cacheKey, categories, 600) // 10 minutes TTL
+
+    return categories
+  }
+
+  async invalidateProductCache(id: string): Promise<void> {
+    this.memoryCache.delete(`product:${id}`)
+    this.memoryCache.invalidatePattern('products:*')
+  }
+
+  async invalidateProducts(): Promise<void> {
+    this.memoryCache.invalidatePattern('products:*')
+  }
+
+  async invalidateCategoryCache(id: string): Promise<void> {
+    this.memoryCache.delete(`category:${id}`)
+    this.memoryCache.invalidatePattern('categories:*')
+  }
+
+  async set<T>(key: string, value: T, ttl: number = 300): Promise<void> {
+    this.memoryCache.set(key, value, ttl)
   }
 
   async get<T>(key: string): Promise<T | null> {
-    const entry = await this.prisma.cache.findUnique({
-      where: { key }
-    })
-
-    if (!entry) return null
-
-    // Check if expired
-    if (entry.expiresAt < new Date()) {
-      await this.prisma.cache.delete({ where: { key } })
-      return null
-    }
-
-    try {
-      return JSON.parse(entry.value) as T
-    } catch {
-      return null
-    }
+    return this.memoryCache.get<T>(key)
   }
 
   async delete(key: string): Promise<boolean> {
-    try {
-      await this.prisma.cache.delete({ where: { key } })
-      return true
-    } catch {
-      return false
-    }
+    return this.memoryCache.delete(key)
   }
 
   async clear(): Promise<void> {
-    await this.prisma.cache.deleteMany()
+    this.memoryCache.clear()
   }
 
   async cleanup(): Promise<number> {
-    const result = await this.prisma.cache.deleteMany({
-      where: {
-        expiresAt: {
-          lt: new Date()
-        }
-      }
-    })
-    return result.count
+    // For memory cache, we don't need explicit cleanup as expired items are removed on access
+    return 0
   }
 }
 
 /**
- * Image cache for optimized image serving
+ * Image cache for processed image metadata caching
  */
 export class ImageCache {
-  private cache = new MemoryCache({ maxSize: 500 })
+  private cache = new MemoryCache(500)
 
   constructor(private cacheDir: string = './cache/images') {}
 
-  getCacheKey(url: string, width?: number, height?: number, quality?: number): string {
-    const params = [url, width, height, quality].filter(Boolean).join('-')
+  getCacheKey(originalPath: string, options: ImageOptions): string {
+    const params = [originalPath, options.width, options.height, options.format, options.quality, options.fit].filter(Boolean).join('-')
     return `image-${Buffer.from(params).toString('base64')}`
+  }
+
+  async cacheImageMetadata(originalPath: string, processedPath: string, metadata: ImageMetadata): Promise<void> {
+    const cacheKey = this.getCacheKey(originalPath, metadata)
+    const cacheData: CachedImage = {
+      processedPath,
+      metadata,
+      createdAt: Date.now()
+    }
+    
+    this.cache.set(cacheKey, cacheData, 3600) // 1 hour TTL
+  }
+
+  async getCachedImageMetadata(originalPath: string, options: ImageOptions): Promise<CachedImage | null> {
+    const cacheKey = this.getCacheKey(originalPath, options)
+    return this.cache.get<CachedImage>(cacheKey)
+  }
+
+  async invalidateImageCache(path: string): Promise<void> {
+    // Invalidate all cached versions of this image
+    const pattern = `image-${Buffer.from(path).toString('base64').substring(0, 10)}*`
+    this.cache.invalidatePattern(pattern)
   }
 
   get(key: string): string | null {
@@ -172,22 +366,120 @@ export class ImageCache {
 }
 
 /**
- * Main cache service that combines different cache strategies
+ * Main cache service singleton that combines different cache strategies
  */
 export class CacheService {
+  private static instance: CacheService | null = null
   private memoryCache: MemoryCache
   private databaseCache?: DatabaseCache
   private imageCache: ImageCache
+  private config: CacheConfig
+  private stats = {
+    totalHits: 0,
+    totalMisses: 0
+  }
 
-  constructor(prisma?: PrismaClient, options: CacheOptions = {}) {
-    this.memoryCache = new MemoryCache(options)
-    this.databaseCache = prisma ? new DatabaseCache(prisma) : undefined
+  private constructor(config: CacheConfig = {}) {
+    this.config = {
+      defaultTTL: 300,
+      maxMemoryItems: 1000,
+      enableRedis: false,
+      ...config
+    }
+    
+    this.memoryCache = new MemoryCache(this.config.maxMemoryItems)
     this.imageCache = new ImageCache()
   }
 
-  // Memory cache methods
+  static getInstance(config: CacheConfig = {}): CacheService {
+    if (!CacheService.instance) {
+      CacheService.instance = new CacheService(config)
+    }
+    return CacheService.instance
+  }
+
+  // Initialize with Prisma client for database caching
+  initializeDatabase(prisma: PrismaClient): void {
+    this.databaseCache = new DatabaseCache(prisma)
+  }
+
+  async get<T>(key: string): Promise<T | null> {
+    const result = this.memoryCache.get<T>(key)
+    if (result !== null) {
+      this.stats.totalHits++
+      return result
+    }
+    
+    this.stats.totalMisses++
+    return null
+  }
+
+  async set<T>(key: string, value: T, ttl?: number): Promise<void> {
+    const actualTTL = ttl || this.config.defaultTTL || 300
+    this.memoryCache.set(key, value, actualTTL)
+  }
+
+  async delete(key: string): Promise<void> {
+    this.memoryCache.delete(key)
+  }
+
+  async clear(): Promise<void> {
+    this.memoryCache.clear()
+    this.imageCache.clear()
+    if (this.databaseCache) {
+      await this.databaseCache.clear()
+    }
+    this.stats.totalHits = 0
+    this.stats.totalMisses = 0
+  }
+
+  async getOrSet<T>(key: string, fetchFunction: () => Promise<T>, ttl?: number): Promise<T> {
+    // Try to get from cache first
+    const cached = await this.get<T>(key)
+    if (cached !== null) {
+      return cached
+    }
+
+    // Fetch the data
+    const data = await fetchFunction()
+    
+    // Store in cache
+    await this.set(key, data, ttl)
+    
+    return data
+  }
+
+  async invalidatePattern(pattern: string): Promise<void> {
+    this.memoryCache.invalidatePattern(pattern)
+  }
+
+  getStats(): CacheStats {
+    const memoryStats = this.memoryCache.getStats()
+    const totalRequests = this.stats.totalHits + this.stats.totalMisses
+    const hitRate = totalRequests > 0 ? (this.stats.totalHits / totalRequests) * 100 : 0
+
+    return {
+      totalItems: this.memoryCache.size(),
+      memoryUsage: this.memoryCache.size() * 1024, // Rough estimate
+      hitRate: Math.round(hitRate * 100) / 100,
+      totalHits: this.stats.totalHits,
+      totalMisses: this.stats.totalMisses
+    }
+  }
+
+  // Database cache methods
+  getDatabaseCache(): DatabaseCache | undefined {
+    return this.databaseCache
+  }
+
+  // Image cache methods
+  getImageCache(): ImageCache {
+    return this.imageCache
+  }
+
+  // Memory cache methods (for backward compatibility)
   setMemory<T>(key: string, value: T, ttl?: number): void {
-    this.memoryCache.set(key, value, ttl)
+    this.memoryCache.set(key, value, ttl || this.config.defaultTTL || 300)
   }
 
   getMemory<T>(key: string): T | null {
@@ -198,10 +490,10 @@ export class CacheService {
     return this.memoryCache.delete(key)
   }
 
-  // Database cache methods
+  // Database cache methods (for backward compatibility)
   async setDatabase<T>(key: string, value: T, ttl?: number): Promise<void> {
     if (this.databaseCache) {
-      await this.databaseCache.set(key, value, ttl)
+      await this.databaseCache.set(key, value, ttl || this.config.defaultTTL || 300)
     }
   }
 
@@ -219,13 +511,13 @@ export class CacheService {
     return false
   }
 
-  // Image cache methods
+  // Image cache methods (for backward compatibility)
   getImage(key: string): string | null {
     return this.imageCache.get(key)
   }
 
   setImage(key: string, path: string, ttl?: number): void {
-    this.imageCache.set(key, path, ttl)
+    this.imageCache.set(key, path, ttl || 3600)
   }
 
   deleteImage(key: string): boolean {
@@ -242,5 +534,12 @@ export class CacheService {
   clearAll(): void {
     this.memoryCache.clear()
     this.imageCache.clear()
+    this.stats.totalHits = 0
+    this.stats.totalMisses = 0
+  }
+
+  // Reset singleton instance (useful for testing)
+  static resetInstance(): void {
+    CacheService.instance = null
   }
 }

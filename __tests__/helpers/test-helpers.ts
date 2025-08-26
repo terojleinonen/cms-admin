@@ -3,7 +3,7 @@
  * Utility functions for creating test data and mocking authentication
  */
 
-import { prisma } from '@/lib/db'
+import { prisma } from '@/app/lib/prisma'
 import { UserRole } from '@prisma/client'
 import { hashPassword } from '@/lib/password-utils'
 

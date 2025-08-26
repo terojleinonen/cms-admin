@@ -3,17 +3,11 @@
  * Provides a comprehensive mocked Prisma client for unit tests
  */
 
-import { mockPrisma, resetPrismaMocks, mockDataStore } from './prisma-mock'
+import { mockPrisma, mockDataStore, resetMockErrorConfig, setupPrismaMocks } from './prisma-mock'
+import { MockDataConsistencyChecker } from './mock-validators'
 
 // Export the mock prisma client
 export const prisma = mockPrisma
-
-// Export mock utilities
-export { 
-  mockPrisma as mockPrismaClient,
-  resetPrismaMocks,
-  mockDataStore
-}
 
 // Export test data factories
 export {
@@ -21,11 +15,13 @@ export {
   createMockCategory,
   createMockProduct,
   createMockMedia,
-  createMockPage
+  createMockPage,
+  resetMockErrorConfig,
+  setupPrismaMocks
 } from './prisma-mock'
 
 // Enhanced reset function with comprehensive cleanup
-export const resetPrismaMocks = () => {
+const resetPrismaTestMocks = () => {
   // Clear all data stores
   mockDataStore.users.clear()
   mockDataStore.categories.clear()
@@ -56,9 +52,18 @@ export const resetPrismaMocks = () => {
   setupPrismaMocks()
 }
 
+// Export mock utilities
+export { 
+  mockPrisma as mockPrismaClient,
+  mockDataStore
+}
+
+// Export the enhanced reset function
+export const resetPrismaMocks = resetPrismaTestMocks
+
 // Reset mocks before each test
 beforeEach(() => {
-  resetPrismaMocks()
+  resetPrismaTestMocks()
 })
 
 // Export types

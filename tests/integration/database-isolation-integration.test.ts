@@ -14,6 +14,7 @@ import {
   executeTransaction,
   handleUniqueConstraint
 } from '../helpers/error-recovery-utils'
+import { withTransaction } from '../setup-integration'
 import { 
   cleanDatabase,
   seedMinimalDatabase,

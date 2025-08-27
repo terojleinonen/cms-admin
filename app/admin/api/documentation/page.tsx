@@ -2,14 +2,14 @@ import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/lib/auth-config'
 import { redirect } from 'next/navigation'
-import ApiManagementDashboard from '@/app/components/admin/ApiManagementDashboard'
+import ApiDocumentation from '@/app/components/admin/ApiDocumentation'
 
 export const metadata: Metadata = {
-  title: 'API Management - Kin Workspace CMS',
-  description: 'Manage API keys, documentation, and analytics',
+  title: 'API Documentation - Kin Workspace CMS',
+  description: 'Interactive API documentation and testing interface',
 }
 
-export default async function ApiManagementPage() {
+export default async function ApiDocumentationPage() {
   const session = await getServerSession(authOptions)
   
   if (!session?.user || session.user.role !== 'ADMIN') {
@@ -19,13 +19,13 @@ export default async function ApiManagementPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-matte-black font-satoshi">API Management</h1>
+        <h1 className="text-2xl font-bold text-matte-black font-satoshi">API Documentation</h1>
         <p className="text-slate-gray font-inter">
-          Manage API keys, view documentation, and monitor API usage
+          Interactive documentation and testing interface for the CMS API
         </p>
       </div>
 
-      <ApiManagementDashboard />
+      <ApiDocumentation />
     </div>
   )
 }

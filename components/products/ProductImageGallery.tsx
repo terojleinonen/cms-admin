@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
@@ -33,6 +33,30 @@ export default function ProductImageGallery({
 }: ProductImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isModalOpen) return
+
+      switch (e.key) {
+        case 'Escape':
+          setIsModalOpen(false)
+          break
+        case 'ArrowLeft':
+          e.preventDefault()
+          handlePrevious()
+          break
+        case 'ArrowRight':
+          e.preventDefault()
+          handleNext()
+          break
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isModalOpen])
 
   if (!images || images.length === 0) {
     return (
@@ -76,6 +100,14 @@ export default function ProductImageGallery({
           fill
           className="object-cover cursor-pointer"
           onClick={() => setIsModalOpen(true)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              setIsModalOpen(true)
+            }
+          }}
         />
         
         {/* Navigation Arrows */}
@@ -83,12 +115,14 @@ export default function ProductImageGallery({
           <>
             <button
               onClick={handlePrevious}
+              aria-label="Previous image"
               className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-colors"
             >
               <ChevronLeftIcon className="w-5 h-5 text-gray-700" />
             </button>
             <button
               onClick={handleNext}
+              aria-label="Next image"
               className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-colors"
             >
               <ChevronRightIcon className="w-5 h-5 text-gray-700" />
@@ -107,6 +141,7 @@ export default function ProductImageGallery({
         {editable && (
           <button
             onClick={(e) => handleRemoveImage(selectedImage.id, e)}
+            aria-label="Remove image"
             className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md transition-colors"
           >
             <XMarkIcon className="w-4 h-4" />
@@ -126,6 +161,15 @@ export default function ProductImageGallery({
                   : 'border-gray-200 hover:border-gray-300'
               }`}
               onClick={() => handleThumbnailClick(index)}
+              role="button"
+              tabIndex={0}
+              aria-label={`View ${image.altText || `image ${index + 1}`}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleThumbnailClick(index)
+                }
+              }}
             >
               <Image
                 src={image.url}
@@ -145,6 +189,7 @@ export default function ProductImageGallery({
               {editable && (
                 <button
                   onClick={(e) => handleRemoveImage(image.id, e)}
+                  aria-label={`Remove ${image.altText || 'image'}`}
                   className="absolute -top-1 -right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-0.5 shadow-md transition-colors"
                 >
                   <XMarkIcon className="w-3 h-3" />
@@ -157,10 +202,20 @@ export default function ProductImageGallery({
 
       {/* Modal for full-size view */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="relative max-w-4xl max-h-full">
+        <div 
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image gallery modal"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div 
+            className="relative max-w-4xl max-h-full"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setIsModalOpen(false)}
+              aria-label="Close image modal"
               className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors"
             >
               <XMarkIcon className="w-8 h-8" />
@@ -180,12 +235,14 @@ export default function ProductImageGallery({
                 <>
                   <button
                     onClick={handlePrevious}
+                    aria-label="Previous image in modal"
                     className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 transition-colors"
                   >
                     <ChevronLeftIcon className="w-6 h-6" />
                   </button>
                   <button
                     onClick={handleNext}
+                    aria-label="Next image in modal"
                     className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 transition-colors"
                   >
                     <ChevronRightIcon className="w-6 h-6" />

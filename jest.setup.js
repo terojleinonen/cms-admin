@@ -36,7 +36,7 @@ jest.mock('next-auth/react', () => ({
     },
     status: 'authenticated',
   }),
-  SessionProvider: ({ children }: { children: React.ReactNode }) => children,
+  SessionProvider: ({ children }) => children,
 }));
 
 // Mock Prisma
@@ -85,7 +85,7 @@ process.env.NEXTAUTH_URL = 'http://localhost:3001';
 
 // Suppress console warnings in tests
 const originalWarn = console.warn;
-console.warn = (...args: any[]) => {
+console.warn = (...args) => {
   if (args[0]?.includes?.('Warning:')) {
     return;
   }

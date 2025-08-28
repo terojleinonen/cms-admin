@@ -8,16 +8,8 @@ import { BackupService } from '@/lib/backup';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-// Mock dependencies
-jest.mock('fs', () => ({
-  promises: {
-    mkdir: jest.fn(),
-    stat: jest.fn(),
-    unlink: jest.fn(),
-    readdir: jest.fn(),
-    access: jest.fn()
-  }
-}));
+// Mock dependencies - use the global fs/promises mock from jest.setup.js
+import { promises as mockFs } from 'fs';
 
 jest.mock('child_process', () => ({
   exec: jest.fn()
@@ -40,7 +32,7 @@ const mockPrisma = {
   }
 } as any;
 
-const mockFs = fs as jest.Mocked<typeof fs>;
+// mockFs is already imported above
 
 describe('BackupService', () => {
   let backupService: BackupService;
@@ -48,6 +40,13 @@ describe('BackupService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Setup default mock returns
+    (mockFs.mkdir as jest.Mock).mockResolvedValue(undefined);
+    (mockFs.stat as jest.Mock).mockResolvedValue({ size: 1024 });
+    (mockFs.unlink as jest.Mock).mockResolvedValue(undefined);
+    (mockFs.readdir as jest.Mock).mockResolvedValue([]);
+    (mockFs.access as jest.Mock).mockResolvedValue(undefined);
     
     mockConfig = {
       databaseUrl: 'postgresql://user:pass@localhost:5432/testdb',

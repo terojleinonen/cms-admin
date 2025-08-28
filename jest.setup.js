@@ -83,6 +83,34 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock window.location to avoid JSDOM navigation issues
+if (!window.location.reload || typeof window.location.reload !== 'function') {
+  const mockLocation = {
+    href: 'http://localhost:3000',
+    origin: 'http://localhost:3000',
+    protocol: 'http:',
+    host: 'localhost:3000',
+    hostname: 'localhost',
+    port: '3000',
+    pathname: '/',
+    search: '',
+    hash: '',
+    reload: jest.fn(),
+    replace: jest.fn(),
+    assign: jest.fn(),
+  };
+
+  try {
+    Object.defineProperty(window, 'location', {
+      value: mockLocation,
+      writable: true,
+    });
+  } catch (e) {
+    // If we can't redefine, just mock the reload function
+    window.location.reload = jest.fn();
+  }
+}
+
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
   constructor() {}
@@ -292,6 +320,31 @@ jest.mock('fs/promises', () => ({
   unlink: jest.fn().mockResolvedValue(undefined),
   stat: jest.fn().mockResolvedValue({ size: 1024 }),
   readdir: jest.fn().mockResolvedValue([]),
+}));
+
+// Mock fs (for compatibility with different import styles)
+jest.mock('fs', () => ({
+  promises: {
+    readFile: jest.fn().mockResolvedValue('mock file content'),
+    writeFile: jest.fn().mockResolvedValue(undefined),
+    mkdir: jest.fn().mockResolvedValue(undefined),
+    unlink: jest.fn().mockResolvedValue(undefined),
+    stat: jest.fn().mockResolvedValue({ size: 1024 }),
+    readdir: jest.fn().mockResolvedValue([]),
+    access: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+// Mock path module
+jest.mock('path', () => ({
+  join: jest.fn((...args) => args.join('/')),
+  dirname: jest.fn((p) => p.split('/').slice(0, -1).join('/') || '/'),
+  basename: jest.fn((p) => p.split('/').pop() || ''),
+  extname: jest.fn((p) => {
+    const parts = p.split('.');
+    return parts.length > 1 ? '.' + parts.pop() : '';
+  }),
+  resolve: jest.fn((...args) => '/' + args.join('/').replace(/\/+/g, '/')),
 }));
 
 // Global test environment setup

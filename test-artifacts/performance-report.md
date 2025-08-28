@@ -1,5 +1,5 @@
 # Test Performance Report
-Generated: 2025-08-28T19:22:38.171Z
+Generated: 2025-08-28T19:53:21.705Z
 
 ## Summary
 - **Total Tests**: 4
@@ -19,10 +19,10 @@ Generated: 2025-08-28T19:22:38.171Z
 - ❌ Performance Suite::performance test exceeded unit test threshold: 1500ms > 1000ms
 
 ## Warnings
-- ⚠️ Performance Suite::performance test high memory usage: 122.75MB
-- ⚠️ Integration Test Suite::test 1 high memory usage: 127.91MB
-- ⚠️ Integration Test Suite::test 2 high memory usage: 127.91MB
-- ⚠️ Integration Test Suite::test 3 high memory usage: 127.92MB
+- ⚠️ Performance Suite::performance test high memory usage: 263.47MB
+- ⚠️ Integration Test Suite::test 1 high memory usage: 268.64MB
+- ⚠️ Integration Test Suite::test 2 high memory usage: 268.64MB
+- ⚠️ Integration Test Suite::test 3 high memory usage: 268.65MB
 
 ## Slowest Tests
 | Test | Suite | Duration | Type |

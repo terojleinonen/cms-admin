@@ -1,6 +1,104 @@
 import '@testing-library/jest-dom';
 import { jest } from '@jest/globals';
 
+// Polyfill for Next.js Web APIs in test environment
+global.Request = global.Request || class Request {
+  constructor(input, init = {}) {
+    this.url = input;
+    this.method = init.method || 'GET';
+    this.headers = new Headers(init.headers);
+    this.body = init.body;
+  }
+};
+
+global.Response = global.Response || class Response {
+  constructor(body, init = {}) {
+    this.body = body;
+    this.status = init.status || 200;
+    this.statusText = init.statusText || 'OK';
+    this.headers = new Headers(init.headers);
+    this.ok = this.status >= 200 && this.status < 300;
+  }
+  
+  async json() {
+    return JSON.parse(this.body);
+  }
+  
+  async text() {
+    return this.body;
+  }
+  
+  clone() {
+    return new Response(this.body, {
+      status: this.status,
+      statusText: this.statusText,
+      headers: this.headers
+    });
+  }
+};
+
+global.Headers = global.Headers || class Headers {
+  constructor(init = {}) {
+    this._headers = new Map();
+    if (init) {
+      Object.entries(init).forEach(([key, value]) => {
+        this.set(key, value);
+      });
+    }
+  }
+  
+  set(name, value) {
+    this._headers.set(name.toLowerCase(), String(value));
+  }
+  
+  get(name) {
+    return this._headers.get(name.toLowerCase()) || null;
+  }
+  
+  has(name) {
+    return this._headers.has(name.toLowerCase());
+  }
+  
+  delete(name) {
+    this._headers.delete(name.toLowerCase());
+  }
+  
+  entries() {
+    return this._headers.entries();
+  }
+};
+
+// Mock window.matchMedia for responsive components
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
+// Mock IntersectionObserver
+global.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
+  observe() { return null; }
+  disconnect() { return null; }
+  unobserve() { return null; }
+};
+
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  constructor() {}
+  observe() { return null; }
+  disconnect() { return null; }
+  unobserve() { return null; }
+};
+
 // Mock Next.js modules
 jest.mock('next/navigation', () => ({
   useRouter: () => ({

@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/app/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 // Simple in-memory cache for this route

@@ -15,7 +15,7 @@ import {
   TrashIcon,
   EyeIcon,
 } from '@heroicons/react/24/outline'
-import { Product, ProductFilters } from '@/app/lib/types'
+import { Product, ProductFilters } from '@/lib/types'
 
 interface ProductsResponse {
   products: Product[]

@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
+import { authOptions } from '@/lib/auth-config'
 import { redirect } from 'next/navigation'
-import ApiAnalytics from '@/app/components/admin/ApiAnalytics'
+import ApiAnalytics from '@/components/admin/ApiAnalytics'
 
 export const metadata: Metadata = {
   title: 'API Analytics - Kin Workspace CMS',

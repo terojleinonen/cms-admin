@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { XMarkIcon, PhotoIcon, DocumentIcon } from '@heroicons/react/24/outline'
-import { Media } from '@/app/lib/types'
+import { Media } from '@/lib/types'
 
 interface MediaPickerProps {
   isOpen: boolean

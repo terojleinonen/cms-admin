@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ApiAuthService } from '@/app/lib/api-auth';
+import { ApiAuthService } from '@/lib/api-auth';
 import { z } from 'zod';
 
 // Validation schema

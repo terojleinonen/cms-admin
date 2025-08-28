@@ -6,10 +6,10 @@
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { UserRole } from '@prisma/client'
-import { GET, POST } from '../../app/api/users/route'
-import { GET as getUserById, PUT as updateUser, DELETE as deleteUser } from '../../app/api/users/[id]/route'
-import { prisma } from '../../app/lib/db'
-import { hashPassword } from '../../app/lib/password-utils'
+import { GET, POST } from '@/api/users/route'
+import { GET as getUserById, PUT as updateUser, DELETE as deleteUser } from '@/api/users/[id]/route'
+import { prisma } from '@/lib/db'
+import { hashPassword } from '@/lib/password-utils'
 
 // Mock dependencies
 jest.mock('next-auth')

@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth-config';
-import { BackupService } from '@/app/lib/backup';
+import { authOptions } from '@/lib/auth-config';
+import { BackupService } from '@/lib/backup';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();

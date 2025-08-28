@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth-config';
-import { ApiAuthService } from '@/app/lib/api-auth';
+import { authOptions } from '@/lib/auth-config';
+import { ApiAuthService } from '@/lib/api-auth';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 

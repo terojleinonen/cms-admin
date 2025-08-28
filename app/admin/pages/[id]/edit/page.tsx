@@ -8,8 +8,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { use } from 'react'
-import PageForm from '@/app/components/pages/PageForm'
-import { Page } from '@/app/lib/types'
+import PageForm from '@/components/pages/PageForm'
+import { Page } from '@/lib/types'
 
 interface EditPagePageProps {
   params: Promise<{ id: string }>

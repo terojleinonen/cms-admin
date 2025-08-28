@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth-config';
-import { PerformanceMonitor } from '@/app/lib/performance';
-import { CacheService } from '@/app/lib/cache';
+import { authOptions } from '@/lib/auth-config';
+import { PerformanceMonitor } from '@/lib/performance';
+import { CacheService } from '@/lib/cache';
 
 // GET /api/admin/performance/metrics - Get performance metrics
 export async function GET(request: NextRequest) {

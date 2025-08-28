@@ -12,7 +12,7 @@ import {
   FunnelIcon,
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline'
-import { TableColumn, FilterOption, PaginationInfo } from '@/app/lib/types'
+import { TableColumn, FilterOption, PaginationInfo } from '@/lib/types'
 import Button from './Button'
 import Input from './Input'
 import Select from './Select'

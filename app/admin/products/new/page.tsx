@@ -5,7 +5,7 @@
 
 'use client'
 
-import ProductForm from '@/app/components/products/ProductForm'
+import ProductForm from '@/components/products/ProductForm'
 
 export default function NewProductPage() {
   return (

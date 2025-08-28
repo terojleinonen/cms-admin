@@ -5,8 +5,8 @@
 
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { GET, POST } from '../../app/api/media/route'
-import { prisma } from '../../app/lib/db'
+import { GET, POST } from '@/api/media/route'
+import { prisma } from '@/lib/db'
 
 // Mock dependencies
 jest.mock('next-auth', () => ({

@@ -17,7 +17,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 import clsx from 'clsx'
-import { Media, ProductMedia } from '@/app/lib/types'
+import { Media, ProductMedia } from '@/lib/types'
 
 interface ProductImageGalleryProps {
   images: ProductMedia[]

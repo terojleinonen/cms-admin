@@ -4,7 +4,7 @@
  */
 
 import { render, screen } from '@testing-library/react'
-import LoadingState from '../../../app/components/ui/LoadingState'
+import LoadingState from '@/components/ui/LoadingState'
 
 describe('LoadingState', () => {
   it('renders with default message', () => {

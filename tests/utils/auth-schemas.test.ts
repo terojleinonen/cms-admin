@@ -12,7 +12,7 @@ import {
   updateProfileSchema,
   passwordResetRequestSchema,
   passwordResetSchema
-} from '../../app/lib/auth-schemas'
+} from '@/lib/auth-schemas'
 
 describe('Authentication Schemas', () => {
   describe('loginSchema', () => {

@@ -7,9 +7,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import CategoryTree from '@/app/components/categories/CategoryTree'
-import CategoryForm from '@/app/components/categories/CategoryForm'
-import { Category } from '@/app/lib/types'
+import CategoryTree from '@/components/categories/CategoryTree'
+import CategoryForm from '@/components/categories/CategoryForm'
+import { Category } from '@/lib/types'
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createRequestMonitor, securityMonitor, logger } from '@/app/lib/monitoring'
+import { createRequestMonitor, securityMonitor, logger } from '@/lib/monitoring'
 
 export function middleware(request: NextRequest) {
   // Create request monitor

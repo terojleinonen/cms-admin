@@ -5,7 +5,7 @@
 
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import ErrorBoundary from '../../../app/components/ui/ErrorBoundary'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 
 // Mock component that throws an error
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {

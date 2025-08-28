@@ -13,7 +13,7 @@ import {
   handleApiError,
   createErrorResponse,
   isAppError
-} from '../../app/lib/error-handling'
+} from '@/lib/error-handling'
 
 describe('Error Handling Utils', () => {
   describe('Custom Error Classes', () => {

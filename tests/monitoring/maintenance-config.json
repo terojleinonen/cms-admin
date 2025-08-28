@@ -1,0 +1,12 @@
+{
+  "autoCleanup": true,
+  "retentionDays": 45,
+  "maxLogSize": 15,
+  "enabledTasks": [
+    "cleanup-artifacts"
+  ],
+  "notifications": {
+    "onSuccess": false,
+    "onFailure": true
+  }
+}

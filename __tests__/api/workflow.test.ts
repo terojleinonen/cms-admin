@@ -4,11 +4,11 @@
  */
 
 import { NextRequest } from 'next/server';
-import { GET, POST, PUT } from '@/app/api/workflow/route';
-import { GET as GET_REVISIONS, POST as POST_REVISIONS, DELETE as DELETE_REVISIONS } from '@/app/api/workflow/revisions/route';
+import { GET, POST, PUT } from '@/api/workflow/route';
+import { GET as GET_REVISIONS, POST as POST_REVISIONS, DELETE as DELETE_REVISIONS } from '@/api/workflow/revisions/route';
 import { getServerSession } from 'next-auth';
-import { WorkflowService } from '@/app/lib/workflow';
-import { prisma } from '@/app/lib/db';
+import { WorkflowService } from '@/lib/workflow';
+import { prisma } from '@/lib/db';
 
 // Mock dependencies
 jest.mock('next-auth');

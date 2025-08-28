@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
-import { performanceMonitor, securityMonitor, logger } from '@/app/lib/monitoring'
+import { authOptions } from '@/lib/auth-config'
+import { performanceMonitor, securityMonitor, logger } from '@/lib/monitoring'
 
 /**
  * Monitoring dashboard endpoint for administrators

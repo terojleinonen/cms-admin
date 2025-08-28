@@ -5,10 +5,10 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
-import { GET as productsHandler } from '@/app/api/public/products/route';
-import { GET as productHandler } from '@/app/api/public/products/[id]/route';
-import { GET as categoriesHandler } from '@/app/api/public/categories/route';
-import { POST as tokenHandler } from '@/app/api/auth/token/route';
+import { GET as productsHandler } from '@/api/public/products/route';
+import { GET as productHandler } from '@/api/public/products/[id]/route';
+import { GET as categoriesHandler } from '@/api/public/categories/route';
+import { POST as tokenHandler } from '@/api/auth/token/route';
 
 // Mock API auth service
 jest.mock('@/lib/api-auth', () => ({

@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
+import { authOptions } from '@/lib/auth-config'
 import { redirect } from 'next/navigation'
-import ApiManagementDashboard from '@/app/components/admin/ApiManagementDashboard'
+import ApiManagementDashboard from '@/components/admin/ApiManagementDashboard'
 
 export const metadata: Metadata = {
   title: 'API Management - Kin Workspace CMS',

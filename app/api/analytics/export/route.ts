@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth-config';
-import { AnalyticsService } from '@/app/lib/analytics';
+import { authOptions } from '@/lib/auth-config';
+import { AnalyticsService } from '@/lib/analytics';
 import { z } from 'zod';
 
 // Validation schema

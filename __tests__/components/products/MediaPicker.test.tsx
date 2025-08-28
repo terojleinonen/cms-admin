@@ -7,8 +7,8 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
-import MediaPicker from '../../../app/components/products/MediaPicker'
-import { Media, PaginationInfo } from '../../../app/lib/types'
+import MediaPicker from '@/components/products/MediaPicker'
+import { Media, PaginationInfo } from '@/lib/types'
 
 // Mock Next.js Image component
 jest.mock('next/image', () => {

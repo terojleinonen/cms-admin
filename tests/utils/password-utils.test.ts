@@ -3,7 +3,7 @@
  * Tests for password hashing and verification functions
  */
 
-import { hashPassword, verifyPassword, validatePassword } from '../../app/lib/password-utils'
+import { hashPassword, verifyPassword, validatePassword } from '@/lib/password-utils'
 import bcrypt from 'bcryptjs'
 
 // Mock bcryptjs

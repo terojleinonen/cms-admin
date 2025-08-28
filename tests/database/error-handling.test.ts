@@ -10,7 +10,7 @@ import {
   isForeignKeyError,
   isNotFoundError,
   getUniqueConstraintField 
-} from '../../app/lib/db-errors'
+} from '@/lib/db-errors'
 import { Prisma } from '@prisma/client'
 
 describe('Database Error Handling', () => {

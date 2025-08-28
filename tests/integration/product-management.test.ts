@@ -7,9 +7,9 @@
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { UserRole } from '@prisma/client'
-import { POST as createProduct, GET as getProducts } from '../../app/api/products/route'
-import { GET as getProduct, PUT as updateProduct, DELETE as deleteProduct } from '../../app/api/products/[id]/route'
-import { POST as createCategory } from '../../app/api/categories/route'
+import { POST as createProduct, GET as getProducts } from '@/api/products/route'
+import { GET as getProduct, PUT as updateProduct, DELETE as deleteProduct } from '@/api/products/[id]/route'
+import { POST as createCategory } from '@/api/categories/route'
 import { 
   useIsolatedTestContext,
   createAPITester,

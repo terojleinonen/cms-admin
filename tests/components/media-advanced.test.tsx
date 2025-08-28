@@ -5,9 +5,9 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import MediaFolderTree from '../../app/components/media/MediaFolderTree'
-import MediaBulkActions from '../../app/components/media/MediaBulkActions'
-import MediaMetadataEditor from '../../app/components/media/MediaMetadataEditor'
+import MediaFolderTree from '@/components/media/MediaFolderTree'
+import MediaBulkActions from '@/components/media/MediaBulkActions'
+import MediaMetadataEditor from '@/components/media/MediaMetadataEditor'
 
 // Mock fetch
 global.fetch = jest.fn()

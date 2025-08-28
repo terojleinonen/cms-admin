@@ -7,8 +7,8 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
-import ProductMediaManager from '../../../app/components/products/ProductMediaManager'
-import { Media, ProductMedia } from '../../../app/lib/types'
+import ProductMediaManager from '@/components/products/ProductMediaManager'
+import { Media, ProductMedia } from '@/lib/types'
 
 // Mock child components
 jest.mock('../../../app/components/products/ProductImageGallery', () => {

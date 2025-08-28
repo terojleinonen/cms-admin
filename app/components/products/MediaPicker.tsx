@@ -23,7 +23,7 @@ import {
   PlusIcon,
 } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
-import { Media, PaginationInfo } from '@/app/lib/types'
+import { Media, PaginationInfo } from '@/lib/types'
 
 interface MediaFolder {
   name: string

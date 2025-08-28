@@ -10,7 +10,7 @@ import {
   updateProfileSchema,
   createUserSchema,
   updateUserSchema,
-} from '../../app/lib/auth-schemas'
+} from '@/lib/auth-schemas'
 import { UserRole } from '@prisma/client'
 
 describe('Authentication Schemas', () => {

@@ -7,8 +7,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Page } from '@/app/lib/types'
-import RichTextEditorWithMedia from '@/app/components/editor/RichTextEditorWithMedia'
+import { Page } from '@/lib/types'
+import RichTextEditorWithMedia from '@/components/editor/RichTextEditorWithMedia'
 import TemplateSelector from './TemplateSelector'
 import { EyeIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline'
 

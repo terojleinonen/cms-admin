@@ -6,8 +6,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { useSession } from 'next-auth/react'
 import { UserRole } from '@prisma/client'
-import UserTable from '../../app/components/users/UserTable'
-import UserModal from '../../app/components/users/UserModal'
+import UserTable from '@/components/users/UserTable'
+import UserModal from '@/components/users/UserModal'
 
 // Mock next-auth
 jest.mock('next-auth/react', () => ({

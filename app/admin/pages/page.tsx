@@ -6,8 +6,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import PageList from '@/app/components/pages/PageList'
-import { Page } from '@/app/lib/types'
+import PageList from '@/components/pages/PageList'
+import { Page } from '@/lib/types'
 
 type PageStatus = 'DRAFT' | 'REVIEW' | 'PUBLISHED' | 'ARCHIVED'
 

@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
+import { authOptions } from '@/lib/auth-config'
 
 // Define available page templates
 const PAGE_TEMPLATES = [

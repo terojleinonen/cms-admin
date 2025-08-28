@@ -3,7 +3,7 @@
  * Tests core authentication functions without NextAuth dependencies
  */
 
-import { hashPassword, verifyPassword, validatePassword } from '../../app/lib/password-utils'
+import { hashPassword, verifyPassword, validatePassword } from '@/lib/password-utils'
 
 describe('Authentication Utilities (Simple)', () => {
   describe('Password Hashing', () => {

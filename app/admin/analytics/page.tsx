@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import AnalyticsDashboard from '@/app/components/analytics/AnalyticsDashboard';
+import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 
 export const metadata: Metadata = {
   title: 'Analytics Dashboard - Kin Workspace CMS',

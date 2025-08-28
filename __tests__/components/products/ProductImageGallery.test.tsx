@@ -7,8 +7,8 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
-import ProductImageGallery from '../../../app/components/products/ProductImageGallery'
-import { Media, ProductMedia } from '../../../app/lib/types'
+import ProductImageGallery from '@/components/products/ProductImageGallery'
+import { Media, ProductMedia } from '@/lib/types'
 
 // Mock Next.js Image component
 jest.mock('next/image', () => {

@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = {
+  experimental: {
+    typedRoutes: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -8,6 +13,15 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    // Fix for module resolution issues
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, './app'),
+    };
+    
+    return config;
+  },
 }
 
-module.exports = nextConfig
+module.exports = nextConfig;

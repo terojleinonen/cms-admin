@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import { Category } from '@/app/lib/types'
+import { Category } from '@/lib/types'
 import { getCategoryIndentClass } from '../../../utils/dynamic-styles'
 
 interface CategorySelectorProps {

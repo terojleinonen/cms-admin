@@ -5,9 +5,9 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import PageList from '../../app/components/pages/PageList'
-import PageForm from '../../app/components/pages/PageForm'
-import TemplateSelector from '../../app/components/pages/TemplateSelector'
+import PageList from '@/components/pages/PageList'
+import PageForm from '@/components/pages/PageForm'
+import TemplateSelector from '@/components/pages/TemplateSelector'
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({

@@ -4,8 +4,8 @@
  */
 
 import { render, screen } from '@testing-library/react'
-import FormField from '../../../app/components/ui/FormField'
-import Input from '../../../app/components/ui/Input'
+import FormField from '@/components/ui/FormField'
+import Input from '@/components/ui/Input'
 
 describe('FormField', () => {
   it('renders label when provided', () => {

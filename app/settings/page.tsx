@@ -5,9 +5,9 @@
 
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
+import { authOptions } from '@/lib/auth-config'
 import { redirect } from 'next/navigation'
-import SettingsPanel from '@/app/components/settings/SettingsPanel'
+import SettingsPanel from '@/components/settings/SettingsPanel'
 
 export const metadata: Metadata = {
   title: 'Settings - Kin Workspace CMS',

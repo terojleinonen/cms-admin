@@ -6,8 +6,8 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals'
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { GET, PUT, DELETE } from '../../app/api/media/[id]/route'
-import { prisma } from '../../app/lib/db'
+import { GET, PUT, DELETE } from '@/api/media/[id]/route'
+import { prisma } from '@/lib/db'
 
 // Mock dependencies
 jest.mock('next-auth', () => ({

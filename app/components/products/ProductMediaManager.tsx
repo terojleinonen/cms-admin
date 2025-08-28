@@ -9,7 +9,7 @@ import { useState, useCallback } from 'react'
 import ProductImageGallery from './ProductImageGallery'
 import MediaPicker from './MediaPicker'
 import ImageUpload from './ImageUpload'
-import { Media, ProductMedia } from '@/app/lib/types'
+import { Media, ProductMedia } from '@/lib/types'
 
 interface ProductMediaManagerProps {
   productId?: string

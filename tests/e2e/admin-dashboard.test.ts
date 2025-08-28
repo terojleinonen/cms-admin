@@ -6,11 +6,11 @@
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { UserRole } from '@prisma/client'
-import { GET as getDashboard } from '../../app/api/analytics/dashboard/route'
-import { GET as getUsers } from '../../app/api/users/route'
-import { GET as getProducts } from '../../app/api/products/route'
-import { GET as getCategories } from '../../app/api/categories/route'
-import { prisma } from '../../app/lib/db'
+import { GET as getDashboard } from '@/api/analytics/dashboard/route'
+import { GET as getUsers } from '@/api/users/route'
+import { GET as getProducts } from '@/api/products/route'
+import { GET as getCategories } from '@/api/categories/route'
+import { prisma } from '@/lib/db'
 import { initTestDatabase, cleanupTestDatabase } from '../setup'
 
 // Mock next-auth

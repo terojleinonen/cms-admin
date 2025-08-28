@@ -8,7 +8,7 @@
 import { useState } from 'react'
 import RichTextEditor from './RichTextEditor'
 import MediaPicker from './MediaPicker'
-import { Media } from '@/app/lib/types'
+import { Media } from '@/lib/types'
 
 interface RichTextEditorWithMediaProps {
   value: string

@@ -4,7 +4,7 @@
  */
 
 import { Metadata } from 'next'
-import MediaLibrary from '@/app/components/media/MediaLibrary'
+import MediaLibrary from '@/components/media/MediaLibrary'
 
 export const metadata: Metadata = {
   title: 'Media Library - Kin Workspace CMS',

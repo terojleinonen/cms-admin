@@ -6,8 +6,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import PageForm from '@/app/components/pages/PageForm'
-import { Page } from '@/app/lib/types'
+import PageForm from '@/components/pages/PageForm'
+import { Page } from '@/lib/types'
 
 export default function NewPagePage() {
   const router = useRouter()

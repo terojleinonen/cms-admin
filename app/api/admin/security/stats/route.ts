@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth-config';
-import { SecurityService } from '@/app/lib/security';
+import { authOptions } from '@/lib/auth-config';
+import { SecurityService } from '@/lib/security';
 
 // GET /api/admin/security/stats - Get security statistics
 export async function GET(request: NextRequest) {

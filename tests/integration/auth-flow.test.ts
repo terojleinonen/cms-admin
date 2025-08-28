@@ -5,9 +5,9 @@
  */
 
 import { NextRequest } from 'next/server'
-import { POST as registerUser } from '../../app/api/auth/register/route'
-import { POST as loginUser } from '../../app/api/auth/login/route'
-import { GET as getProfile } from '../../app/api/auth/me/route'
+import { POST as registerUser } from '@/api/auth/register/route'
+import { POST as loginUser } from '@/api/auth/login/route'
+import { GET as getProfile } from '@/api/auth/me/route'
 import { 
   useIsolatedTestContext,
   createAPITester,

@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
-import { prisma } from '@/app/lib/prisma'
-import { searchService, SearchOptions } from '@/app/lib/search'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/prisma'
+import { searchService, SearchOptions } from '@/lib/search'
 import { z } from 'zod'
 
 // Validation schema for search requests

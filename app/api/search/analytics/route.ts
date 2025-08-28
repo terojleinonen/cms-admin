@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
-import { trackSearchEvent, getSearchAnalytics } from '@/app/lib/search'
+import { authOptions } from '@/lib/auth-config'
+import { trackSearchEvent, getSearchAnalytics } from '@/lib/search'
 import { z } from 'zod'
 
 // Validation schema for search analytics events

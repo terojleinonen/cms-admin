@@ -5,8 +5,8 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import DataTable from '../../../app/components/ui/DataTable'
-import { TableColumn, FilterOption, PaginationInfo } from '../../../app/lib/types'
+import DataTable from '@/components/ui/DataTable'
+import { TableColumn, FilterOption, PaginationInfo } from '@/lib/types'
 
 interface TestData {
   id: string

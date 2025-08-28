@@ -17,7 +17,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon
 } from '@heroicons/react/24/outline'
-import { Page } from '@/app/lib/types'
+import { Page } from '@/lib/types'
 
 interface PageListProps {
   onEdit?: (page: Page) => void

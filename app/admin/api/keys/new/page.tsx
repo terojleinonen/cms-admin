@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
+import { authOptions } from '@/lib/auth-config'
 import { redirect } from 'next/navigation'
-import CreateApiKeyForm from '@/app/components/admin/CreateApiKeyForm'
+import CreateApiKeyForm from '@/components/admin/CreateApiKeyForm'
 
 export const metadata: Metadata = {
   title: 'Create API Key - Kin Workspace CMS',

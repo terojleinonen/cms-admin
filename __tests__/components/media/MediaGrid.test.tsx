@@ -4,7 +4,7 @@
  */
 
 import { render, screen, fireEvent } from '@testing-library/react'
-import MediaGrid from '../../../app/components/media/MediaGrid'
+import MediaGrid from '@/components/media/MediaGrid'
 
 const mockMediaFiles = [
   {

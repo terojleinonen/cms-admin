@@ -33,9 +33,9 @@ jest.mock('@/lib/search', () => ({
 }))
 
 // Import actual handlers
-import { GET as searchHandler } from '@/app/api/search/route'
-import { GET as suggestionsHandler } from '@/app/api/search/suggestions/route'
-import { POST as analyticsHandler, GET as analyticsGetHandler } from '@/app/api/search/analytics/route'
+import { GET as searchHandler } from '@/api/search/route'
+import { GET as suggestionsHandler } from '@/api/search/suggestions/route'
+import { POST as analyticsHandler, GET as analyticsGetHandler } from '@/api/search/analytics/route'
 
 describe('Search API', () => {
   beforeEach(() => {
@@ -48,7 +48,7 @@ describe('Search API', () => {
     })
 
     // Setup search service mocks
-    const { getSuggestions, trackSearchEvent, getSearchAnalytics } = require('@/app/lib/search')
+    const { getSuggestions, trackSearchEvent, getSearchAnalytics } = require('@/lib/search')
     getSuggestions.mockResolvedValue(['product', 'products', 'production'])
     trackSearchEvent.mockResolvedValue(undefined)
     getSearchAnalytics.mockResolvedValue({

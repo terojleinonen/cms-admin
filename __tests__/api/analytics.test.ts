@@ -5,8 +5,8 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
-import { GET as analyticsHandler } from '../../app/api/analytics/route';
-import { GET as exportHandler } from '../../app/api/analytics/export/route';
+import { GET as analyticsHandler } from '@/api/analytics/route';
+import { GET as exportHandler } from '@/api/analytics/export/route';
 
 // Mock next-auth
 jest.mock('next-auth', () => ({

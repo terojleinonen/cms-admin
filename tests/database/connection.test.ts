@@ -3,8 +3,8 @@
  * Tests database connectivity, health checks, and error handling
  */
 
-import { testDatabaseConnection, getDatabaseHealth, withDatabase, prisma } from '../../app/lib/db'
-import { handleDatabaseError, isPrismaError, isUniqueConstraintError } from '../../app/lib/db-errors'
+import { testDatabaseConnection, getDatabaseHealth, withDatabase, prisma } from '@/lib/db'
+import { handleDatabaseError, isPrismaError, isUniqueConstraintError } from '@/lib/db-errors'
 import { Prisma } from '@prisma/client'
 
 describe('Database Connection', () => {

@@ -4,10 +4,10 @@
  */
 
 import { NextRequest } from 'next/server'
-import { POST as loginUser } from '../../app/api/auth/login/route'
-import { GET as getProfile } from '../../app/api/auth/me/route'
-import { prisma } from '../../app/lib/db'
-import { hashPassword } from '../../app/lib/auth-utils'
+import { POST as loginUser } from '@/api/auth/login/route'
+import { GET as getProfile } from '@/api/auth/me/route'
+import { prisma } from '@/lib/db'
+import { hashPassword } from '@/lib/auth-utils'
 import jwt from 'jsonwebtoken'
 
 // Mock the database
@@ -62,7 +62,7 @@ describe('Authentication API Routes', () => {
       mockPrisma.user.update.mockResolvedValue(mockUser)
 
       // Mock password verification
-      const { verifyPassword } = require('../../app/lib/auth-utils')
+      const { verifyPassword } = require('@/lib/auth-utils')
       verifyPassword.mockResolvedValue(true)
 
       // Mock JWT signing
@@ -125,7 +125,7 @@ describe('Authentication API Routes', () => {
     it('should reject login with invalid password', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
 
-      const { verifyPassword } = require('../../app/lib/auth-utils')
+      const { verifyPassword } = require('@/lib/auth-utils')
       verifyPassword.mockResolvedValue(false)
 
       const request = new NextRequest('http://localhost/api/auth/login', {
@@ -181,7 +181,7 @@ describe('Authentication API Routes', () => {
       delete process.env.NEXTAUTH_SECRET
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
-      const { verifyPassword } = require('../../app/lib/auth-utils')
+      const { verifyPassword } = require('@/lib/auth-utils')
       verifyPassword.mockResolvedValue(true)
 
       const request = new NextRequest('http://localhost/api/auth/login', {
@@ -246,7 +246,7 @@ describe('Authentication API Routes', () => {
       const request = new NextRequest('http://localhost/api/auth/me')
 
       // Mock NextAuth session
-      const { getCurrentUser, requireAuth } = require('../../app/lib/auth-utils')
+      const { getCurrentUser, requireAuth } = require('@/lib/auth-utils')
       requireAuth.mockResolvedValue(mockUser)
       getCurrentUser.mockResolvedValue(mockUser)
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
@@ -267,7 +267,7 @@ describe('Authentication API Routes', () => {
       })
 
       // Mock NextAuth session to fail
-      const { requireAuth } = require('../../app/lib/auth-utils')
+      const { requireAuth } = require('@/lib/auth-utils')
       requireAuth.mockResolvedValue(new Response('Unauthorized', { status: 401 }))
 
       const request = new NextRequest('http://localhost/api/auth/me', {
@@ -301,7 +301,7 @@ describe('Authentication API Routes', () => {
       })
 
       // Mock NextAuth session to fail
-      const { requireAuth } = require('../../app/lib/auth-utils')
+      const { requireAuth } = require('@/lib/auth-utils')
       requireAuth.mockResolvedValue(new Response('Unauthorized', { status: 401 }))
 
       const response = await getProfile(request)

@@ -7,8 +7,8 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { useSession } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { UserRole } from '@prisma/client'
-import Sidebar from '../../app/components/layout/Sidebar'
-import Breadcrumbs from '../../app/components/layout/Breadcrumbs'
+import Sidebar from '@/components/layout/Sidebar'
+import Breadcrumbs from '@/components/layout/Breadcrumbs'
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({

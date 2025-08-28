@@ -10,6 +10,9 @@ import { prisma } from '../../../lib/db'
 import { hashPassword } from '../../../lib/password-utils'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
+import { userProfileUpdateSchema, formatValidationErrors } from '../../../lib/user-validation-schemas'
+import { profilePictureService, fileToBuffer } from '../../../lib/profile-image-utils'
+import { getAuditService } from '../../../lib/audit-service'
 
 const updateUserSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255).optional(),
@@ -17,6 +20,7 @@ const updateUserSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters').optional(),
   role: z.enum(['ADMIN', 'EDITOR', 'VIEWER']).optional(),
   isActive: z.boolean().optional(),
+  profilePicture: z.string().url().optional().nullable(),
 })
 
 // Check if user has admin permissions or is updating their own profile
@@ -53,22 +57,36 @@ async function requireUserAccess(userId: string, requireAdmin = false) {
 // GET /api/users/[id] - Get user by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const authError = await requireUserAccess(params.id)
+    const resolvedParams = await params
+    const authError = await requireUserAccess(resolvedParams.id)
     if (authError) return authError
 
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
         isActive: true,
+        profilePicture: true,
+        emailVerified: true,
+        twoFactorEnabled: true,
+        lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
+        preferences: {
+          select: {
+            theme: true,
+            timezone: true,
+            language: true,
+            notifications: true,
+            dashboard: true,
+          }
+        },
         _count: {
           select: {
             createdProducts: true,
@@ -85,7 +103,17 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ user })
+    // Generate profile picture URL if user has one
+    const profilePictureUrl = user.profilePicture 
+      ? profilePictureService.getProfilePictureUrl(user.id, 'medium')
+      : null
+
+    return NextResponse.json({ 
+      user: {
+        ...user,
+        profilePictureUrl
+      }
+    })
   } catch (error) {
     console.error('Error fetching user:', error)
     return NextResponse.json(
@@ -98,25 +126,26 @@ export async function GET(
 // PUT /api/users/[id] - Update user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
+    const resolvedParams = await params
     const session = await getServerSession(authOptions)
-    const isOwnProfile = session?.user?.id === params.id
+    const isOwnProfile = session?.user?.id === resolvedParams.id
     const isAdmin = session?.user?.role === UserRole.ADMIN
 
     // For role changes, require admin access
     const body = await request.json()
     const requireAdmin = 'role' in body || 'isActive' in body
     
-    const authError = await requireUserAccess(params.id, requireAdmin)
+    const authError = await requireUserAccess(resolvedParams.id, requireAdmin)
     if (authError) return authError
 
     const data = updateUserSchema.parse(body)
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { id: params.id }
+      where: { id: resolvedParams.id }
     })
 
     if (!existingUser) {
@@ -153,6 +182,7 @@ export async function PUT(
     if (data.email) updateData.email = data.email
     if (data.role && isAdmin) updateData.role = data.role as UserRole
     if (typeof data.isActive === 'boolean' && isAdmin) updateData.isActive = data.isActive
+    if (typeof data.profilePicture === 'string') updateData.profilePicture = data.profilePicture
     
     if (data.password) {
       updateData.passwordHash = await hashPassword(data.password)
@@ -160,7 +190,7 @@ export async function PUT(
 
     // Update user
     const user = await prisma.user.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: updateData,
       select: {
         id: true,
@@ -168,18 +198,53 @@ export async function PUT(
         email: true,
         role: true,
         isActive: true,
+        profilePicture: true,
+        emailVerified: true,
+        twoFactorEnabled: true,
+        lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
       }
     })
 
-    return NextResponse.json({ user })
+    // Log the profile update
+    const auditService = getAuditService(prisma)
+    await auditService.logUser(
+      session?.user?.id || resolvedParams.id,
+      resolvedParams.id,
+      'PROFILE_UPDATED',
+      {
+        updatedFields: Object.keys(updateData),
+        isOwnProfile,
+      },
+      request.headers.get('x-forwarded-for') || request.ip,
+      request.headers.get('user-agent')
+    )
+
+    // Generate profile picture URL if user has one
+    const profilePictureUrl = user.profilePicture 
+      ? profilePictureService.getProfilePictureUrl(user.id, 'medium')
+      : null
+
+    return NextResponse.json({ 
+      user: {
+        ...user,
+        profilePictureUrl
+      }
+    })
   } catch (error) {
     console.error('Error updating user:', error)
     
     if (error instanceof z.ZodError) {
+      const validationErrors = formatValidationErrors(error)
       return NextResponse.json(
-        { error: { code: 'VALIDATION_ERROR', message: 'Invalid user data', details: error.issues } },
+        { 
+          error: { 
+            code: 'VALIDATION_ERROR', 
+            message: validationErrors.message,
+            details: validationErrors.errors
+          } 
+        },
         { status: 400 }
       )
     }
@@ -194,16 +259,17 @@ export async function PUT(
 // DELETE /api/users/[id] - Delete user (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const authError = await requireUserAccess(params.id, true) // Require admin
+    const resolvedParams = await params
+    const authError = await requireUserAccess(resolvedParams.id, true) // Require admin
     if (authError) return authError
 
     const session = await getServerSession(authOptions)
     
     // Prevent self-deletion
-    if (session?.user?.id === params.id) {
+    if (session?.user?.id === resolvedParams.id) {
       return NextResponse.json(
         { error: { code: 'FORBIDDEN', message: 'Cannot delete your own account' } },
         { status: 403 }
@@ -212,7 +278,7 @@ export async function DELETE(
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { id: params.id }
+      where: { id: resolvedParams.id }
     })
 
     if (!existingUser) {
@@ -222,10 +288,27 @@ export async function DELETE(
       )
     }
 
-    // Delete user
+    // Delete profile picture files
+    await profilePictureService.deleteProfilePicture(resolvedParams.id)
+
+    // Delete user (cascade will handle related records)
     await prisma.user.delete({
-      where: { id: params.id }
+      where: { id: resolvedParams.id }
     })
+
+    // Log the user deletion
+    const auditService = getAuditService(prisma)
+    await auditService.logUser(
+      session?.user?.id || '',
+      resolvedParams.id,
+      'DELETED',
+      {
+        deletedUserName: existingUser.name,
+        deletedUserEmail: existingUser.email,
+      },
+      request.headers.get('x-forwarded-for') || request.ip,
+      request.headers.get('user-agent')
+    )
 
     return NextResponse.json({ message: 'User deleted successfully' })
   } catch (error) {

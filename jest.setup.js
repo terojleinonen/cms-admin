@@ -1,16 +1,76 @@
 import '@testing-library/jest-dom';
 import { jest } from '@jest/globals';
 
-// Polyfill for Next.js Web APIs in test environment
-global.Request = global.Request || class Request {
-  constructor(input, init = {}) {
-    this.url = input;
-    this.method = init.method || 'GET';
-    this.headers = new Headers(init.headers);
-    this.body = init.body;
-  }
-};
+// Enhanced polyfills for Next.js 15 Web APIs
+import { TextEncoder, TextDecoder } from 'util';
 
+// Set up global polyfills
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
+// Enhanced Request polyfill - avoid conflicts with NextRequest
+if (!global.Request) {
+  global.Request = class Request {
+    constructor(input, init = {}) {
+      // Use Object.defineProperty to avoid conflicts with NextRequest
+      Object.defineProperty(this, 'url', {
+        value: typeof input === 'string' ? input : input.url,
+        writable: false,
+        configurable: true
+      });
+      
+      this.method = init.method || 'GET';
+      this.headers = new Headers(init.headers);
+      this.body = init.body;
+      this.cache = init.cache || 'default';
+      this.credentials = init.credentials || 'same-origin';
+      this.destination = init.destination || '';
+      this.integrity = init.integrity || '';
+      this.keepalive = init.keepalive || false;
+      this.mode = init.mode || 'cors';
+      this.redirect = init.redirect || 'follow';
+      this.referrer = init.referrer || 'about:client';
+      this.referrerPolicy = init.referrerPolicy || '';
+      this.signal = init.signal || null;
+    }
+    
+    clone() {
+      return new Request(this.url, {
+        method: this.method,
+        headers: this.headers,
+        body: this.body,
+        cache: this.cache,
+        credentials: this.credentials,
+        destination: this.destination,
+        integrity: this.integrity,
+        keepalive: this.keepalive,
+        mode: this.mode,
+        redirect: this.redirect,
+        referrer: this.referrer,
+        referrerPolicy: this.referrerPolicy,
+        signal: this.signal,
+      });
+    }
+    
+    async json() {
+      return JSON.parse(this.body || '{}');
+    }
+    
+    async text() {
+      return this.body || '';
+    }
+    
+    async formData() {
+      return new FormData();
+    }
+    
+    async arrayBuffer() {
+      return new ArrayBuffer(0);
+    }
+  };
+}
+
+// Enhanced Response polyfill
 global.Response = global.Response || class Response {
   constructor(body, init = {}) {
     this.body = body;
@@ -18,32 +78,75 @@ global.Response = global.Response || class Response {
     this.statusText = init.statusText || 'OK';
     this.headers = new Headers(init.headers);
     this.ok = this.status >= 200 && this.status < 300;
+    this.redirected = init.redirected || false;
+    this.type = init.type || 'default';
+    this.url = init.url || '';
   }
   
   async json() {
-    return JSON.parse(this.body);
+    if (typeof this.body === 'string') {
+      return JSON.parse(this.body);
+    }
+    return this.body || {};
   }
   
   async text() {
-    return this.body;
+    return typeof this.body === 'string' ? this.body : JSON.stringify(this.body || '');
+  }
+  
+  async formData() {
+    return new FormData();
+  }
+  
+  async arrayBuffer() {
+    return new ArrayBuffer(0);
   }
   
   clone() {
     return new Response(this.body, {
       status: this.status,
       statusText: this.statusText,
-      headers: this.headers
+      headers: this.headers,
+      redirected: this.redirected,
+      type: this.type,
+      url: this.url,
+    });
+  }
+  
+  static json(data, init = {}) {
+    return new Response(JSON.stringify(data), {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...init.headers,
+      },
+    });
+  }
+  
+  static redirect(url, status = 302) {
+    return new Response(null, {
+      status,
+      headers: { Location: url },
     });
   }
 };
 
+// Enhanced Headers polyfill
 global.Headers = global.Headers || class Headers {
   constructor(init = {}) {
     this._headers = new Map();
     if (init) {
-      Object.entries(init).forEach(([key, value]) => {
-        this.set(key, value);
-      });
+      if (init instanceof Headers) {
+        for (const [key, value] of init.entries()) {
+          this.set(key, value);
+        }
+      } else if (Array.isArray(init)) {
+        init.forEach(([key, value]) => this.set(key, value));
+      } else {
+        Object.entries(init).forEach(([key, value]) => {
+          this.set(key, value);
+        });
+      }
     }
   }
   
@@ -63,10 +166,234 @@ global.Headers = global.Headers || class Headers {
     this._headers.delete(name.toLowerCase());
   }
   
+  append(name, value) {
+    const existing = this.get(name);
+    if (existing) {
+      this.set(name, `${existing}, ${value}`);
+    } else {
+      this.set(name, value);
+    }
+  }
+  
   entries() {
     return this._headers.entries();
   }
+  
+  keys() {
+    return this._headers.keys();
+  }
+  
+  values() {
+    return this._headers.values();
+  }
+  
+  forEach(callback, thisArg) {
+    this._headers.forEach((value, key) => {
+      callback.call(thisArg, value, key, this);
+    });
+  }
+  
+  [Symbol.iterator]() {
+    return this.entries();
+  }
 };
+
+// FormData polyfill
+global.FormData = global.FormData || class FormData {
+  constructor() {
+    this._data = new Map();
+  }
+  
+  append(name, value, filename) {
+    if (!this._data.has(name)) {
+      this._data.set(name, []);
+    }
+    this._data.get(name).push({ value, filename });
+  }
+  
+  delete(name) {
+    this._data.delete(name);
+  }
+  
+  get(name) {
+    const values = this._data.get(name);
+    return values ? values[0].value : null;
+  }
+  
+  getAll(name) {
+    const values = this._data.get(name);
+    return values ? values.map(v => v.value) : [];
+  }
+  
+  has(name) {
+    return this._data.has(name);
+  }
+  
+  set(name, value, filename) {
+    this._data.set(name, [{ value, filename }]);
+  }
+  
+  entries() {
+    const entries = [];
+    for (const [name, values] of this._data) {
+      for (const { value } of values) {
+        entries.push([name, value]);
+      }
+    }
+    return entries[Symbol.iterator]();
+  }
+  
+  keys() {
+    return this._data.keys();
+  }
+  
+  values() {
+    const values = [];
+    for (const [, valueList] of this._data) {
+      for (const { value } of valueList) {
+        values.push(value);
+      }
+    }
+    return values[Symbol.iterator]();
+  }
+  
+  forEach(callback, thisArg) {
+    for (const [name, value] of this.entries()) {
+      callback.call(thisArg, value, name, this);
+    }
+  }
+};
+
+// URL and URLSearchParams polyfills
+global.URL = global.URL || class URL {
+  constructor(url, base) {
+    if (base) {
+      this.href = new URL(base).href + '/' + url;
+    } else {
+      this.href = url;
+    }
+    
+    const parts = this.href.split('://');
+    this.protocol = parts[0] + ':';
+    
+    const remaining = parts[1] || '';
+    const pathStart = remaining.indexOf('/');
+    const queryStart = remaining.indexOf('?');
+    const hashStart = remaining.indexOf('#');
+    
+    if (pathStart !== -1) {
+      this.host = remaining.substring(0, pathStart);
+      this.pathname = remaining.substring(pathStart, queryStart !== -1 ? queryStart : hashStart !== -1 ? hashStart : undefined);
+    } else {
+      this.host = remaining;
+      this.pathname = '/';
+    }
+    
+    this.hostname = this.host.split(':')[0];
+    this.port = this.host.split(':')[1] || '';
+    
+    if (queryStart !== -1) {
+      this.search = remaining.substring(queryStart, hashStart !== -1 ? hashStart : undefined);
+      this.searchParams = new URLSearchParams(this.search);
+    } else {
+      this.search = '';
+      this.searchParams = new URLSearchParams();
+    }
+    
+    if (hashStart !== -1) {
+      this.hash = remaining.substring(hashStart);
+    } else {
+      this.hash = '';
+    }
+    
+    this.origin = `${this.protocol}//${this.host}`;
+  }
+};
+
+global.URLSearchParams = global.URLSearchParams || class URLSearchParams {
+  constructor(init = '') {
+    this._params = new Map();
+    
+    if (typeof init === 'string') {
+      const search = init.startsWith('?') ? init.slice(1) : init;
+      if (search) {
+        search.split('&').forEach(pair => {
+          const [key, value = ''] = pair.split('=');
+          this.append(decodeURIComponent(key), decodeURIComponent(value));
+        });
+      }
+    }
+  }
+  
+  append(name, value) {
+    if (!this._params.has(name)) {
+      this._params.set(name, []);
+    }
+    this._params.get(name).push(String(value));
+  }
+  
+  delete(name) {
+    this._params.delete(name);
+  }
+  
+  get(name) {
+    const values = this._params.get(name);
+    return values ? values[0] : null;
+  }
+  
+  getAll(name) {
+    return this._params.get(name) || [];
+  }
+  
+  has(name) {
+    return this._params.has(name);
+  }
+  
+  set(name, value) {
+    this._params.set(name, [String(value)]);
+  }
+  
+  entries() {
+    const entries = [];
+    for (const [name, values] of this._params) {
+      for (const value of values) {
+        entries.push([name, value]);
+      }
+    }
+    return entries[Symbol.iterator]();
+  }
+  
+  keys() {
+    return Array.from(this._params.keys())[Symbol.iterator]();
+  }
+  
+  values() {
+    const values = [];
+    for (const valueList of this._params.values()) {
+      values.push(...valueList);
+    }
+    return values[Symbol.iterator]();
+  }
+  
+  forEach(callback, thisArg) {
+    for (const [name, value] of this.entries()) {
+      callback.call(thisArg, value, name, this);
+    }
+  }
+  
+  toString() {
+    const pairs = [];
+    for (const [name, value] of this.entries()) {
+      pairs.push(`${encodeURIComponent(name)}=${encodeURIComponent(value)}`);
+    }
+    return pairs.join('&');
+  }
+};
+
+// Fetch polyfill
+global.fetch = global.fetch || jest.fn().mockResolvedValue(
+  new Response(JSON.stringify({}), { status: 200 })
+);
 
 // Mock window.matchMedia for responsive components
 Object.defineProperty(window, 'matchMedia', {
@@ -127,20 +454,29 @@ jest.mock('next/navigation', () => ({
   usePathname: () => '/test-path',
 }));
 
-jest.mock('next-auth/react', () => ({
-  useSession: () => ({
-    data: {
-      user: {
-        id: '1',
-        email: 'test@example.com',
-        name: 'Test User',
-        role: 'ADMIN',
-      },
+// Enhanced NextAuth mocking
+const mockUseSession = jest.fn(() => ({
+  data: {
+    user: {
+      id: '1',
+      email: 'test@example.com',
+      name: 'Test User',
+      role: 'ADMIN',
     },
-    status: 'authenticated',
-  }),
-  SessionProvider: ({ children }) => children,
+  },
+  status: 'authenticated',
 }));
+
+jest.mock('next-auth/react', () => ({
+  useSession: mockUseSession,
+  SessionProvider: ({ children }) => children,
+  signIn: jest.fn(),
+  signOut: jest.fn(),
+  getSession: jest.fn(),
+}));
+
+// Make mockUseSession available globally for tests
+global.mockUseSession = mockUseSession;
 
 // Create comprehensive Prisma mock
 const createMockPrismaModel = () => ({

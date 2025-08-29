@@ -63,11 +63,11 @@ const mockMediaFile = {
 
 describe('/api/media/[id]', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   afterEach(() => {
-    vi.resetAllMocks()
+    jest.resetAllMocks()
   })
 
   describe('GET /api/media/[id]', () => {

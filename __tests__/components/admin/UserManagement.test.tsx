@@ -7,7 +7,28 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import UserManagement from '@/components/admin/UserManagement'
-import { User, UserRole } from '@/lib/types'
+import { UserRole } from '@prisma/client'
+
+// Define UserWithStats type for testing
+interface UserWithStats {
+  id: string
+  name: string
+  email: string
+  role: UserRole
+  isActive: boolean
+  profilePicture?: string
+  emailVerified?: Date
+  twoFactorEnabled: boolean
+  lastLoginAt?: Date
+  createdAt: Date
+  updatedAt: Date
+  _count: {
+    createdProducts: number
+    createdPages: number
+    auditLogs: number
+    sessions: number
+  }
+}
 
 // Mock fetch
 global.fetch = jest.fn()
@@ -16,7 +37,7 @@ global.fetch = jest.fn()
 global.alert = jest.fn()
 
 // Mock user data
-const mockUsers = [
+const mockUsers: UserWithStats[] = [
   {
     id: '1',
     name: 'John Admin',

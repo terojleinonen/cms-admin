@@ -14,7 +14,8 @@ import {
   ExclamationTriangleIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline'
-import { User, UserRole } from '@/lib/types'
+import { User } from '@/lib/types'
+import { UserRole } from '@prisma/client'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 

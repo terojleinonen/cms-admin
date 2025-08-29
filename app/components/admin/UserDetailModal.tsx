@@ -21,7 +21,8 @@ import {
   EyeIcon,
   EyeSlashIcon,
 } from '@heroicons/react/24/outline'
-import { User, UserRole, AuditLog, Session } from '@/lib/types'
+import { User, AuditLog, Session } from '@/lib/types'
+import { UserRole } from '@prisma/client'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 // Simple notification helper

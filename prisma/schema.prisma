@@ -26,6 +26,8 @@ model User {
   preferences      UserPreferences?
   sessions         Session[]
   auditLogs        AuditLog[]
+  backupCodes      BackupCode[]
+  passwordResetTokens PasswordResetToken[]
   createdApiKeys   ApiKey[]           @relation("ApiKeyCreator")
   restoredBackups  BackupRestoreLog[] @relation("BackupRestorer")
   createdBackups   Backup[]           @relation("BackupCreator")
@@ -271,6 +273,36 @@ model Session {
   @@index([token])
   @@index([expiresAt])
   @@map("sessions")
+}
+
+model BackupCode {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  code      String   @db.VarChar(64) // Hashed backup code
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([code])
+  @@map("backup_codes")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @map("token_hash") @db.VarChar(64)
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 enum UserRole {

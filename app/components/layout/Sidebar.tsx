@@ -81,7 +81,7 @@ const navigation: NavigationItem[] = [
     name: 'Users',
     href: '/users',
     icon: UsersIcon,
-    requiredRole: UserRole.ADMIN,
+    requiredRole: UserRole.EDITOR,
   },
   {
     name: 'Analytics',
@@ -98,6 +98,18 @@ const navigation: NavigationItem[] = [
 
 // Admin-only navigation items (shown in a separate section)
 const adminNavigation: NavigationItem[] = [
+  {
+    name: 'User Management',
+    href: '/admin/users',
+    icon: UsersIcon,
+    requiredRole: UserRole.ADMIN,
+  },
+  {
+    name: 'Security Monitor',
+    href: '/admin/security',
+    icon: ShieldCheckIcon,
+    requiredRole: UserRole.ADMIN,
+  },
   {
     name: 'API Management',
     href: '/admin/api',

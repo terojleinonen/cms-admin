@@ -1,0 +1,222 @@
+/**
+ * Two-Factor Authentication Setup API
+ * Handles 2FA setup initiation and completion
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/lib/auth-config'
+import { prisma } from '@/app/lib/db'
+import { 
+  generateTwoFactorSetup, 
+  enableTwoFactorAuth,
+  isTwoFactorRequired 
+} from '@/app/lib/two-factor-auth'
+import { auditLog } from '@/app/lib/audit-service'
+
+interface SetupParams {
+  params: { id: string }
+}
+
+/**
+ * GET /api/users/[id]/two-factor/setup
+ * Generate 2FA setup data (secret, QR code, backup codes)
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: SetupParams
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
+    const userId = params.id
+    
+    // Check if user can access this resource
+    if (session.user.id !== userId && session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden' },
+        { status: 403 }
+      )
+    }
+    
+    // Get user details
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        twoFactorEnabled: true
+      }
+    })
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+    
+    // Check if 2FA is already enabled
+    if (user.twoFactorEnabled) {
+      return NextResponse.json(
+        { error: '2FA is already enabled for this user' },
+        { status: 400 }
+      )
+    }
+    
+    // Generate 2FA setup data
+    const setupData = await generateTwoFactorSetup(
+      user.id,
+      user.email,
+      'Kin Workspace CMS'
+    )
+    
+    // Log the setup initiation
+    await auditLog({
+      userId: session.user.id,
+      action: '2FA_SETUP_INITIATED',
+      resource: 'USER_SECURITY',
+      details: {
+        targetUserId: userId,
+        userEmail: user.email
+      },
+      request
+    })
+    
+    return NextResponse.json({
+      qrCodeUrl: setupData.qrCodeUrl,
+      backupCodes: setupData.backupCodes,
+      secret: setupData.secret, // Temporary - will be stored after verification
+      isRequired: isTwoFactorRequired(user.role)
+    })
+    
+  } catch (error) {
+    console.error('2FA setup error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * POST /api/users/[id]/two-factor/setup
+ * Complete 2FA setup by verifying token
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: SetupParams
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
+    const userId = params.id
+    
+    // Check if user can access this resource
+    if (session.user.id !== userId && session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden' },
+        { status: 403 }
+      )
+    }
+    
+    const body = await request.json()
+    const { token, secret, backupCodes } = body
+    
+    if (!token || !secret || !backupCodes) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+    
+    // Get user details
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        twoFactorEnabled: true
+      }
+    })
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+    
+    // Check if 2FA is already enabled
+    if (user.twoFactorEnabled) {
+      return NextResponse.json(
+        { error: '2FA is already enabled for this user' },
+        { status: 400 }
+      )
+    }
+    
+    // Enable 2FA
+    const success = await enableTwoFactorAuth(userId, secret, token, backupCodes)
+    
+    if (!success) {
+      await auditLog({
+        userId: session.user.id,
+        action: '2FA_SETUP_FAILED',
+        resource: 'USER_SECURITY',
+        details: {
+          targetUserId: userId,
+          userEmail: user.email,
+          reason: 'Invalid token'
+        },
+        request
+      })
+      
+      return NextResponse.json(
+        { error: 'Invalid verification token' },
+        { status: 400 }
+      )
+    }
+    
+    // Log successful 2FA setup
+    await auditLog({
+      userId: session.user.id,
+      action: '2FA_ENABLED',
+      resource: 'USER_SECURITY',
+      details: {
+        targetUserId: userId,
+        userEmail: user.email
+      },
+      request
+    })
+    
+    return NextResponse.json({
+      success: true,
+      message: '2FA has been successfully enabled'
+    })
+    
+  } catch (error) {
+    console.error('2FA setup completion error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

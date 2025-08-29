@@ -18,12 +18,14 @@ import {
   UserIcon,
   CogIcon,
   ShieldCheckIcon,
+  ComputerDesktopIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 import ProfilePictureManager from '@/components/users/ProfilePictureManager'
 import AccountSettings from '@/components/users/AccountSettings'
 import SecuritySettings from '@/components/users/SecuritySettings'
+import SessionManagement from '@/components/profile/SessionManagement'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
@@ -50,7 +52,7 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>
 
-type TabId = 'profile' | 'account' | 'security'
+type TabId = 'profile' | 'account' | 'security' | 'sessions'
 
 interface Tab {
   id: TabId
@@ -77,6 +79,12 @@ const tabs: Tab[] = [
     name: 'Security',
     icon: ShieldCheckIcon,
     description: 'Password, 2FA, and security settings'
+  },
+  {
+    id: 'sessions',
+    name: 'Sessions',
+    icon: ComputerDesktopIcon,
+    description: 'Active sessions and device management'
   }
 ]
 
@@ -645,6 +653,17 @@ export default function ProfilePage() {
                 aria-labelledby="security-tab"
               >
                 <SecuritySettings userId={session.user.id} />
+              </div>
+            )}
+
+            {/* Sessions Tab */}
+            {activeTab === 'sessions' && (
+              <div
+                id="sessions-panel"
+                role="tabpanel"
+                aria-labelledby="sessions-tab"
+              >
+                <SessionManagement />
               </div>
             )}
           </div>

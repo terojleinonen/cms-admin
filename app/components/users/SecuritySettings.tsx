@@ -804,25 +804,45 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
           )}
         </div>
 
-        {/* Active Sessions */}
+        {/* Active Sessions - Enhanced */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <ComputerDesktopIcon className="h-5 w-5 text-gray-400 mr-2" />
-              <h3 className="text-lg font-medium text-gray-900">Active Sessions</h3>
+              <h3 className="text-lg font-medium text-gray-900">Session Management</h3>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSessionTermination([], true)}
-              loading={updating}
-            >
-              Terminate All Other Sessions
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSessionTermination([], true)}
+                loading={updating}
+              >
+                Logout All Devices
+              </Button>
+            </div>
+          </div>
+
+          {/* Session Statistics */}
+          <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <div className="text-lg font-semibold text-blue-600">{securityInfo.activeSessions.length}</div>
+              <div className="text-xs text-gray-500">Active Sessions</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-semibold text-green-600">
+                {securityInfo.lastLoginAt ? new Date(securityInfo.lastLoginAt).toLocaleDateString() : 'Never'}
+              </div>
+              <div className="text-xs text-gray-500">Last Login</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-semibold text-purple-600">{securityInfo.recentActivity.length}</div>
+              <div className="text-xs text-gray-500">Recent Activity</div>
+            </div>
           </div>
 
           <div className="space-y-3">
-            {securityInfo.activeSessions.map((session) => (
+            {securityInfo.activeSessions.map((session, index) => (
               <div key={session.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
@@ -830,6 +850,11 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
                     <span className="text-sm font-medium text-gray-900">
                       {parseUserAgent(session.userAgent)}
                     </span>
+                    {index === 0 && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Current
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
                     <div>IP: {session.ipAddress || 'Unknown'}</div>
@@ -837,14 +862,16 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
                     <div>Expires: {new Date(session.expiresAt).toLocaleDateString()}</div>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSessionTermination([session.id])}
-                  loading={updating}
-                >
-                  Terminate
-                </Button>
+                {index !== 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSessionTermination([session.id])}
+                    loading={updating}
+                  >
+                    End Session
+                  </Button>
+                )}
               </div>
             ))}
 
@@ -854,6 +881,21 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
               </p>
             )}
           </div>
+
+          {/* Suspicious Activity Alert */}
+          {securityInfo.activeSessions.length > 3 && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center">
+                <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mr-2" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">Multiple Active Sessions</p>
+                  <p className="text-xs text-yellow-700">
+                    You have {securityInfo.activeSessions.length} active sessions. Consider ending unused sessions for better security.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

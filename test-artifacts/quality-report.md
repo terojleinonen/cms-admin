@@ -1,7 +1,7 @@
 # Test Quality Gates Report
 ❌ **Overall Status**: FAILED
-🔴 **Quality Score**: 57.9/100
-📅 **Generated**: 2025-08-28T19:53:21.704Z
+🔴 **Quality Score**: 53.7/100
+📅 **Generated**: 2025-08-29T19:46:05.645Z
 
 ## Summary
 - **Total Gates**: 6
@@ -18,7 +18,7 @@
 ## 🚫 Blocking Issues
 - Code Coverage: No coverage data available
 - Test Reliability: Reliability issues: 0 flaky tests, 57.1% pass rate
-- Security Standards: 1 security issues found in test code
+- Security Standards: 2 security issues found in test code
 
 ## Gate Results
 | Gate | Status | Score | Message |
@@ -26,7 +26,7 @@
 | Code Coverage | ❌ | 0.0% | No coverage data available |
 | Test Performance | ❌ | 77.2% | Performance issues detected: 1 violations |
 | Test Reliability | ❌ | 80.1% | Reliability issues: 0 flaky tests, 57.1% pass rate |
-| Security Standards | ❌ | 75.0% | 1 security issues found in test code |
+| Security Standards | ❌ | 50.0% | 2 security issues found in test code |
 | Test Documentation | ❌ | 30.0% | Documentation issues found: 7 items need attention |
 | Code Maintainability | ✅ | 85.0% | Code maintainability acceptable (85.0% score) |
 
@@ -78,10 +78,11 @@
 
 ### Security Standards
 **Status**: ❌ Failed
-**Score**: 75.0%
-**Message**: 1 security issues found in test code
+**Score**: 50.0%
+**Message**: 2 security issues found in test code
 **Details**:
 - Hardcoded credentials in test files
+- Insecure random number generation
 **Recommendations**:
 - Review and fix security issues in test code
 - Use environment variables for sensitive test data

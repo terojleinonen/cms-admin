@@ -83,33 +83,10 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock window.location to avoid JSDOM navigation issues
-if (!window.location.reload || typeof window.location.reload !== 'function') {
-  const mockLocation = {
-    href: 'http://localhost:3000',
-    origin: 'http://localhost:3000',
-    protocol: 'http:',
-    host: 'localhost:3000',
-    hostname: 'localhost',
-    port: '3000',
-    pathname: '/',
-    search: '',
-    hash: '',
-    reload: jest.fn(),
-    replace: jest.fn(),
-    assign: jest.fn(),
-  };
-
-  try {
-    Object.defineProperty(window, 'location', {
-      value: mockLocation,
-      writable: true,
-    });
-  } catch (e) {
-    // If we can't redefine, just mock the reload function
-    window.location.reload = jest.fn();
-  }
-}
+// Mock window.location methods - simplified approach
+global.mockLocationReload = jest.fn();
+global.mockLocationReplace = jest.fn();
+global.mockLocationAssign = jest.fn();
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {

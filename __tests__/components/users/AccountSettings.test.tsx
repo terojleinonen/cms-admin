@@ -7,7 +7,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SessionProvider } from 'next-auth/react'
 import AccountSettings from '@/components/users/AccountSettings'
-import { UserPreferences, Theme } from '@/lib/types'
+import { Theme } from '@prisma/client'
+import { UserPreferences } from '@/lib/types'
 
 // Mock the API calls
 const mockFetch = jest.fn()

@@ -37,14 +37,22 @@
       ],
       "@/api/*": [
         "./app/api/*"
+      ],
+      "@/types/*": [
+        "./types/*"
       ]
-    }
+    },
+    "types": ["jest", "@testing-library/jest-dom", "node"]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "__tests__/**/*.ts",
+    "__tests__/**/*.tsx",
+    "tests/**/*.ts",
+    "types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

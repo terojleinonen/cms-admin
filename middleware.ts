@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createRequestMonitor, securityMonitor, logger } from '@/lib/monitoring'
 
-export function middleware(request: NextRequest) {
-  // Create request monitor
-  const monitor = createRequestMonitor()
-  const { requestId, finish } = monitor(request)
+export async function middleware(request: NextRequest) {
+  // Generate a simple request ID for tracing
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
   // Add request ID to headers for tracing
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-request-id', requestId)
+
+  // Enhanced audit and security middleware
+  // const auditResponse = await auditMiddleware(request)
+  // if (auditResponse) {
+  //   // Audit middleware returned a response (blocked request)
+  //   return auditResponse
+  // }
 
   // Security monitoring for authentication endpoints
   if (request.nextUrl.pathname.startsWith('/api/auth/')) {
@@ -18,50 +23,10 @@ export function middleware(request: NextRequest) {
                'unknown'
     const userAgent = request.headers.get('user-agent') || 'unknown'
 
-    // Record login attempts
+    // Log login attempts (simplified logging)
     if (request.nextUrl.pathname === '/api/auth/login' && request.method === 'POST') {
-      securityMonitor.recordSecurityEvent({
-        type: 'login_attempt',
-        ip,
-        userAgent,
-        timestamp: new Date().toISOString(),
-        details: {
-          endpoint: request.nextUrl.pathname,
-          method: request.method
-        }
-      })
+      console.log(`Login attempt from IP: ${ip}, User-Agent: ${userAgent}`)
     }
-  }
-
-  // Security monitoring for admin endpoints
-  if (request.nextUrl.pathname.startsWith('/api/admin/')) {
-    const ip = request.headers.get('x-forwarded-for') || 
-               request.headers.get('x-real-ip') || 
-               'unknown'
-    const userAgent = request.headers.get('user-agent') || 'unknown'
-
-    // This will be enhanced with actual session checking
-    securityMonitor.recordSecurityEvent({
-      type: 'unauthorized_access',
-      ip,
-      userAgent,
-      timestamp: new Date().toISOString(),
-      details: {
-        endpoint: request.nextUrl.pathname,
-        method: request.method
-      }
-    })
-  }
-
-  // Rate limiting for API endpoints
-  if (request.nextUrl.pathname.startsWith('/api/')) {
-    const ip = request.headers.get('x-forwarded-for') || 
-               request.headers.get('x-real-ip') || 
-               'unknown'
-
-    // Simple in-memory rate limiting (in production, use Redis)
-    const rateLimitKey = `rate_limit:${ip}`
-    // This would be implemented with a proper rate limiting solution
   }
 
   // Continue with the request
@@ -83,12 +48,6 @@ export function middleware(request: NextRequest) {
 
   // Add request ID to response headers
   response.headers.set('x-request-id', requestId)
-
-  // Log the response (this would be called after the request is processed)
-  // In a real implementation, you'd need to hook into the response lifecycle
-  setTimeout(() => {
-    finish(response.status)
-  }, 0)
 
   return response
 }

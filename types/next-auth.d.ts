@@ -8,6 +8,7 @@ declare module 'next-auth' {
       name: string
       email: string
       role: UserRole
+      profilePicture?: string
     }
   }
 
@@ -16,6 +17,7 @@ declare module 'next-auth' {
     name: string
     email: string
     role: UserRole
+    profilePicture?: string
   }
 }
 

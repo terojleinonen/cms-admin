@@ -19,6 +19,7 @@ declare module 'next-auth' {
       email: string;
       name: string;
       role: import('@prisma/client').UserRole;
+      profilePicture?: string;
     };
   }
 
@@ -27,6 +28,7 @@ declare module 'next-auth' {
     email: string;
     name: string;
     role: import('@prisma/client').UserRole;
+    profilePicture?: string;
   }
 }
 

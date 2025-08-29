@@ -51,8 +51,8 @@ describe('/api/users', () => {
       } as any)
 
       // Mock database responses
-      mockPrisma.user.count.mockResolvedValue(2)
-      mockPrisma.user.findMany.mockResolvedValue([
+      ;(mockPrisma.user.count as jest.Mock).mockResolvedValue(2)
+      ;(mockPrisma.user.findMany as jest.Mock).mockResolvedValue([
         {
           id: '1',
           name: 'Admin User',
@@ -118,8 +118,8 @@ describe('/api/users', () => {
         user: { id: '1', role: UserRole.ADMIN, name: 'Admin', email: 'admin@test.com' }
       } as any)
 
-      mockPrisma.user.count.mockResolvedValue(1)
-      mockPrisma.user.findMany.mockResolvedValue([
+      ;(mockPrisma.user.count as jest.Mock).mockResolvedValue(1)
+      ;(mockPrisma.user.findMany as jest.Mock).mockResolvedValue([
         {
           id: '2',
           name: 'Editor User',
@@ -316,7 +316,7 @@ describe('/api/users/[id]', () => {
       } as any)
 
       mockPrisma.user.findUnique
-        .mockResolvedValueOnce({
+        ;(mockPrisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
           id: '2',
           email: 'old@test.com'
         } as any)
@@ -413,7 +413,7 @@ describe('/api/users/[id]', () => {
         name: 'User to Delete'
       } as any)
 
-      mockPrisma.user.delete.mockResolvedValue({} as any)
+      ;(mockPrisma.user.delete as jest.Mock).mockResolvedValue({} as any)
 
       const request = new NextRequest('http://localhost/api/users/2')
       const response = await deleteUser(request, { params: { id: '2' } })

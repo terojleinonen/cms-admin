@@ -44,7 +44,7 @@ describe('Password Utils', () => {
       const password = 'testPassword123!'
       const error = new Error('Bcrypt hashing failed')
 
-      mockBcrypt.hash.mockRejectedValue(error)
+      ;(mockBcrypt.hash as jest.Mock).mockRejectedValue(error)
 
       await expect(hashPassword(password)).rejects.toThrow('Bcrypt hashing failed')
     })
@@ -79,7 +79,7 @@ describe('Password Utils', () => {
       const password = 'testPassword123!'
       const hashedPassword = 'hashed_password_result'
 
-      mockBcrypt.compare.mockResolvedValue(true)
+      ;(mockBcrypt.compare as jest.Mock).mockResolvedValue(true)
 
       const result = await verifyPassword(password, hashedPassword)
 
@@ -128,7 +128,7 @@ describe('Password Utils', () => {
       const hashedPassword = 'hashed_password_result'
       const error = new Error('Bcrypt comparison failed')
 
-      mockBcrypt.compare.mockRejectedValue(error)
+      ;(mockBcrypt.compare as jest.Mock).mockRejectedValue(error)
 
       await expect(verifyPassword(password, hashedPassword)).rejects.toThrow('Bcrypt comparison failed')
     })

@@ -30,8 +30,8 @@ jest.mock('@/lib/auth-utils', () => ({
 }))
 
 // Set test environment
-process.env.NODE_ENV = 'test'
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'
+Object.defineProperty(process.env, 'NODE_ENV', { value: 'test', writable: true })
+Object.defineProperty(process.env, 'DATABASE_URL', { value: 'postgresql://test:test@localhost:5432/test', writable: true })
 process.env.NEXTAUTH_SECRET = 'test-secret'
 process.env.NEXTAUTH_URL = 'http://localhost:3001'
 

@@ -532,7 +532,7 @@ export async function trackSearchEvent(event: SearchAnalyticsEvent): Promise<voi
       query: event.query,
       resultsCount: event.resultsCount,
       userId: event.userId || null,
-      filters: event.filters || null,
+      filters: event.filters || undefined,
       userAgent: event.userAgent || null,
       ipAddress: event.ipAddress || null
     }

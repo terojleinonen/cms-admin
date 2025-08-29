@@ -141,7 +141,10 @@ jest.setTimeout(30000)
 if (!process.env.NODE_ENV) {
   (process.env as any).NODE_ENV = 'test'
 }
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://cms_user:secure_password@localhost:5432/kin_workspace_cms_test'
+Object.defineProperty(process.env, 'DATABASE_URL', { 
+  value: process.env.DATABASE_URL || 'postgresql://cms_user:secure_password@localhost:5432/kin_workspace_cms_test',
+  writable: true 
+})
 
 // Global test database instance
 let testPrisma: PrismaClient | undefined

@@ -127,7 +127,7 @@ export async function migrateTestDatabase(): Promise<void> {
   try {
     // Set test database URL for migration
     const originalUrl = process.env.DATABASE_URL
-    process.env.DATABASE_URL = config.testUrl
+    Object.defineProperty(process.env, 'DATABASE_URL', { value: config.testUrl, writable: true })
     
     // Run Prisma migrations
     execSync('npx prisma migrate deploy', {
@@ -139,7 +139,7 @@ export async function migrateTestDatabase(): Promise<void> {
     
     // Restore original URL
     if (originalUrl) {
-      process.env.DATABASE_URL = originalUrl
+      Object.defineProperty(process.env, 'DATABASE_URL', { value: originalUrl, writable: true })
     }
   } catch (error) {
     console.error('❌ Failed to migrate test database:', error)
@@ -171,8 +171,8 @@ export async function setupTestDatabaseEnvironment(): Promise<void> {
   const config = parseTestDatabaseConfig()
   
   // Set test environment variables
-  process.env.NODE_ENV = 'test'
-  process.env.DATABASE_URL = config.testUrl
+  Object.defineProperty(process.env, 'NODE_ENV', { value: 'test', writable: true })
+  Object.defineProperty(process.env, 'DATABASE_URL', { value: config.testUrl, writable: true })
   
   try {
     await createTestDatabase()

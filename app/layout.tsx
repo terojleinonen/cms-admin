@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import SessionProvider from './components/auth/SessionProvider'
 import LayoutWrapper from './components/layout/LayoutWrapper'
+import { PreferencesProvider } from './components/providers/PreferencesProvider'
+import { PreferencesApplier } from './components/preferences/PreferencesApplier'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,9 +22,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} bg-soft-white text-slate-gray`}>
         <SessionProvider>
-          <LayoutWrapper>
-            {children}
-          </LayoutWrapper>
+          <PreferencesProvider>
+            <PreferencesApplier />
+            <LayoutWrapper>
+              {children}
+            </LayoutWrapper>
+          </PreferencesProvider>
         </SessionProvider>
       </body>
     </html>

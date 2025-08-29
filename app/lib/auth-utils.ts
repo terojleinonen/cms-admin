@@ -170,23 +170,49 @@ export async function createUser(userData: {
   // Hash the password
   const passwordHash = await hashPassword(password)
   
-  // Create user in database
-  const user = await prisma.user.create({
-    data: {
-      ...userFields,
-      email: userFields.email.toLowerCase(),
-      passwordHash,
-      role: userFields.role || UserRole.EDITOR,
-    },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+  // Create user in database with transaction to ensure preferences are created
+  const user = await prisma.$transaction(async (tx) => {
+    // Create the user
+    const newUser = await tx.user.create({
+      data: {
+        ...userFields,
+        email: userFields.email.toLowerCase(),
+        passwordHash,
+        role: userFields.role || UserRole.EDITOR,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+
+    // Create default preferences for the new user
+    await tx.userPreferences.create({
+      data: {
+        userId: newUser.id,
+        theme: 'SYSTEM',
+        timezone: 'UTC',
+        language: 'en',
+        notifications: {
+          email: true,
+          push: true,
+          security: true,
+          marketing: false,
+        },
+        dashboard: {
+          layout: 'default',
+          widgets: [],
+          defaultView: 'dashboard',
+        },
+      },
+    })
+
+    return newUser
   })
 
   return user

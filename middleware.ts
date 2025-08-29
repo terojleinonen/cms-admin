@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { applyUserPreferences } from './app/lib/preferences-middleware'
 
 export async function middleware(request: NextRequest) {
   // Generate a simple request ID for tracing
@@ -30,11 +31,17 @@ export async function middleware(request: NextRequest) {
   }
 
   // Continue with the request
-  const response = NextResponse.next({
+  let response = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   })
+
+  // Apply user preferences for non-API routes
+  if (!request.nextUrl.pathname.startsWith('/api/') && 
+      !request.nextUrl.pathname.startsWith('/_next/')) {
+    response = await applyUserPreferences(request, response)
+  }
 
   // Add security headers
   response.headers.set('X-Content-Type-Options', 'nosniff')

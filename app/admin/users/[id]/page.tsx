@@ -7,10 +7,10 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth'
+import { authOptions } from '@/lib/auth'
 import { UserRole } from '@prisma/client'
-import UserDetailView from '@/app/components/admin/UserDetailView'
-import UserActivityMonitor from '@/app/components/admin/UserActivityMonitor'
+import UserDetailView from '@/components/admin/UserDetailView'
+import UserActivityMonitor from '@/components/admin/UserActivityMonitor'
 
 interface UserManagementPageProps {
   params: {

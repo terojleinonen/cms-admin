@@ -4,7 +4,7 @@
  */
 
 import { Suspense } from 'react'
-import PasswordReset from '@/app/components/auth/PasswordReset'
+import PasswordReset from '@/components/auth/PasswordReset'
 
 export default function PasswordResetPage() {
   return (

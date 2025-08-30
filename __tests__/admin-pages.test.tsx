@@ -23,25 +23,25 @@ jest.mock('next/navigation', () => ({
 }))
 
 // Mock components
-jest.mock('@/app/components/admin/UserManagement', () => {
+jest.mock('@/components/admin/UserManagement', () => {
   return function MockUserManagement() {
     return <div data-testid="user-management">User Management Component</div>
   }
 })
 
-jest.mock('@/app/components/admin/UserDetailView', () => {
+jest.mock('@/components/admin/UserDetailView', () => {
   return function MockUserDetailView() {
     return <div data-testid="user-detail-view">User Detail View Component</div>
   }
 })
 
-jest.mock('@/app/components/admin/SecurityDashboard', () => {
+jest.mock('@/components/admin/SecurityDashboard', () => {
   return function MockSecurityDashboard() {
     return <div data-testid="security-dashboard">Security Dashboard Component</div>
   }
 })
 
-jest.mock('@/app/components/admin/UserActivityMonitor', () => {
+jest.mock('@/components/admin/UserActivityMonitor', () => {
   return function MockUserActivityMonitor() {
     return <div data-testid="user-activity-monitor">User Activity Monitor Component</div>
   }
@@ -66,7 +66,7 @@ describe('Admin Pages', () => {
   describe('User Management Page', () => {
     it('renders user management page for admin users', async () => {
       // Dynamic import to avoid SSR issues in tests
-      const UserManagementPage = (await import('@/app/admin/users/page')).default
+      const UserManagementPage = (await import('@/admin/users/page')).default
       
       render(await UserManagementPage())
       
@@ -76,7 +76,7 @@ describe('Admin Pages', () => {
 
   describe('Individual User Page', () => {
     it('renders individual user page for admin users', async () => {
-      const UserDetailPage = (await import('@/app/admin/users/[id]/page')).default
+      const UserDetailPage = (await import('@/admin/users/[id]/page')).default
       
       render(await UserDetailPage({ params: { id: 'user-123' } }))
       
@@ -87,7 +87,7 @@ describe('Admin Pages', () => {
 
   describe('Security Monitoring Page', () => {
     it('renders security monitoring page for admin users', async () => {
-      const SecurityPage = (await import('@/app/admin/security/page')).default
+      const SecurityPage = (await import('@/admin/security/page')).default
       
       render(await SecurityPage())
       

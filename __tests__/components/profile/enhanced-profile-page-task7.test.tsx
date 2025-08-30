@@ -6,14 +6,14 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { useSession } from 'next-auth/react'
-import ProfilePage from '@/app/profile/page'
+import ProfilePage from '@/profile/page'
 
 // Mock next-auth
 jest.mock('next-auth/react')
 const mockUseSession = useSession as jest.MockedFunction<typeof useSession>
 
 // Mock the child components
-jest.mock('@/app/components/users/ProfilePictureManager', () => {
+jest.mock('@/components/users/ProfilePictureManager', () => {
   return function MockProfilePictureManager({ onUpload, onRemove }: any) {
     return (
       <div data-testid="profile-picture-manager">
@@ -26,25 +26,25 @@ jest.mock('@/app/components/users/ProfilePictureManager', () => {
   }
 })
 
-jest.mock('@/app/components/users/AccountSettings', () => {
+jest.mock('@/components/users/AccountSettings', () => {
   return function MockAccountSettings({ userId }: any) {
     return <div data-testid="account-settings">Account Settings for {userId}</div>
   }
 })
 
-jest.mock('@/app/components/users/SecuritySettings', () => {
+jest.mock('@/components/users/SecuritySettings', () => {
   return function MockSecuritySettings({ userId }: any) {
     return <div data-testid="security-settings">Security Settings for {userId}</div>
   }
 })
 
-jest.mock('@/app/components/ui/ErrorBoundary', () => {
+jest.mock('@/components/ui/ErrorBoundary', () => {
   return function MockErrorBoundary({ children }: any) {
     return <div data-testid="error-boundary">{children}</div>
   }
 })
 
-jest.mock('@/app/components/ui/LoadingSpinner', () => {
+jest.mock('@/components/ui/LoadingSpinner', () => {
   return function MockLoadingSpinner({ size }: any) {
     return <div data-testid="loading-spinner" data-size={size}>Loading...</div>
   }

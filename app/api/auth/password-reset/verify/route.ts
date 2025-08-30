@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyPasswordResetToken, completePasswordReset } from '@/app/lib/password-reset'
+import { verifyPasswordResetToken, completePasswordReset } from '@/lib/password-reset'
 import { z } from 'zod'
 
 const tokenVerificationSchema = z.object({

@@ -17,7 +17,7 @@ import {
   ShieldCheckIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline'
-import { AuditLog, User } from '@/app/lib/types'
+import { AuditLog, User } from '@/lib/types'
 
 interface AuditLogWithUser extends AuditLog {
   user: Pick<User, 'id' | 'name' | 'email' | 'role'>

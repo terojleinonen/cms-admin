@@ -22,9 +22,9 @@ import {
   ComputerDesktopIcon,
   KeyIcon,
 } from '@heroicons/react/24/outline'
-import { User, UserRole } from '@/app/lib/types'
-import Button from '@/app/components/ui/Button'
-import Modal from '@/app/components/ui/Modal'
+import { User, UserRole } from '@/lib/types'
+import Button from '@/components/ui/Button'
+import Modal from '@/components/ui/Modal'
 
 interface UserWithDetails extends User {
   _count: {

@@ -5,15 +5,15 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
+import { authOptions } from '@/lib/auth-config'
 import { 
   getUserSessions, 
   invalidateSession, 
   logoutFromAllDevices,
   getSessionStatistics,
   detectSuspiciousActivity
-} from '@/app/lib/session-management'
-import { logAuditEvent } from '@/app/lib/audit-service'
+} from '@/lib/session-management'
+import { logAuditEvent } from '@/lib/audit-service'
 import { z } from 'zod'
 
 const sessionActionSchema = z.object({

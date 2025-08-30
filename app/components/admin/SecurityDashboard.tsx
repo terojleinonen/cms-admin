@@ -19,7 +19,7 @@ import {
   XCircleIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline'
-import Button from '@/app/components/ui/Button'
+import Button from '@/components/ui/Button'
 
 interface SecurityMetrics {
   totalUsers: number

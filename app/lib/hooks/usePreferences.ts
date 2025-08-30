@@ -103,7 +103,7 @@ export function usePreferences() {
     if (!session?.user?.id) return null
 
     try {
-      const response = await fetch(`/api/users/${session.user.id}/preferences`, {
+      const response = await fetch('/api/user/preferences', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ export function usePreferences() {
       }
 
       const data = await response.json()
-      return data.preferences
+      return data
     } catch (error) {
       console.error('Error fetching preferences:', error)
       throw error
@@ -135,7 +135,7 @@ export function usePreferences() {
     setState(prev => ({ ...prev, isUpdating: true, error: null }))
 
     try {
-      const response = await fetch(`/api/users/${session.user.id}/preferences`, {
+      const response = await fetch('/api/user/preferences', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ export function usePreferences() {
       }
 
       const data = await response.json()
-      const updatedPreferences = data.preferences
+      const updatedPreferences = data
 
       // Update cache
       cachePreferences(updatedPreferences)

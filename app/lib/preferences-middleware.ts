@@ -124,40 +124,17 @@ function applyDefaultPreferences(response: NextResponse): NextResponse {
 
 /**
  * Get user preferences with caching
+ * Note: This function now returns null to avoid Prisma in Edge Runtime
+ * User preferences are now handled via the /api/user/preferences endpoint
  */
 async function getUserPreferences(userId: string): Promise<UserPreferencesData | null> {
   try {
-    // Try to get from cache first (if Redis is available)
-    const cacheKey = `user_preferences:${userId}`
-    
-    // For now, we'll fetch directly from database
-    // In production, this should use Redis or similar caching
-    const { prisma } = await import('./db')
-    
-    const preferences = await prisma.userPreferences.findUnique({
-      where: { userId },
-      select: {
-        theme: true,
-        timezone: true,
-        language: true,
-        notifications: true,
-        dashboard: true,
-      }
-    })
-
-    if (!preferences) {
-      return null
-    }
-
-    return {
-      theme: preferences.theme,
-      timezone: preferences.timezone,
-      language: preferences.language,
-      notifications: preferences.notifications as any,
-      dashboard: preferences.dashboard as any,
-    }
+    // Edge Runtime doesn't support Prisma, so we return null
+    // User preferences are now loaded client-side via API routes
+    // This avoids the "PrismaClient is unable to run in this browser environment" error
+    return null
   } catch (error) {
-    console.error('Error fetching user preferences:', error)
+    console.error('Error in getUserPreferences:', error)
     return null
   }
 }
@@ -256,9 +233,18 @@ export function validateAndMigratePreferences(
 
 /**
  * Create default preferences for a new user
+ * Note: This should be called from API routes, not middleware
  */
 export async function createDefaultUserPreferences(userId: string): Promise<UserPreferencesData> {
   try {
+    // This function should only be called from API routes or server components
+    // where Prisma is available, not from Edge Runtime middleware
+    if (typeof window === 'undefined' && process.env.VERCEL_ENV) {
+      // In Edge Runtime, return defaults without database operation
+      console.log(`Returning default preferences for user ${userId} in Edge Runtime`)
+      return getDefaultPreferences()
+    }
+
     const { prisma } = await import('./db')
     const defaultPrefs = getDefaultPreferences()
 

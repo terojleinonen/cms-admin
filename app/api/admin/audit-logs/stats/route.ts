@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
-import { prisma } from '@/app/lib/db'
-import { getAuditService } from '@/app/lib/audit-service'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
+import { getAuditService } from '@/lib/audit-service'
 import { z } from 'zod'
 
 const statsFiltersSchema = z.object({

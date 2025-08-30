@@ -22,12 +22,12 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
-import ProfilePictureManager from '@/app/components/users/ProfilePictureManager'
-import AccountSettings from '@/app/components/users/AccountSettings'
-import SecuritySettings from '@/app/components/users/SecuritySettings'
-import SessionManagement from '@/app/components/profile/SessionManagement'
-import ErrorBoundary from '@/app/components/ui/ErrorBoundary'
-import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
+import ProfilePictureManager from '@/components/users/ProfilePictureManager'
+import AccountSettings from '@/components/users/AccountSettings'
+import SecuritySettings from '@/components/users/SecuritySettings'
+import SessionManagement from '@/components/profile/SessionManagement'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),

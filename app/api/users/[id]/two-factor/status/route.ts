@@ -5,12 +5,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
-import { prisma } from '@/app/lib/db'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
 import { 
   getRemainingBackupCodes,
   isTwoFactorRequired 
-} from '@/app/lib/two-factor-auth'
+} from '@/lib/two-factor-auth'
 
 interface StatusParams {
   params: { id: string }

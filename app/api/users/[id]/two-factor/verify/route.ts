@@ -5,10 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
-import { prisma } from '@/app/lib/db'
-import { validateTwoFactorForLogin } from '@/app/lib/two-factor-auth'
-import { auditLog } from '@/app/lib/audit-service'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
+import { validateTwoFactorForLogin } from '@/lib/two-factor-auth'
+import { auditLog } from '@/lib/audit-service'
 
 interface VerifyParams {
   params: { id: string }

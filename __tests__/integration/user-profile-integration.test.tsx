@@ -7,8 +7,8 @@ import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SessionProvider } from 'next-auth/react'
-import ProfilePage from '@/app/profile/page'
-import { prisma } from '@/app/lib/db'
+import ProfilePage from '@/profile/page'
+import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 
 // Mock next-auth
@@ -28,7 +28,7 @@ jest.mock('next/navigation', () => ({
 }))
 
 // Mock database
-jest.mock('@/app/lib/db', () => ({
+jest.mock('@/lib/db', () => ({
   prisma: {
     user: {
       findUnique: jest.fn(),

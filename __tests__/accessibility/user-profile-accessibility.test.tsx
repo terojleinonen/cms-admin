@@ -8,11 +8,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { axe, toHaveNoViolations } from 'jest-axe'
 import userEvent from '@testing-library/user-event'
 import { SessionProvider } from 'next-auth/react'
-import ProfilePage from '@/app/profile/page'
-import ProfilePictureManager from '@/app/components/users/ProfilePictureManager'
-import AccountSettings from '@/app/components/users/AccountSettings'
-import SecuritySettings from '@/app/components/users/SecuritySettings'
-import SessionManagement from '@/app/components/profile/SessionManagement'
+import ProfilePage from '@/profile/page'
+import ProfilePictureManager from '@/components/users/ProfilePictureManager'
+import AccountSettings from '@/components/users/AccountSettings'
+import SecuritySettings from '@/components/users/SecuritySettings'
+import SessionManagement from '@/components/profile/SessionManagement'
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations)

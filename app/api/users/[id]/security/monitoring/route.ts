@@ -5,15 +5,15 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
+import { authOptions } from '@/lib/auth-config'
 import { 
   detectSuspiciousActivity, 
   lockUserAccount,
   getSessionStatistics
-} from '@/app/lib/session-management'
-import { getPasswordResetStatistics } from '@/app/lib/password-reset'
-import { logAuditEvent } from '@/app/lib/audit-service'
-import { prisma } from '@/app/lib/db'
+} from '@/lib/session-management'
+import { getPasswordResetStatistics } from '@/lib/password-reset'
+import { logAuditEvent } from '@/lib/audit-service'
+import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 const securityActionSchema = z.object({

@@ -37,7 +37,8 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  // Apply user preferences for non-API routes
+  // Apply default preferences for non-API routes
+  // User-specific preferences are now handled client-side via API routes
   if (!request.nextUrl.pathname.startsWith('/api/') && 
       !request.nextUrl.pathname.startsWith('/_next/')) {
     response = await applyUserPreferences(request, response)

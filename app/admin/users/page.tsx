@@ -5,9 +5,9 @@
 
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import UserManagement from '@/app/components/admin/UserManagement'
+import UserManagement from '@/components/admin/UserManagement'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth'
+import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { UserRole } from '@prisma/client'
 

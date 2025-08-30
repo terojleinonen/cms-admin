@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
-import { prisma } from '@/app/lib/db'
-import { getSecurityAlertingSystem } from '@/app/lib/security-alerting'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
+import { getSecurityAlertingSystem } from '@/lib/security-alerting'
 import { z } from 'zod'
 
 const alertResolutionSchema = z.object({
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log the resolution action
-    const auditService = await import('@/app/lib/audit-service')
+    const auditService = await import('@/lib/audit-service')
     await auditService.getAuditService(prisma).logSecurity(
       session.user.id,
       'SUSPICIOUS_ACTIVITY',

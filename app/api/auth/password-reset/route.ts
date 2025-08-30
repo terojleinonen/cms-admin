@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { initiatePasswordReset } from '@/app/lib/password-reset'
+import { initiatePasswordReset } from '@/lib/password-reset'
 import { z } from 'zod'
 
 const passwordResetRequestSchema = z.object({

@@ -8,7 +8,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { axe, toHaveNoViolations, configureAxe } from 'jest-axe'
 import userEvent from '@testing-library/user-event'
 import { SessionProvider } from 'next-auth/react'
-import ProfilePage from '@/app/profile/page'
+import ProfilePage from '@/profile/page'
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations)

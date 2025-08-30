@@ -4,7 +4,7 @@
  */
 
 import { Metadata } from 'next'
-import UserActivityMonitor from '@/app/components/admin/UserActivityMonitor'
+import UserActivityMonitor from '@/components/admin/UserActivityMonitor'
 
 export const metadata: Metadata = {
   title: 'User Activity Monitor - Admin Dashboard',

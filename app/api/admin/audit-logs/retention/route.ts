@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth-config'
-import { prisma } from '@/app/lib/db'
-import { createRetentionManager } from '@/app/lib/audit-retention'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
+import { createRetentionManager } from '@/lib/audit-retention'
 import { z } from 'zod'
 
 const retentionActionSchema = z.object({
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log the retention action
-    const auditService = await import('@/app/lib/audit-service')
+    const auditService = await import('@/lib/audit-service')
     await auditService.getAuditService(prisma).logSystem(
       session.user.id,
       'SETTINGS_CHANGED',
@@ -202,7 +202,7 @@ export async function PUT(request: NextRequest) {
     const result = await retentionManager.restoreFromArchive(archiveFilePath)
 
     // Log the restore action
-    const auditService = await import('@/app/lib/audit-service')
+    const auditService = await import('@/lib/audit-service')
     await auditService.getAuditService(prisma).logSystem(
       session.user.id,
       'BACKUP_RESTORED',

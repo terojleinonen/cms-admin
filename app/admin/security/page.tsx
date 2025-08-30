@@ -6,11 +6,11 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth'
+import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { UserRole } from '@prisma/client'
-import SecurityDashboard from '@/app/components/admin/SecurityDashboard'
-import UserActivityMonitor from '@/app/components/admin/UserActivityMonitor'
+import SecurityDashboard from '@/components/admin/SecurityDashboard'
+import UserActivityMonitor from '@/components/admin/UserActivityMonitor'
 
 export const metadata: Metadata = {
   title: 'Security Monitoring | Admin Dashboard',

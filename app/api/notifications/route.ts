@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth'
-import { notificationService } from '@/app/lib/notification-service'
+import { authOptions } from '@/lib/auth'
+import { notificationService } from '@/lib/notification-service'
 import { z } from 'zod'
 
 const getNotificationsSchema = z.object({

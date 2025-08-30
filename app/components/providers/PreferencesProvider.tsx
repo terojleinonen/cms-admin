@@ -6,7 +6,7 @@
 'use client'
 
 import React, { createContext, useContext, ReactNode } from 'react'
-import { usePreferences, UserPreferences } from '../../lib/hooks/usePreferences'
+import { usePreferences, UserPreferences } from '@/lib/hooks/usePreferences'
 
 interface PreferencesContextType {
   preferences: UserPreferences | null

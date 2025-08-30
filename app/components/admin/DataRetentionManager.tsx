@@ -9,7 +9,6 @@ import {
   CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 import { Button } from '../ui/Button'
-import { FormField } from '../ui/FormField'
 import { LoadingState } from '../ui/LoadingState'
 
 interface RetentionPolicy {
@@ -136,75 +135,100 @@ export function DataRetentionManager() {
         <h3 className="text-lg font-medium text-gray-900 mb-4">Retention Policies</h3>
         
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <FormField
-            label="Audit Log Retention (days)"
-            description="How long to keep audit log entries"
-          >
+          <div className="space-y-1">
+            <label htmlFor="auditLogRetentionDays" className="block text-sm font-medium text-gray-700">
+              Audit Log Retention (days)
+            </label>
             <input
+              id="auditLogRetentionDays"
               type="number"
               min="1"
               max="3650"
               value={policy.auditLogRetentionDays}
               onChange={(e) => handlePolicyChange('auditLogRetentionDays', parseInt(e.target.value) || 365)}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              aria-describedby="auditLogRetentionDays-description"
             />
-          </FormField>
+            <p id="auditLogRetentionDays-description" className="text-sm text-gray-500">
+              How long to keep audit log entries
+            </p>
+          </div>
 
-          <FormField
-            label="Inactive Session Retention (days)"
-            description="How long to keep inactive user sessions"
-          >
+          <div className="space-y-1">
+            <label htmlFor="inactiveSessionRetentionDays" className="block text-sm font-medium text-gray-700">
+              Inactive Session Retention (days)
+            </label>
             <input
+              id="inactiveSessionRetentionDays"
               type="number"
               min="1"
               max="365"
               value={policy.inactiveSessionRetentionDays}
               onChange={(e) => handlePolicyChange('inactiveSessionRetentionDays', parseInt(e.target.value) || 30)}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              aria-describedby="inactiveSessionRetentionDays-description"
             />
-          </FormField>
+            <p id="inactiveSessionRetentionDays-description" className="text-sm text-gray-500">
+              How long to keep inactive user sessions
+            </p>
+          </div>
 
-          <FormField
-            label="Deactivated User Retention (days)"
-            description="How long to keep deactivated user accounts before deletion"
-          >
+          <div className="space-y-1">
+            <label htmlFor="deactivatedUserRetentionDays" className="block text-sm font-medium text-gray-700">
+              Deactivated User Retention (days)
+            </label>
             <input
+              id="deactivatedUserRetentionDays"
               type="number"
               min="1"
               max="3650"
               value={policy.deactivatedUserRetentionDays}
               onChange={(e) => handlePolicyChange('deactivatedUserRetentionDays', parseInt(e.target.value) || 90)}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              aria-describedby="deactivatedUserRetentionDays-description"
             />
-          </FormField>
+            <p id="deactivatedUserRetentionDays-description" className="text-sm text-gray-500">
+              How long to keep deactivated user accounts before deletion
+            </p>
+          </div>
 
-          <FormField
-            label="Orphaned Media Retention (days)"
-            description="How long to keep media files not referenced by any content"
-          >
+          <div className="space-y-1">
+            <label htmlFor="mediaFileRetentionDays" className="block text-sm font-medium text-gray-700">
+              Orphaned Media Retention (days)
+            </label>
             <input
+              id="mediaFileRetentionDays"
               type="number"
               min="1"
               max="3650"
               value={policy.mediaFileRetentionDays}
               onChange={(e) => handlePolicyChange('mediaFileRetentionDays', parseInt(e.target.value) || 180)}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              aria-describedby="mediaFileRetentionDays-description"
             />
-          </FormField>
+            <p id="mediaFileRetentionDays-description" className="text-sm text-gray-500">
+              How long to keep media files not referenced by any content
+            </p>
+          </div>
 
-          <FormField
-            label="Backup Retention (days)"
-            description="How long to keep system backups"
-          >
+          <div className="space-y-1">
+            <label htmlFor="backupRetentionDays" className="block text-sm font-medium text-gray-700">
+              Backup Retention (days)
+            </label>
             <input
+              id="backupRetentionDays"
               type="number"
               min="1"
               max="3650"
               value={policy.backupRetentionDays}
               onChange={(e) => handlePolicyChange('backupRetentionDays', parseInt(e.target.value) || 90)}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              aria-describedby="backupRetentionDays-description"
             />
-          </FormField>
+            <p id="backupRetentionDays-description" className="text-sm text-gray-500">
+              How long to keep system backups
+            </p>
+          </div>
         </div>
 
         <div className="mt-6 flex justify-end">

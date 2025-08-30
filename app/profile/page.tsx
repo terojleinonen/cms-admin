@@ -405,6 +405,7 @@ export default function ProfilePage() {
                 return (
                   <button
                     key={tab.id}
+                    id={`${tab.id}-tab`}
                     ref={(el) => {
                       if (el) tabRefs.current[tab.id] = el
                     }}

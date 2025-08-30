@@ -24,7 +24,7 @@ import Button from '../ui/Button'
 import FormField from '../ui/FormField'
 import Input from '../ui/Input'
 import LoadingSpinner from '../ui/LoadingSpinner'
-import { validatePasswordStrength } from '../../lib/user-validation-schemas'
+import { validatePasswordStrength } from '@/lib/user-validation-schemas'
 import QRCode from 'qrcode'
 
 interface SecuritySettingsProps {
@@ -521,6 +521,7 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
                   securityInfo.securityScore >= 50 ? 'bg-yellow-500' : 'bg-red-500'
                 }`}
                 style={{ width: `${securityInfo.securityScore}%` }}
+                aria-label={`Security score: ${securityInfo.securityScore}%`}
               />
             </div>
           </div>
@@ -626,6 +627,7 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
                         passwordStrength.score >= 3 ? 'bg-yellow-500' : 'bg-red-500'
                       }`}
                       style={{ width: `${(passwordStrength.score / 6) * 100}%` }}
+                      aria-label={`Password strength: ${Math.round((passwordStrength.score / 6) * 100)}%`}
                     />
                   </div>
                   {passwordStrength.feedback.length > 0 && (

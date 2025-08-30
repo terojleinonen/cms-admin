@@ -299,6 +299,7 @@ export default function ApiAnalytics() {
                       style={{ 
                         width: `${(hour.requests / Math.max(...stats.requestsByHour.map(h => h.requests))) * 100}%` 
                       }}
+                      aria-label={`${hour.requests} requests at ${hour.hour}:00`}
                     ></div>
                   </div>
                   <span className="text-xs text-gray-900 w-12 text-right">

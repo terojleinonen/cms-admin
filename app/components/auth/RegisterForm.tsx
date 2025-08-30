@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { registerSchema, RegisterFormData } from '../../lib/auth-schemas'
+import { registerSchema, RegisterFormData } from '@/lib/auth-schemas'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
 export default function RegisterForm() {

@@ -290,6 +290,11 @@ export default function ImageUpload({
                         <div 
                           className="bg-blue-600 h-1 rounded-full transition-all duration-300"
                           style={{ width: `${uploadFile.progress}%` }}
+                          role="progressbar"
+                          aria-valuenow={uploadFile.progress}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-label={`Upload progress: ${uploadFile.progress}%`}
                         />
                       </div>
                     </div>

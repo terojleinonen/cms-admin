@@ -10,7 +10,7 @@ import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { loginSchema, LoginFormData } from '../../lib/auth-schemas'
+import { loginSchema, LoginFormData } from '@/lib/auth-schemas'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
 interface LoginFormProps {

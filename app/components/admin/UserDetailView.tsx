@@ -405,6 +405,7 @@ export default function UserDetailView({ userId, initialData }: UserDetailViewPr
                           securityScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                         }`}
                         style={{ width: `${securityScore}%` }}
+                        aria-label={`Security score: ${securityScore}%`}
                       ></div>
                     </div>
                   </div>

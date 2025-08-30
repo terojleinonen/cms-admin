@@ -182,6 +182,7 @@ export default function SessionManagement() {
             <h3 className="text-sm font-medium text-red-800">Error</h3>
             <p className="mt-1 text-sm text-red-700">{error}</p>
             <button
+              type="button"
               onClick={fetchSessionData}
               className="mt-2 text-sm text-red-600 hover:text-red-500"
             >
@@ -254,6 +255,7 @@ export default function SessionManagement() {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">Active Sessions</h3>
             <button
+              type="button"
               onClick={handleLogoutAllDevices}
               disabled={actionLoading === 'logout_all'}
               className="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
@@ -298,6 +300,7 @@ export default function SessionManagement() {
                   
                   {!session.isCurrent && (
                     <button
+                      type="button"
                       onClick={() => handleInvalidateSession(session.id)}
                       disabled={actionLoading === session.id}
                       className="inline-flex items-center p-1 border border-transparent rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"

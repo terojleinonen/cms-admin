@@ -111,7 +111,7 @@
   - Create default preference setup for new users
   - _Requirements: 3.1, 3.2, 3.3, 3.5_
 
-- [ ] 17. Add notification system for account changes
+- [x] 17. Add notification system for account changes
   - Implement email notifications for security-related changes
   - Create in-app notification system for account updates
   - Add notification preferences management

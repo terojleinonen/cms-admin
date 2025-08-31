@@ -431,6 +431,60 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() { return null; }
 };
 
+// Mock Headless UI animations to prevent memory leaks and warnings
+if (typeof global.Element !== 'undefined') {
+  global.Element.prototype.getAnimations = jest.fn().mockReturnValue([]);
+  global.Element.prototype.animate = jest.fn().mockReturnValue({
+    cancel: jest.fn(),
+    finish: jest.fn(),
+    pause: jest.fn(),
+    play: jest.fn(),
+    reverse: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  });
+}
+
+// Add comprehensive cleanup after each test
+afterEach(async () => {
+  // Clear all timers and intervals
+  jest.clearAllTimers();
+  jest.clearAllMocks();
+  
+  // Clear DOM completely
+  if (document.body) {
+    document.body.innerHTML = '';
+  }
+  
+  // Clear any remaining event listeners
+  const events = ['click', 'change', 'submit', 'keydown', 'keyup', 'resize', 'scroll'];
+  events.forEach(event => {
+    // Remove all listeners for this event type
+    const listeners = document.querySelectorAll('*');
+    listeners.forEach(element => {
+      element.removeEventListener?.(event, () => {});
+    });
+  });
+  
+  // Clear any pending promises or async operations
+  await new Promise(resolve => setTimeout(resolve, 0));
+  
+  // Force garbage collection if available
+  if (global.gc) {
+    global.gc();
+  }
+});
+
+// Global cleanup before each test
+beforeEach(() => {
+  // Reset all mocks to clean state
+  jest.resetAllMocks();
+  
+  // Clear any cached modules
+  jest.resetModules();
+});
+
 // Mock Next.js modules
 jest.mock('next/navigation', () => ({
   useRouter: () => ({

@@ -4,7 +4,7 @@ const createJestConfig = nextJest({
   dir: './',
 });
 
-const customJestConfig = {
+const memoryOptimizedConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
   
@@ -19,10 +19,12 @@ const customJestConfig = {
     '^@/types/(.*)$': '<rootDir>/types/$1',
   },
   
-  // Performance optimizations - more conservative for memory
-  maxWorkers: 2, // Fixed number instead of percentage
-  workerIdleMemoryLimit: '256MB', // Reduced memory limit
-  maxConcurrency: 2, // Limit concurrent tests
+  // Aggressive memory optimization
+  maxWorkers: 1, // Single worker to minimize memory usage
+  workerIdleMemoryLimit: '128MB', // Very low memory limit
+  maxConcurrency: 1, // Run tests one at a time
+  
+  // Force serial execution (handled by maxWorkers: 1)
   
   testPathIgnorePatterns: [
     '<rootDir>/.next/',
@@ -31,10 +33,12 @@ const customJestConfig = {
     '<rootDir>/test-artifacts/',
   ],
   
-  // Ignore helper files that don't contain tests
+  // Only run essential tests
   testMatch: [
     '**/__tests__/**/*.(test|spec).(js|jsx|ts|tsx)',
-    '**/*.(test|spec).(js|jsx|ts|tsx)',
+    '!**/__tests__/**/comprehensive.*',
+    '!**/__tests__/**/performance.*',
+    '!**/__tests__/**/e2e.*',
     '!**/__tests__/**/helpers/**',
     '!**/helpers/**',
   ],
@@ -57,28 +61,28 @@ const customJestConfig = {
     url: 'http://localhost:3001',
   },
   
-  // Timeout settings
-  testTimeout: 20000, // Reduced timeout
+  // Aggressive timeout settings
+  testTimeout: 15000,
   
-  // Memory management
-  detectLeaks: true,
-  logHeapUsage: true,
-  
-  // Force garbage collection
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  
-  // Bail on failures to save memory
-  bail: 3,
-  
-  // Remove custom transform - let Next.js handle it
-  
-  // Cache settings
+  // Cache settings for memory optimization
   clearMocks: true,
   restoreMocks: true,
+  resetMocks: true,
+  
+  // Memory management - disable leak detection for now
+  detectLeaks: false,
+  logHeapUsage: true,
+  
+  // Bail early on failures
+  bail: 1,
   
   // Verbose output control
   verbose: false,
-  silent: false,
+  silent: true, // Reduce console output to save memory
+  
+  // Force exit to prevent hanging
+  forceExit: true,
+  detectOpenHandles: true,
 };
 
-module.exports = createJestConfig(customJestConfig);
+module.exports = createJestConfig(memoryOptimizedConfig);

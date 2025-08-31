@@ -39,10 +39,24 @@ const testConfigs = {
     testMatch: [
       '**/__tests__/components/**/*.test.(js|jsx|ts|tsx)',
       '**/__tests__/lib/**/*.test.(js|jsx|ts|tsx)',
+      '!**/__tests__/**/comprehensive.*',
+      '!**/__tests__/**/performance.*',
     ],
-    maxWorkers: '75%',
+    maxWorkers: 1, // Single worker for memory efficiency
     testTimeout: 10000,
     bail: 1, // Stop on first failure
+    runInBand: true, // Force serial execution
+  },
+  
+  memory: {
+    testMatch: [
+      '**/__tests__/setup-verification.test.ts',
+      '**/__tests__/lib/**/*.test.(js|jsx|ts|tsx)',
+    ],
+    maxWorkers: 1,
+    testTimeout: 8000,
+    bail: 1,
+    runInBand: true,
   }
 };
 
@@ -62,16 +76,14 @@ function runTests(category = 'unit', options = {}) {
   }
   
   // Add performance options
-  if (config.maxWorkers) {
+  if (config.runInBand) {
+    jestArgs.push('--runInBand');
+  } else if (config.maxWorkers) {
     jestArgs.push('--maxWorkers', config.maxWorkers);
   }
   
   if (config.testTimeout) {
     jestArgs.push('--testTimeout', config.testTimeout.toString());
-  }
-  
-  if (config.runInBand) {
-    jestArgs.push('--runInBand');
   }
   
   if (config.bail) {

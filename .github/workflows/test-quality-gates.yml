@@ -21,10 +21,10 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: npm ci
+      run: npm ci --legacy-peer-deps
       
-    - name: Run tests with coverage
-      run: npm test -- --coverage
+    - name: Run memory-optimized tests
+      run: npm run test:memory-config
       
     - name: Run quality gates
       id: quality-gates

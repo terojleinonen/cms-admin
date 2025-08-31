@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -352,10 +353,12 @@ export default function ProfilePage() {
             <div className="flex-shrink-0">
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
                 {session.user.profilePicture ? (
-                  <img
+                  <Image
                     src={session.user.profilePicture}
                     alt={`${session.user.name}'s profile picture`}
                     className="w-full h-full object-cover"
+                    width={96}
+                    height={96}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import {
   UserIcon,
   EnvelopeIcon,
@@ -188,10 +189,12 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
         <div className="flex items-start space-x-4 p-6 bg-gray-50 rounded-lg">
           <div className="flex-shrink-0">
             {user.profilePicture ? (
-              <img
+              <Image
                 className="h-16 w-16 rounded-full object-cover"
                 src={user.profilePicture}
                 alt={user.name}
+                width={64}
+                height={64}
               />
             ) : (
               <div className="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center">

@@ -184,7 +184,7 @@ export async function PUT(
     const { categoryIds, ...updateData } = validatedData
     
     // Convert numbers to Decimal where needed
-    const processedUpdateData: any = { ...updateData }
+    const processedUpdateData: Record<string, unknown> = { ...updateData }
     if (updateData.price !== undefined) {
       processedUpdateData.price = new Decimal(updateData.price)
     }

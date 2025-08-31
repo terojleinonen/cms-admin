@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 import { 
   ShieldCheckIcon,
   KeyIcon,
@@ -696,7 +697,7 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
                 <p className="mb-2">Scan this QR code with your authenticator app:</p>
                 {qrCodeDataUrl && (
                   <div className="flex justify-center mb-4">
-                    <img src={qrCodeDataUrl} alt="2FA QR Code" className="border rounded" />
+                    <Image src={qrCodeDataUrl} alt="2FA QR Code" className="border rounded" width={200} height={200} />
                   </div>
                 )}
                 

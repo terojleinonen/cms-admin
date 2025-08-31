@@ -13,6 +13,7 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline'
+import Image from 'next/image'
 import Button from '../ui/Button'
 
 interface ProfilePictureManagerProps {
@@ -360,10 +361,12 @@ export default function ProfilePictureManager({
         <div className="relative">
           <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
             {currentImage ? (
-              <img
+              <Image
                 src={currentImage}
                 alt="Current profile picture"
                 className="w-full h-full object-cover"
+                width={96}
+                height={96}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">

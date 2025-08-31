@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { XMarkIcon, PhotoIcon, DocumentIcon } from '@heroicons/react/24/outline'
 import { Media } from '@/lib/types'
+import Image from 'next/image'
 
 interface MediaPickerProps {
   isOpen: boolean
@@ -161,10 +162,12 @@ export default function MediaPicker({
                   {/* Media Preview */}
                   <div className="aspect-square flex items-center justify-center bg-gray-50 rounded-md mb-2">
                     {item.mimeType.startsWith('image/') ? (
-                      <img
+                      <Image
                         src={`/api/media/${item.id}/file`}
                         alt={item.altText || item.originalName}
                         className="w-full h-full object-cover rounded-md"
+                        width={200}
+                        height={200}
                       />
                     ) : (
                       getMediaIcon(item.mimeType)

@@ -137,7 +137,7 @@ export async function PUT(
     })
 
     // Prepare update data
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     
     if (data.theme !== undefined) updateData.theme = data.theme
     if (data.timezone !== undefined) updateData.timezone = data.timezone

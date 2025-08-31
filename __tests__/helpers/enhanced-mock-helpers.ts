@@ -26,7 +26,7 @@ export class EnhancedMockFactory {
   private static productCounter = 0
   
   // Create a complete user with realistic data
-  static createRealisticUser(role: UserRole = UserRole.EDITOR, overrides: any = {}) {
+  static createRealisticUser(role: UserRole = UserRole.EDITOR, overrides: Record<string, unknown> = {}) {
     this.userCounter++
     const baseData = {
       name: `Test User ${this.userCounter}`,
@@ -120,9 +120,9 @@ export class EnhancedMockFactory {
   
   // Create test data set for performance testing
   static createLargeDataSet(count: number = 100) {
-    const users: any[] = []
-    const categories: any[] = []
-    const products: any[] = []
+    const users: Record<string, unknown>[] = []
+    const categories: Record<string, unknown>[] = []
+    const products: Record<string, unknown>[] = []
     
     // Create users
     for (let i = 0; i < Math.min(count / 10, 10); i++) {
@@ -347,7 +347,7 @@ export class ServiceMockIntegrator {
 
 // Comprehensive test scenario builder
 export class TestScenarioBuilder {
-  private scenario: any = {}
+  private scenario: Record<string, unknown> = {}
   
   // Add users to scenario
   withUsers(count: number = 3, roles: UserRole[] = [UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER]) {

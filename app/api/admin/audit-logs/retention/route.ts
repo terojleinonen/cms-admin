@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     const { action, policy } = retentionActionSchema.parse(body)
 
     const retentionManager = createRetentionManager(prisma, { autoSchedule: false })
-    let result: any
+    let result: unknown
 
     switch (action) {
       case 'archive':

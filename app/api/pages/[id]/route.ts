@@ -101,7 +101,7 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: any = { ...validatedData }
+    const updateData: Record<string, unknown> = { ...validatedData }
     
     // Handle publishedAt
     if (validatedData.publishedAt !== undefined) {

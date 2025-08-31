@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
     const validatedData = createRevisionSchema.parse(body);
 
     // Get current content data
-    let revisionData: any = {};
+    let revisionData: Record<string, unknown> = {};
     
     if (validatedData.contentType === 'product') {
       const product = await prisma.product.findUnique({
@@ -262,8 +262,8 @@ export async function DELETE(request: NextRequest) {
 /**
  * Compare two revision data objects and return differences
  */
-function compareRevisions(data1: any, data2: any): any {
-  const differences: any = {};
+function compareRevisions(data1: Record<string, unknown>, data2: Record<string, unknown>): Record<string, unknown> {
+  const differences: Record<string, unknown> = {};
   
   // Simple comparison - in a real implementation, you'd want a more sophisticated diff
   const keys = new Set([...Object.keys(data1 || {}), ...Object.keys(data2 || {})]);

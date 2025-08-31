@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const includeInactive = searchParams.get('includeInactive') === 'true'
 
     // Build where clause
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     
     if (!includeInactive) {
       where.isActive = true

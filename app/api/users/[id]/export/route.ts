@@ -44,7 +44,7 @@ async function requireUserAccess(userId: string) {
 }
 
 // Helper function to convert data to CSV format
-function convertToCSV(data: any[], headers: string[]): string {
+function convertToCSV(data: Record<string, unknown>[], headers: string[]): string {
   const csvHeaders = headers.join(',')
   const csvRows = data.map(row => 
     headers.map(header => {
@@ -108,7 +108,7 @@ export async function GET(
     }
 
     // Build export data object
-    const exportData: any = {
+    const exportData: Record<string, unknown> = {
       user: {
         ...user,
         // Remove sensitive fields from export

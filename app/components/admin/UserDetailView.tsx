@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   ArrowLeftIcon,
   PencilIcon,
@@ -273,10 +274,12 @@ export default function UserDetailView({ userId, initialData }: UserDetailViewPr
           <div className="flex items-center space-x-6">
             <div className="flex-shrink-0">
               {user.profilePicture ? (
-                <img
+                <Image
                   className="h-20 w-20 rounded-full object-cover"
                   src={user.profilePicture}
                   alt={user.name}
+                  width={80}
+                  height={80}
                 />
               ) : (
                 <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">

@@ -158,7 +158,7 @@ export async function createTestProduct(productData: {
   sku?: string
   inventoryQuantity?: number
   weight?: number
-  dimensions?: any
+  dimensions?: { width?: number; height?: number; depth?: number }
   status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
   featured?: boolean
   seoTitle?: string

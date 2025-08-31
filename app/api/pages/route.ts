@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const query = querySchema.parse(Object.fromEntries(searchParams))
 
     // Build where clause
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     
     if (query.search) {
       where.OR = [

@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
     // Build where clause
-    const where: any = {}
+    const where: Record<string, unknown> = {}
 
     if (search) {
       where.OR = [
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     // Build order by clause
-    const orderBy: any = {}
+    const orderBy: Record<string, unknown> = {}
     if (sortBy === 'price') {
       orderBy.price = sortOrder
     } else if (sortBy === 'name') {

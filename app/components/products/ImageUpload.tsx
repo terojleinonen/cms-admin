@@ -8,6 +8,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { CloudArrowUpIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
+import Image from 'next/image'
 
 interface UploadFile {
   file: File

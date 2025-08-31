@@ -59,10 +59,10 @@ jest.mock('bcryptjs', () => ({
 }))
 
 describe('User Profile Management E2E Workflow', () => {
-  let testUser: any
-  let adminUser: any
-  let userSession: any
-  let adminSession: any
+  let testUser: Record<string, unknown>
+  let adminUser: Record<string, unknown>
+  let userSession: Record<string, unknown>
+  let adminSession: Record<string, unknown>
 
   beforeEach(async () => {
     // Clean up test data

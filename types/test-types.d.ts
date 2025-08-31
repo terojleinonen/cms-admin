@@ -32,13 +32,13 @@ export interface TestProduct {
   sku?: string;
   inventoryQuantity: number;
   weight?: number;
-  dimensions?: any;
+  dimensions?: { width?: number; height?: number; depth?: number };
   status: import('@prisma/client').ProductStatus;
   featured: boolean;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
-  categories: any[];
+  categories: { id: string; name: string }[];
 }
 
 export interface TestCategory {

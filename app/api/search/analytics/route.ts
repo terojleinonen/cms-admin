@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
     const validatedOptions = analyticsQuerySchema.parse(queryOptions)
 
     // Parse dates if provided
-    const options: any = {
+    const options: Record<string, unknown> = {
       limit: validatedOptions.limit
     }
 

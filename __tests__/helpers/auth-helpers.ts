@@ -31,7 +31,7 @@ export async function createMockUser(data: MockUserData = {}) {
   })
 }
 
-export function createMockSession(user: any) {
+export function createMockSession(user: Record<string, unknown>) {
   return {
     user: {
       id: user.id,

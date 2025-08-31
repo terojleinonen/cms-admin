@@ -4,7 +4,7 @@
  */
 
 // Simple performance tracking without TypeScript dependencies
-let testResults = {
+const testResults = {
   totalTests: 0,
   passedTests: 0,
   failedTests: 0,
@@ -12,7 +12,7 @@ let testResults = {
   duration: 0,
 }
 
-let testStartTimes = new Map()
+const testStartTimes = new Map()
 
 // Hook into Jest lifecycle
 beforeAll(async () => {

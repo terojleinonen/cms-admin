@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { 
   KeyIcon, 
@@ -40,9 +40,9 @@ export default function ApiManagementDashboard() {
   useEffect(() => {
     fetchApiKeys()
     fetchStats()
-  }, [])
+  }, [fetchApiKeys, fetchStats])
 
-  const fetchApiKeys = async () => {
+  const fetchApiKeys = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/api-keys')
       if (response.ok) {
@@ -52,9 +52,9 @@ export default function ApiManagementDashboard() {
     } catch (error) {
       console.error('Error fetching API keys:', error)
     }
-  }
+  }, [])
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       // Mock stats for now - would come from analytics API
       setStats({
@@ -68,7 +68,7 @@ export default function ApiManagementDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [apiKeys])
 
   const quickActions = [
     {

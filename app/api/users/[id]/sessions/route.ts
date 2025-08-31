@@ -13,7 +13,7 @@ import {
   getSessionStatistics,
   detectSuspiciousActivity
 } from '@/lib/session-management'
-import { logAuditEvent } from '@/lib/audit-service'
+import { auditLog } from '@/lib/audit-service'
 import { z } from 'zod'
 
 const sessionActionSchema = z.object({
@@ -101,7 +101,7 @@ export async function POST(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       )
     }

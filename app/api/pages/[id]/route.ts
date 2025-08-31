@@ -133,7 +133,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid page data', details: error.errors },
+        { error: 'Invalid page data', details: error.issues },
         { status: 400 }
       )
     }

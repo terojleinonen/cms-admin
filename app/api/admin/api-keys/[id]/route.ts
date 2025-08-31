@@ -31,8 +31,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const apiKey = await prisma.apiKey.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -76,12 +77,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const validatedData = updateApiKeySchema.parse(body);
 
     // Check if API key exists
     const existingKey = await prisma.apiKey.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!existingKey) {
@@ -90,7 +92,7 @@ export async function PUT(
 
     // Update API key
     const updatedKey = await prisma.apiKey.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(validatedData.name && { name: validatedData.name }),
         ...(validatedData.permissions && { permissions: validatedData.permissions }),
@@ -118,7 +120,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Invalid request data', details: error.issues },
         { status: 400 }
       );
     }
@@ -142,9 +144,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     // Check if API key exists
     const existingKey = await prisma.apiKey.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!existingKey) {
@@ -153,7 +156,7 @@ export async function DELETE(
 
     // Delete API key and related usage logs
     await prisma.apiKey.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({

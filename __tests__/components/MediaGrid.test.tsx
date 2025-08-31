@@ -317,7 +317,7 @@ describe('MediaGrid Component', () => {
     it('should support different grid sizes', () => {
       const { rerender } = render(<MediaGrid {...defaultProps} gridSize="small" />)
 
-      let gridContainer = screen.getByTestId('media-grid')
+      const gridContainer = screen.getByTestId('media-grid')
       expect(gridContainer).toHaveClass('grid-cols-6')
 
       rerender(<MediaGrid {...defaultProps} gridSize="medium" />)

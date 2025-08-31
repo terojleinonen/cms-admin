@@ -467,10 +467,10 @@ describe('User Management Performance Tests', () => {
       mockPrisma.user.findMany.mockResolvedValue(users.slice(0, 20) as any)
       mockPrisma.user.count.mockResolvedValue(100)
 
-      let startTime = performance.now()
-      let request = new NextRequest('http://localhost/api/users')
-      let response = await getUsersGET(request)
-      let endTime = performance.now()
+      const startTime = performance.now()
+      const request = new NextRequest('http://localhost/api/users')
+      const response = await getUsersGET(request)
+      const endTime = performance.now()
 
       results.push({
         endpoint: 'userList',

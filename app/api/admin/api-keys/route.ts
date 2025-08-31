@@ -69,23 +69,22 @@ export async function POST(request: NextRequest) {
     const validatedData = createApiKeySchema.parse(body);
 
     // Create API key
-    const result = await ApiAuthService.createApiKey({
-      name: validatedData.name,
-      permissions: validatedData.permissions,
-      createdBy: session.user.id,
-      expiresAt: validatedData.expiresAt ? new Date(validatedData.expiresAt) : undefined
-    });
+    const result = await ApiAuthService.createApiKey(
+      session.user.id,
+      validatedData.name,
+      validatedData.permissions
+    );
 
     return NextResponse.json({
       id: result.id,
-      apiKey: result.apiKey,
+      apiKey: result.key,
       message: 'API key created successfully'
     });
 
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Invalid request data', details: error.issues },
         { status: 400 }
       );
     }

@@ -6,6 +6,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import {
   UserGroupIcon,
   ShieldCheckIcon,
@@ -14,7 +15,6 @@ import {
   ExclamationTriangleIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline'
-import { User } from '@/lib/types'
 import { UserRole } from '@prisma/client'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
@@ -259,10 +259,12 @@ export default function BulkOperationsModal({
                   <div key={user.id} className="flex items-center space-x-3 p-3 border-b border-gray-100 last:border-b-0">
                     <div className="flex-shrink-0">
                       {user.profilePicture ? (
-                        <img
+                        <Image
                           className="h-8 w-8 rounded-full object-cover"
                           src={user.profilePicture}
                           alt={user.name}
+                          width={32}
+                          height={32}
                         />
                       ) : (
                         <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
@@ -387,10 +389,12 @@ export default function BulkOperationsModal({
               <div key={user.id} className="flex items-center space-x-3 p-3 border-b border-gray-100 last:border-b-0">
                 <div className="flex-shrink-0">
                   {user.profilePicture ? (
-                    <img
+                    <Image
                       className="h-6 w-6 rounded-full object-cover"
                       src={user.profilePicture}
                       alt={user.name}
+                      width={24}
+                      height={24}
                     />
                   ) : (
                     <div className="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center">

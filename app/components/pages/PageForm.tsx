@@ -46,7 +46,7 @@ export default function PageForm({ page, onSave, onCancel }: PageFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showTemplateSelector, setShowTemplateSelector] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState('')
+  const [_previewUrl, _setPreviewUrl] = useState('')
   const [isDirty, setIsDirty] = useState(false)
 
   const isEditing = !!page

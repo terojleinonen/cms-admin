@@ -152,7 +152,7 @@ describe('Test Database Isolation Strategy', () => {
       })
       
       // Verify data exists
-      let foundUser = await testPrisma.user.findUnique({
+      const foundUser = await testPrisma.user.findUnique({
         where: { email: 'cleanup-test@example.com' }
       })
       expect(foundUser).toBeTruthy()

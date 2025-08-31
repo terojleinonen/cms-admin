@@ -457,7 +457,7 @@ export async function searchAll(query: string, options: {
   const { types, limit = 20, offset = 0 } = options
   
   const results: any[] = []
-  let breakdown = { products: 0, pages: 0 }
+  const breakdown = { products: 0, pages: 0 }
 
   // Search products if included
   if (!types || types.includes('product')) {

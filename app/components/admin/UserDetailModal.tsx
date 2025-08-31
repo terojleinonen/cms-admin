@@ -18,10 +18,9 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   PencilIcon,
-  EyeIcon,
   EyeSlashIcon,
 } from '@heroicons/react/24/outline'
-import { User, AuditLog, Session } from '@/lib/types'
+import { AuditLog, Session } from '@/lib/types'
 import { UserRole } from '@prisma/client'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'

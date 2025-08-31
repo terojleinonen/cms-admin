@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import {
   CheckCircleIcon,
-  ExclamationTriangleIcon,
   EnvelopeIcon,
 } from '@heroicons/react/24/outline'
 import { Button } from '../ui/Button'

@@ -5,8 +5,7 @@ import {
   ChartBarIcon, 
   ClockIcon, 
   ExclamationTriangleIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon
+  ArrowTrendingUpIcon
 } from '@heroicons/react/24/outline'
 
 interface ApiStats {

@@ -70,13 +70,13 @@ const roleLabels: Record<UserRole, string> = {
 
 export default function UserDetailView({ userId, initialData }: UserDetailViewProps) {
   const [user, setUser] = useState<UserWithDetails | null>(initialData)
-  const [stats, setStats] = useState<UserStats | null>(null)
+  const [_stats, _setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(!initialData)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'security' | 'activity' | 'settings'>('overview')
   
   // Modal states
-  const [showEditModal, setShowEditModal] = useState(false)
+  const [_showEditModal, _setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showDeactivateModal, setShowDeactivateModal] = useState(false)
 
@@ -131,7 +131,7 @@ export default function UserDetailView({ userId, initialData }: UserDetailViewPr
       setUser(prev => prev ? { ...prev, isActive: false } : null)
       setShowDeactivateModal(false)
       alert('User deactivated successfully')
-    } catch (err) {
+    } catch (_err) {
       alert('Failed to deactivate user')
     }
   }
@@ -149,7 +149,7 @@ export default function UserDetailView({ userId, initialData }: UserDetailViewPr
       alert('User deleted successfully')
       // Redirect to users list
       window.location.href = '/admin/users'
-    } catch (err) {
+    } catch (_err) {
       alert('Failed to delete user')
     }
   }

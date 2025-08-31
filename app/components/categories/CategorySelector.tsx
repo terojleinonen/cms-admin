@@ -8,7 +8,7 @@
 import { useState, useEffect } from 'react'
 import { ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Category } from '@/lib/types'
-import { getCategoryIndentClass } from '@/utils/dynamic-styles'
+import { getCategoryIndentClass } from '../../../utils/dynamic-styles'
 
 interface CategorySelectorProps {
   selectedCategories: string[]

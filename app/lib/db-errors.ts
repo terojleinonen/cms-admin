@@ -9,7 +9,7 @@ export interface DatabaseError {
   code: string
   message: string
   field?: string
-  details?: any
+  details?: unknown
 }
 
 /**

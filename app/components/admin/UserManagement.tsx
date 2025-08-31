@@ -20,7 +20,7 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { User, PaginationInfo } from '@/lib/types'
+import { PaginationInfo } from '@/lib/types'
 import { UserRole } from '@prisma/client'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'

@@ -9,7 +9,6 @@ import { useState } from 'react'
 import { 
   CheckCircleIcon, 
   ClockIcon, 
-  EyeIcon, 
   ArchiveBoxIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
@@ -71,7 +70,7 @@ const STATUS_CONFIG: Record<PageStatus, StatusConfig> = {
 
 export default function PageStatusManager({
   currentStatus,
-  pageId,
+  pageId: _pageId,
   pageTitle,
   onStatusChange,
   disabled = false,

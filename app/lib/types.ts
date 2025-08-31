@@ -54,7 +54,7 @@ export interface AuditLog {
   userId: string
   action: string
   resource: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
   ipAddress?: string
   userAgent?: string
   createdAt: Date
@@ -134,7 +134,7 @@ export interface Product {
   sku?: string
   inventoryQuantity: number
   weight?: number
-  dimensions?: any
+  dimensions?: { length?: number; width?: number; height?: number }
   status: ProductStatus
   featured: boolean
   seoTitle?: string
@@ -157,7 +157,7 @@ export interface ProductFormData {
   sku: string
   inventoryQuantity: number
   weight?: number
-  dimensions?: any
+  dimensions?: { length?: number; width?: number; height?: number }
   status: ProductStatus
   featured: boolean
   seoTitle: string
@@ -170,6 +170,8 @@ export interface ProductFilters {
   status?: ProductStatus
   categoryId?: string
   featured?: boolean
+  minPrice?: number
+  maxPrice?: number
   page?: number
   limit?: number
 }
@@ -257,7 +259,7 @@ export interface PaginationInfo {
 }
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
@@ -311,11 +313,11 @@ export interface SelectOption {
   disabled?: boolean
 }
 
-export interface TableColumn<T = any> {
+export interface TableColumn<T = Record<string, unknown>> {
   key: keyof T | string
   label: string
   sortable?: boolean
-  render?: (value: any, item: T) => React.ReactNode
+  render?: (value: unknown, item: T) => React.ReactNode
 }
 
 export interface FilterOption {

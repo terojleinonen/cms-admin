@@ -97,7 +97,7 @@ export default function UserActivityMonitor({
 
   // UI state
   const [showFilters, setShowFilters] = useState(false)
-  const [selectedLogs, setSelectedLogs] = useState<Set<string>>(new Set())
+  const [_selectedLogs, _setSelectedLogs] = useState<Set<string>>(new Set())
 
   // Fetch audit logs
   const fetchLogs = useCallback(async (showLoader = true) => {

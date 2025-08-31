@@ -41,8 +41,8 @@ describe('/api/categories', () => {
     mockUser = await createMockUser({ role: 'ADMIN' })
     mockSession = createMockSession(mockUser)
     
-    const { getServerSession } = require('next-auth/next')
-    getServerSession.mockResolvedValue(mockSession)
+    const { getServerSession } = await import('next-auth/next')
+    ;(getServerSession as jest.Mock).mockResolvedValue(mockSession)
   })
 
   afterEach(async () => {
@@ -202,8 +202,8 @@ describe('/api/categories', () => {
     })
 
     it('should require authentication', async () => {
-      const { getServerSession } = require('next-auth/next')
-      getServerSession.mockResolvedValue(null)
+      const { getServerSession } = await import('next-auth/next')
+      ;(getServerSession as jest.Mock).mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/categories', {
         method: 'POST',

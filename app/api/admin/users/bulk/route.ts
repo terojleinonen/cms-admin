@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const { operation, userIds, data } = bulkOperationSchema.parse(body)
 
     let updated = 0
-    let errors: string[] = []
+    const errors: string[] = []
 
     // Validate that users exist
     const existingUsers = await prisma.user.findMany({

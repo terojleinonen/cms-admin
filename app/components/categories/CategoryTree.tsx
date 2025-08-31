@@ -15,7 +15,7 @@ import {
   Bars3Icon,
 } from '@heroicons/react/24/outline'
 import { Category } from '@/lib/types'
-import { getCategoryTreeIndentClass } from '@/utils/dynamic-styles'
+import { getCategoryTreeIndentClass } from '../../../utils/dynamic-styles'
 
 interface CategoryTreeProps {
   categories: Category[]
@@ -57,7 +57,7 @@ function CategoryNode({
   isDragOver,
 }: CategoryNodeProps) {
   const hasChildren = category.children && category.children.length > 0
-  const paddingLeft = level * 24
+  const _paddingLeft = level * 24
 
   return (
     <div>

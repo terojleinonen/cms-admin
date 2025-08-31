@@ -93,7 +93,7 @@ async function fetchInitialSecurityData() {
       },
       recentAlerts: [],
       systemHealth: {
-        status: 'healthy',
+        status: 'healthy' as const,
         uptime: '99.9%',
         lastIncident: null,
       },
@@ -109,7 +109,7 @@ async function fetchInitialSecurityData() {
       },
       recentAlerts: [],
       systemHealth: {
-        status: 'unknown',
+        status: 'unknown' as const,
         uptime: 'N/A',
         lastIncident: null,
       },

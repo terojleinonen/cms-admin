@@ -8,7 +8,6 @@ import {
   EyeIcon, 
   EyeSlashIcon,
   TrashIcon,
-  PencilIcon,
   ClipboardDocumentIcon
 } from '@heroicons/react/24/outline'
 

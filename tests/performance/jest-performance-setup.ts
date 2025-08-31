@@ -10,7 +10,7 @@ import { testReporter } from './test-reporter'
 
 // Global test state
 let currentTestStart: (() => any) | null = null
-let testResults = {
+const testResults = {
   totalTests: 0,
   passedTests: 0,
   failedTests: 0,

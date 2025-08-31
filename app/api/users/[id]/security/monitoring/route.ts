@@ -12,7 +12,7 @@ import {
   getSessionStatistics
 } from '@/lib/session-management'
 import { getPasswordResetStatistics } from '@/lib/password-reset'
-import { logAuditEvent } from '@/lib/audit-service'
+import { auditLog } from '@/lib/audit-service'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
@@ -148,7 +148,7 @@ export async function POST(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       )
     }

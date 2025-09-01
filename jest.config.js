@@ -49,7 +49,45 @@ const customJestConfig = {
     '!**/loading.tsx',
     '!**/not-found.tsx',
     '!**/page.tsx',
+    '!**/__mocks__/**',
+    '!**/node_modules/**',
+    '!**/coverage/**',
+    '!**/test-artifacts/**',
   ],
+  
+  // Coverage thresholds
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+    './app/lib/': {
+      branches: 85,
+      functions: 85,
+      lines: 85,
+      statements: 85,
+    },
+    './utils/': {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+  },
+  
+  // Coverage reporting
+  coverageReporters: [
+    'text',
+    'text-summary',
+    'html',
+    'lcov',
+    'json',
+    'json-summary',
+  ],
+  
+  coverageDirectory: 'coverage',
   
   // Environment setup
   testEnvironmentOptions: {

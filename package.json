@@ -64,6 +64,14 @@
     "test:monitor:config": "tsx tests/monitoring/cli.ts config",
     "test:ci": "npm run test:memory-config",
     "test:ci:setup": "tsx tests/monitoring/github-actions-integration.ts generate-workflow",
+    "test:automation": "node scripts/test-automation.js",
+    "test:automation:unit": "node scripts/test-automation.js unit",
+    "test:automation:integration": "node scripts/test-automation.js integration",
+    "test:automation:components": "node scripts/test-automation.js components",
+    "test:automation:e2e": "node scripts/test-automation.js e2e",
+    "test:automation:coverage": "node scripts/test-automation.js coverage",
+    "test:automation:security": "node scripts/test-automation.js security",
+    "test:quality-gates": "node scripts/test-automation.js all",
     "install:ci": "npm ci --legacy-peer-deps"
   },
   "dependencies": {
@@ -104,6 +112,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@faker-js/faker": "^9.9.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",

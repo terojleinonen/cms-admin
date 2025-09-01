@@ -23,6 +23,7 @@ import {
   ServerIcon,
   ShieldCheckIcon,
   ShoppingBagIcon,
+  CircleStackIcon,
 } from '@heroicons/react/24/outline'
 import { UserRole } from '@prisma/client'
 import clsx from 'clsx'
@@ -102,6 +103,12 @@ const adminNavigation: NavigationItem[] = [
     name: 'User Management',
     href: '/admin/users',
     icon: UsersIcon,
+    requiredRole: UserRole.ADMIN,
+  },
+  {
+    name: 'Database Monitor',
+    href: '/admin/database',
+    icon: CircleStackIcon,
     requiredRole: UserRole.ADMIN,
   },
   {

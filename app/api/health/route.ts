@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { getDatabaseHealth, DatabaseConnectionManager } from '@/lib/db'
 
 /**
  * Health check endpoint for monitoring system status
@@ -9,10 +9,30 @@ export async function GET() {
   try {
     const startTime = Date.now()
     
-    // Simple database health check
-    await prisma.$queryRaw`SELECT 1`
+    // Comprehensive database health check
+    const dbHealth = await getDatabaseHealth()
+    const connectionManager = DatabaseConnectionManager.getInstance()
+    const connectionStats = await connectionManager.getConnectionStats()
+    const performanceMetrics = await connectionManager.getPerformanceMetrics()
     
     const responseTime = Date.now() - startTime
+
+    if (!dbHealth.connected) {
+      return NextResponse.json({
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        responseTime,
+        error: dbHealth.error,
+        checks: [
+          {
+            name: 'database',
+            status: 'unhealthy',
+            error: dbHealth.error,
+            details: dbHealth
+          }
+        ]
+      }, { status: 503 })
+    }
 
     const response = {
       status: 'healthy',
@@ -22,7 +42,12 @@ export async function GET() {
         {
           name: 'database',
           status: 'healthy',
-          responseTime
+          responseTime: dbHealth.latency,
+          details: {
+            ...dbHealth,
+            connectionStats,
+            performanceMetrics
+          }
         }
       ],
       version: process.env.npm_package_version || '1.0.0',

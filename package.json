@@ -75,6 +75,11 @@
     "test:automation:coverage": "node scripts/test-automation.js coverage",
     "test:automation:security": "node scripts/test-automation.js security",
     "test:quality-gates": "node scripts/test-automation.js all",
+    "perf:optimize": "node scripts/performance-optimization.js optimize",
+    "perf:database": "node scripts/performance-optimization.js database",
+    "perf:bundle": "node scripts/performance-optimization.js bundle",
+    "perf:images": "node scripts/performance-optimization.js images",
+    "perf:analyze": "ANALYZE=true npm run build",
     "install:ci": "npm ci --legacy-peer-deps"
   },
   "dependencies": {

@@ -1,27 +1,20 @@
+/**
+ * Performance monitoring page for admin dashboard
+ * Provides comprehensive performance insights and optimization tools
+ */
+
 import { Metadata } from 'next'
+import PerformanceDashboard from '@/components/admin/PerformanceDashboard'
 
 export const metadata: Metadata = {
-  title: 'Performance Monitoring - Kin Workspace CMS',
-  description: 'Monitor system performance and optimization metrics',
+  title: 'Performance Dashboard - CMS Admin',
+  description: 'Monitor and optimize system performance',
 }
 
 export default function PerformancePage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-matte-black font-satoshi">Performance Monitoring</h1>
-        <p className="text-slate-gray font-inter">Monitor system performance and optimization metrics</p>
-      </div>
-
-      <div className="card p-6">
-        <h3 className="text-lg font-semibold text-matte-black mb-4 font-satoshi">
-          System Performance
-        </h3>
-        <p className="text-slate-gray font-inter">
-          Performance monitoring features will be available here. This includes system metrics, 
-          load times, database performance, and optimization recommendations.
-        </p>
-      </div>
+    <div className="container mx-auto px-4 py-8">
+      <PerformanceDashboard />
     </div>
   )
 }

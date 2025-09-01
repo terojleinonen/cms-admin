@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-09-01T22:34:23.314Z",
+  "summary": {
+    "indexesCreated": 0,
+    "bundleSize": "0 Bytes",
+    "optimizationSuggestions": []
+  },
+  "details": {
+    "database": {
+      "indexesCreated": [],
+      "queriesOptimized": [],
+      "suggestions": []
+    },
+    "frontend": {
+      "bundleSize": 0,
+      "optimizations": []
+    },
+    "api": {
+      "slowEndpoints": [],
+      "optimizations": []
+    }
+  }
+}

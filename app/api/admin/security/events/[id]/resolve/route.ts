@@ -1,6 +1,6 @@
 /**
- * Security Statistics API
- * GET /api/admin/security/stats - Get security statistics
+ * Resolve Security Event API
+ * POST /api/admin/security/events/[id]/resolve - Resolve a security event
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -9,7 +9,10 @@ import { authOptions } from '@/lib/auth'
 import { SecurityService } from '@/lib/security'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     // Check authentication and admin role
     const session = await getServerSession(authOptions)
@@ -20,18 +23,27 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const { id } = params
+
     // Get security service instance
     const securityService = SecurityService.getInstance(prisma)
     
-    // Get security statistics
-    const stats = await securityService.getSecurityStats()
+    // Resolve the security event
+    const resolved = await securityService.resolveSecurityEvent(id, session.user.id)
 
-    return NextResponse.json(stats)
+    if (!resolved) {
+      return NextResponse.json(
+        { error: 'Security event not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({ success: true })
 
   } catch (error) {
-    console.error('Security stats API error:', error)
+    console.error('Resolve security event API error:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch security statistics' },
+      { error: 'Failed to resolve security event' },
       { status: 500 }
     )
   }

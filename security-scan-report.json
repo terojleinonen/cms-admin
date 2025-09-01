@@ -1,0 +1,54 @@
+{
+  "timestamp": "2025-09-01T20:20:37.900Z",
+  "scannedFiles": 322,
+  "totalIssues": 2,
+  "issuesBySeverity": {
+    "critical": [],
+    "high": [],
+    "medium": [
+      {
+        "file": "/Users/teroleinonen/software-projects/cms-admin/.env",
+        "line": 2,
+        "column": 15,
+        "pattern": "Database URL with Credentials",
+        "severity": "medium",
+        "description": "Database URL with embedded credentials",
+        "match": "postgresql://cms_user:secure_password@",
+        "context": "DATABASE_URL=\"postgresql://cms_user:secure_password@localhost:5432/kin_workspace_cms\""
+      },
+      {
+        "file": "/Users/teroleinonen/software-projects/cms-admin/docker-compose.production.yml",
+        "line": 52,
+        "column": 21,
+        "pattern": "Database URL with Credentials",
+        "severity": "medium",
+        "description": "Database URL with embedded credentials",
+        "match": "postgresql://cms_user:${POSTGRES_PASSWORD}@",
+        "context": "DATABASE_URL: postgresql://cms_user:${POSTGRES_PASSWORD}@postgres:5432/kin_workspace_cms"
+      }
+    ],
+    "low": []
+  },
+  "issues": [
+    {
+      "file": "/Users/teroleinonen/software-projects/cms-admin/.env",
+      "line": 2,
+      "column": 15,
+      "pattern": "Database URL with Credentials",
+      "severity": "medium",
+      "description": "Database URL with embedded credentials",
+      "match": "postgresql://cms_user:secure_password@",
+      "context": "DATABASE_URL=\"postgresql://cms_user:secure_password@localhost:5432/kin_workspace_cms\""
+    },
+    {
+      "file": "/Users/teroleinonen/software-projects/cms-admin/docker-compose.production.yml",
+      "line": 52,
+      "column": 21,
+      "pattern": "Database URL with Credentials",
+      "severity": "medium",
+      "description": "Database URL with embedded credentials",
+      "match": "postgresql://cms_user:${POSTGRES_PASSWORD}@",
+      "context": "DATABASE_URL: postgresql://cms_user:${POSTGRES_PASSWORD}@postgres:5432/kin_workspace_cms"
+    }
+  ]
+}

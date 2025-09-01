@@ -12,7 +12,8 @@ async function main() {
   console.log('🌱 Seeding database...')
 
   // Create admin user
-  const adminPasswordHash = await bcrypt.hash('admin123', 12)
+  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'admin123'
+  const adminPasswordHash = await bcrypt.hash(adminPassword, 12)
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@kinworkspace.com' },
     update: {},
@@ -28,7 +29,8 @@ async function main() {
   console.log('✅ Created admin user:', adminUser.email)
 
   // Create editor user
-  const editorPasswordHash = await bcrypt.hash('editor123', 12)
+  const editorPassword = process.env.EDITOR_DEFAULT_PASSWORD || 'editor123'
+  const editorPasswordHash = await bcrypt.hash(editorPassword, 12)
   const editorUser = await prisma.user.upsert({
     where: { email: 'editor@kinworkspace.com' },
     update: {},

@@ -1,226 +1,181 @@
-/**
- * Security Dashboard Component
- * Comprehensive security monitoring dashboard with metrics, alerts, and system health
- */
-
 'use client'
 
+/**
+ * Security Dashboard Component
+ * Real-time security monitoring and threat management interface
+ */
+
 import { useState, useEffect } from 'react'
-import {
-  ShieldCheckIcon,
+import { 
+  ShieldCheckIcon, 
+  ShieldExclamationIcon, 
   ExclamationTriangleIcon,
-  UserGroupIcon,
-  EyeIcon,
   ClockIcon,
   ComputerDesktopIcon,
-  ArrowPathIcon,
-  BellIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  InformationCircleIcon,
+  UserIcon,
+  ChartBarIcon,
+  EyeIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
-import Button from '@/components/ui/Button'
 
-interface SecurityMetrics {
-  totalUsers: number
-  activeUsers: number
+interface SecurityStats {
+  totalEvents: number
+  criticalEvents: number
+  blockedRequests: number
   suspiciousActivity: number
-  securityAlerts: number
   failedLogins: number
-  blockedIPs: number
-  twoFactorEnabled: number
-  passwordResets: number
+  successfulLogins: number
+  accountLocks: number
+  rateLimitViolations: number
+  csrfViolations: number
+  lastScan: string
+  threatLevel: 'low' | 'medium' | 'high' | 'critical'
+  topThreats: Array<{ type: string; count: number }>
+  ipBlacklist: string[]
+  recentAlerts: Array<{
+    id: string
+    type: string
+    severity: string
+    message: string
+    ipAddress: string
+    timestamp: string
+    resolved: boolean
+  }>
 }
 
-interface SecurityAlert {
+interface SecurityEvent {
   id: string
-  type: 'login_failure' | 'suspicious_activity' | 'security_breach' | 'system_error'
+  type: string
   severity: 'low' | 'medium' | 'high' | 'critical'
-  title: string
-  description: string
-  timestamp: Date
+  message: string
+  ipAddress: string
+  userAgent?: string
   userId?: string
-  ipAddress?: string
+  timestamp: string
   resolved: boolean
+  metadata?: Record<string, any>
 }
 
-interface SystemHealth {
-  status: 'healthy' | 'warning' | 'critical' | 'unknown'
-  uptime: string
-  lastIncident: Date | null
-  activeIncidents: number
-  systemLoad: number
-  memoryUsage: number
-  diskUsage: number
-}
+export default function SecurityDashboard() {
+  const [stats, setStats] = useState<SecurityStats | null>(null)
+  const [events, setEvents] = useState<SecurityEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null)
+  const [filter, setFilter] = useState<{
+    severity?: string
+    type?: string
+    resolved?: boolean
+  }>({})
 
-interface SecurityDashboardProps {
-  initialData?: {
-    metrics: Partial<SecurityMetrics>
-    recentAlerts: SecurityAlert[]
-    systemHealth: Partial<SystemHealth>
-  }
-}
+  useEffect(() => {
+    fetchSecurityData()
+    
+    // Refresh data every 30 seconds
+    const interval = setInterval(fetchSecurityData, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
-const alertTypeColors = {
-  login_failure: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  suspicious_activity: 'bg-orange-100 text-orange-800 border-orange-200',
-  security_breach: 'bg-red-100 text-red-800 border-red-200',
-  system_error: 'bg-gray-100 text-gray-800 border-gray-200',
-}
-
-const severityColors = {
-  low: 'text-green-600 bg-green-50',
-  medium: 'text-yellow-600 bg-yellow-50',
-  high: 'text-orange-600 bg-orange-50',
-  critical: 'text-red-600 bg-red-50',
-}
-
-const statusColors = {
-  healthy: 'text-green-600 bg-green-50',
-  warning: 'text-yellow-600 bg-yellow-50',
-  critical: 'text-red-600 bg-red-50',
-  unknown: 'text-gray-600 bg-gray-50',
-}
-
-export default function SecurityDashboard({ initialData }: SecurityDashboardProps) {
-  const [metrics, setMetrics] = useState<SecurityMetrics>({
-    totalUsers: 0,
-    activeUsers: 0,
-    suspiciousActivity: 0,
-    securityAlerts: 0,
-    failedLogins: 0,
-    blockedIPs: 0,
-    twoFactorEnabled: 0,
-    passwordResets: 0,
-    ...initialData?.metrics,
-  })
-  
-  const [alerts, setAlerts] = useState<SecurityAlert[]>(initialData?.recentAlerts || [])
-  const [systemHealth, setSystemHealth] = useState<SystemHealth>({
-    status: 'unknown',
-    uptime: 'N/A',
-    lastIncident: null,
-    activeIncidents: 0,
-    systemLoad: 0,
-    memoryUsage: 0,
-    diskUsage: 0,
-    ...initialData?.systemHealth,
-  })
-  
-  const [loading, setLoading] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedTimeRange, setSelectedTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h')
-
-  // Fetch security data
-  const fetchSecurityData = async (showLoader = true) => {
+  const fetchSecurityData = async () => {
     try {
-      if (showLoader) {
-        setLoading(true)
-      } else {
-        setRefreshing(true)
-      }
-      setError(null)
-
-      const [metricsResponse, alertsResponse, healthResponse] = await Promise.all([
-        fetch(`/api/admin/security/metrics?timeRange=${selectedTimeRange}`),
-        fetch(`/api/admin/security/alerts?limit=10`),
-        fetch('/api/admin/security/health')
+      const [statsResponse, eventsResponse] = await Promise.all([
+        fetch('/api/admin/security/stats'),
+        fetch('/api/admin/security/events')
       ])
 
-      if (metricsResponse.ok) {
-        const metricsData = await metricsResponse.json()
-        setMetrics(metricsData.metrics)
+      if (statsResponse.ok && eventsResponse.ok) {
+        const statsData = await statsResponse.json()
+        const eventsData = await eventsResponse.json()
+        
+        setStats(statsData)
+        setEvents(eventsData.events || [])
       }
-
-      if (alertsResponse.ok) {
-        const alertsData = await alertsResponse.json()
-        setAlerts(alertsData.alerts)
-      }
-
-      if (healthResponse.ok) {
-        const healthData = await healthResponse.json()
-        setSystemHealth(healthData.health)
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch security data')
+    } catch (error) {
+      console.error('Failed to fetch security data:', error)
     } finally {
       setLoading(false)
-      setRefreshing(false)
     }
   }
 
-  // Initial load
-  useEffect(() => {
-    if (!initialData) {
-      fetchSecurityData()
-    }
-  }, [selectedTimeRange, initialData])
-
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchSecurityData(false)
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [selectedTimeRange])
-
-  // Handle alert resolution
-  const handleResolveAlert = async (alertId: string) => {
+  const resolveEvent = async (eventId: string) => {
     try {
-      const response = await fetch(`/api/admin/security/alerts/${alertId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resolved: true }),
+      const response = await fetch(`/api/admin/security/events/${eventId}/resolve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       })
 
       if (response.ok) {
-        setAlerts(prev => prev.map(alert => 
-          alert.id === alertId ? { ...alert, resolved: true } : alert
+        setEvents(events.map(event => 
+          event.id === eventId ? { ...event, resolved: true } : event
         ))
+        setSelectedEvent(null)
       }
-    } catch (err) {
-      console.error('Failed to resolve alert:', err)
+    } catch (error) {
+      console.error('Failed to resolve event:', error)
     }
   }
 
-  // Format timestamp
-  const formatTimestamp = (date: Date) => {
-    return new Date(date).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+  const unblockIP = async (ip: string) => {
+    try {
+      const response = await fetch('/api/admin/security/unblock-ip', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ip })
+      })
+
+      if (response.ok) {
+        fetchSecurityData() // Refresh data
+      }
+    } catch (error) {
+      console.error('Failed to unblock IP:', error)
+    }
   }
 
-  // Get system health status icon
-  const getHealthIcon = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return <CheckCircleIcon className="h-5 w-5 text-green-500" />
-      case 'warning':
-        return <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />
+  const getThreatLevelColor = (level: string) => {
+    switch (level) {
+      case 'critical': return 'text-red-600 bg-red-100'
+      case 'high': return 'text-orange-600 bg-orange-100'
+      case 'medium': return 'text-yellow-600 bg-yellow-100'
+      default: return 'text-green-600 bg-green-100'
+    }
+  }
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return 'text-red-600'
+      case 'high': return 'text-orange-600'
+      case 'medium': return 'text-yellow-600'
+      default: return 'text-gray-600'
+    }
+  }
+
+  const getSeverityIcon = (severity: string) => {
+    switch (severity) {
       case 'critical':
-        return <XCircleIcon className="h-5 w-5 text-red-500" />
+        return <ShieldExclamationIcon className="h-5 w-5 text-red-600" />
+      case 'high':
+        return <ExclamationTriangleIcon className="h-5 w-5 text-orange-600" />
+      case 'medium':
+        return <ClockIcon className="h-5 w-5 text-yellow-600" />
       default:
-        return <InformationCircleIcon className="h-5 w-5 text-gray-500" />
+        return <ShieldCheckIcon className="h-5 w-5 text-green-600" />
     }
   }
 
-  if (loading && !refreshing) {
+  const filteredEvents = events.filter(event => {
+    if (filter.severity && event.severity !== filter.severity) return false
+    if (filter.type && event.type !== filter.type) return false
+    if (filter.resolved !== undefined && event.resolved !== filter.resolved) return false
+    return true
+  })
+
+  if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow p-6 animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     )
   }
@@ -230,242 +185,310 @@ export default function SecurityDashboard({ initialData }: SecurityDashboardProp
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Security Monitoring</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Monitor system security events, threats, and user activity
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Security Dashboard</h1>
+          <p className="text-gray-600">Monitor security events and threats in real-time</p>
         </div>
-        <div className="flex items-center space-x-2">
-          <select
-            value={selectedTimeRange}
-            onChange={(e) => setSelectedTimeRange(e.target.value as any)}
-            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
-          >
-            <option value="1h">Last Hour</option>
-            <option value="24h">Last 24 Hours</option>
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-          </select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fetchSecurityData(false)}
-            disabled={refreshing}
-          >
-            <ArrowPathIcon className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
+        
+        {stats && (
+          <div className={`px-4 py-2 rounded-lg font-medium ${getThreatLevelColor(stats.threatLevel)}`}>
+            Threat Level: {stats.threatLevel.toUpperCase()}
+          </div>
+        )}
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <div className="flex">
-            <ExclamationTriangleIcon className="h-5 w-5 text-red-400" />
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>{error}</p>
+      {/* Security Stats */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <ShieldCheckIcon className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Events (24h)</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalEvents}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="h-8 w-8 text-red-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Critical Events</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.criticalEvents}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <ComputerDesktopIcon className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Blocked Requests</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.blockedRequests}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <UserIcon className="h-8 w-8 text-yellow-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Failed Logins</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.failedLogins}</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* System Health Status */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">System Health</h2>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="flex items-center">
-              {getHealthIcon(systemHealth.status)}
-              <div className="ml-3">
-                <div className="text-sm font-medium text-gray-900">Overall Status</div>
-                <div className={`text-sm capitalize px-2 py-1 rounded-full ${statusColors[systemHealth.status]}`}>
-                  {systemHealth.status}
+      {/* Top Threats and Blocked IPs */}
+      {stats && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top Threats */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Top Threats (24h)</h3>
+            <div className="space-y-3">
+              {stats.topThreats.map((threat, index) => (
+                <div key={threat.type} className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-600">
+                      {index + 1}
+                    </div>
+                    <span className="ml-3 text-sm text-gray-900">{threat.type.replace(/_/g, ' ')}</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-600">{threat.count}</span>
                 </div>
-              </div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-900">Uptime</div>
-              <div className="text-2xl font-bold text-gray-900">{systemHealth.uptime}</div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-900">Active Incidents</div>
-              <div className="text-2xl font-bold text-gray-900">{systemHealth.activeIncidents}</div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-900">Last Incident</div>
-              <div className="text-sm text-gray-600">
-                {systemHealth.lastIncident 
-                  ? formatTimestamp(systemHealth.lastIncident)
-                  : 'None'
-                }
-              </div>
+              ))}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Security Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <UserGroupIcon className="h-8 w-8 text-blue-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Users</p>
-              <p className="text-2xl font-semibold text-gray-900">{metrics.totalUsers}</p>
+          {/* Blocked IPs */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Blocked IP Addresses</h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {stats.ipBlacklist.length === 0 ? (
+                <p className="text-sm text-gray-500">No blocked IPs</p>
+              ) : (
+                stats.ipBlacklist.map((ip) => (
+                  <div key={ip} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded">
+                    <span className="text-sm font-mono text-gray-900">{ip}</span>
+                    <button
+                      onClick={() => unblockIP(ip)}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      Unblock
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <CheckCircleIcon className="h-8 w-8 text-green-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Active Users</p>
-              <p className="text-2xl font-semibold text-gray-900">{metrics.activeUsers}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Suspicious Activity</p>
-              <p className="text-2xl font-semibold text-gray-900">{metrics.suspiciousActivity}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <BellIcon className="h-8 w-8 text-red-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Security Alerts</p>
-              <p className="text-2xl font-semibold text-gray-900">{metrics.securityAlerts}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
 
-      {/* Additional Security Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <XCircleIcon className="h-8 w-8 text-red-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Failed Logins</p>
-              <p className="text-2xl font-semibold text-gray-900">{metrics.failedLogins}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <ComputerDesktopIcon className="h-8 w-8 text-orange-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Blocked IPs</p>
-              <p className="text-2xl font-semibold text-gray-900">{metrics.blockedIPs}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <ShieldCheckIcon className="h-8 w-8 text-green-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">2FA Enabled</p>
-              <p className="text-2xl font-semibold text-gray-900">{metrics.twoFactorEnabled}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <ClockIcon className="h-8 w-8 text-purple-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Password Resets</p>
-              <p className="text-2xl font-semibold text-gray-900">{metrics.passwordResets}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Security Alerts */}
+      {/* Security Events */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium text-gray-900">Recent Security Alerts</h2>
-            <Button variant="outline" size="sm">
-              <EyeIcon className="h-4 w-4 mr-2" />
-              View All
-            </Button>
+            <h3 className="text-lg font-medium text-gray-900">Security Events</h3>
+            
+            {/* Filters */}
+            <div className="flex space-x-4">
+              <select
+                value={filter.severity || ''}
+                onChange={(e) => setFilter({ ...filter, severity: e.target.value || undefined })}
+                className="text-sm border-gray-300 rounded-md"
+              >
+                <option value="">All Severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              
+              <select
+                value={filter.resolved === undefined ? '' : filter.resolved.toString()}
+                onChange={(e) => setFilter({ 
+                  ...filter, 
+                  resolved: e.target.value === '' ? undefined : e.target.value === 'true' 
+                })}
+                className="text-sm border-gray-300 rounded-md"
+              >
+                <option value="">All Events</option>
+                <option value="false">Unresolved</option>
+                <option value="true">Resolved</option>
+              </select>
+            </div>
           </div>
         </div>
-        
-        <div className="divide-y divide-gray-200">
-          {alerts.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <ShieldCheckIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No Security Alerts</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                All systems are operating normally.
-              </p>
-            </div>
-          ) : (
-            alerts.map((alert) => (
-              <div key={alert.id} className="px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className={`flex-shrink-0 w-2 h-2 rounded-full ${
-                      alert.resolved ? 'bg-gray-400' : severityColors[alert.severity].split(' ')[0].replace('text-', 'bg-')
-                    }`}></div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <h3 className={`text-sm font-medium ${alert.resolved ? 'text-gray-500' : 'text-gray-900'}`}>
-                          {alert.title}
-                        </h3>
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${alertTypeColors[alert.type]}`}>
-                          {alert.type.replace('_', ' ')}
-                        </span>
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${severityColors[alert.severity]}`}>
-                          {alert.severity}
-                        </span>
-                        {alert.resolved && (
-                          <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                            Resolved
-                          </span>
-                        )}
-                      </div>
-                      <p className={`text-sm ${alert.resolved ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
-                        {alert.description}
-                      </p>
-                      <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                        <span>{formatTimestamp(alert.timestamp)}</span>
-                        {alert.ipAddress && <span>IP: {alert.ipAddress}</span>}
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Event
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Severity
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  IP Address
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Time
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredEvents.map((event) => (
+                <tr key={event.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      {getSeverityIcon(event.severity)}
+                      <div className="ml-3">
+                        <div className="text-sm font-medium text-gray-900">
+                          {event.type.replace(/_/g, ' ')}
+                        </div>
+                        <div className="text-sm text-gray-500 truncate max-w-xs">
+                          {event.message}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {!alert.resolved && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleResolveAlert(alert.id)}
-                    >
-                      Resolve
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`text-sm font-medium ${getSeverityColor(event.severity)}`}>
+                      {event.severity}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                    {event.ipAddress}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(event.timestamp).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      event.resolved 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {event.resolved ? 'Resolved' : 'Active'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setSelectedEvent(event)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        <EyeIcon className="h-4 w-4" />
+                      </button>
+                      {!event.resolved && (
+                        <button
+                          onClick={() => resolveEvent(event.id)}
+                          className="text-green-600 hover:text-green-900"
+                        >
+                          Resolve
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
+
+      {/* Event Detail Modal */}
+      {selectedEvent && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Security Event Details</h3>
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Event Type</label>
+                <p className="mt-1 text-sm text-gray-900">{selectedEvent.type.replace(/_/g, ' ')}</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Message</label>
+                <p className="mt-1 text-sm text-gray-900">{selectedEvent.message}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Severity</label>
+                  <p className={`mt-1 text-sm font-medium ${getSeverityColor(selectedEvent.severity)}`}>
+                    {selectedEvent.severity}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">IP Address</label>
+                  <p className="mt-1 text-sm font-mono text-gray-900">{selectedEvent.ipAddress}</p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Timestamp</label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {new Date(selectedEvent.timestamp).toLocaleString()}
+                </p>
+              </div>
+              
+              {selectedEvent.userAgent && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">User Agent</label>
+                  <p className="mt-1 text-sm text-gray-900 break-all">{selectedEvent.userAgent}</p>
+                </div>
+              )}
+              
+              {selectedEvent.metadata && Object.keys(selectedEvent.metadata).length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Metadata</label>
+                  <pre className="mt-1 text-sm text-gray-900 bg-gray-100 p-3 rounded overflow-x-auto">
+                    {JSON.stringify(selectedEvent.metadata, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-6 flex justify-end space-x-3">
+              {!selectedEvent.resolved && (
+                <button
+                  onClick={() => resolveEvent(selectedEvent.id)}
+                  className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700"
+                >
+                  Resolve Event
+                </button>
+              )}
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-400"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

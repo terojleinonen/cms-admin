@@ -28,7 +28,9 @@ async function sendPasswordChangedNotification(userId: string) {
   
   await NotificationHelpers.sendPasswordChanged(context)
   
-  console.log('Password changed notification sent!')
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Password changed notification sent!')
+  }
 }
 
 // Example 3: Send email changed notification

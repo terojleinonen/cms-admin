@@ -64,7 +64,7 @@ export default function PasswordReset() {
       }
 
       // In development, show the token for testing
-      if (result.resetToken) {
+      if (result.resetToken && process.env.NODE_ENV === 'development') {
         console.log('Reset token (dev only):', result.resetToken)
         router.push(`/auth/password-reset?token=${result.resetToken}`)
       } else {

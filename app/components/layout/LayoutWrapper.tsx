@@ -11,6 +11,7 @@ import AdminLayout from './AdminLayout'
 import ErrorBoundary from '../ui/ErrorBoundary'
 import { Suspense } from 'react'
 import LoadingSpinner from '../ui/LoadingSpinner'
+import KeyboardShortcuts from '../ui/KeyboardShortcuts'
 
 interface LayoutWrapperProps {
   children: React.ReactNode
@@ -137,6 +138,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
         <AdminLayout>
           {children}
         </AdminLayout>
+        <KeyboardShortcuts />
       </Suspense>
     </ErrorBoundary>
   )

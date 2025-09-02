@@ -1,6 +1,43 @@
 /**
- * Sidebar navigation component
- * Provides role-based navigation menu for the CMS
+ * Sidebar Navigation Component for Kin Workspace CMS
+ * 
+ * This component provides a responsive sidebar navigation with role-based access control.
+ * It displays different navigation items based on the user's role (ADMIN, EDITOR, VIEWER)
+ * and includes both mobile and desktop layouts with smooth transitions.
+ * 
+ * Features:
+ * - Role-based navigation filtering
+ * - Responsive design (mobile overlay + desktop fixed)
+ * - Active state highlighting
+ * - Hierarchical navigation sections
+ * - User role indicator
+ * - Smooth animations and transitions
+ * 
+ * @module Sidebar
+ * @version 1.0.0
+ * @author Kin Workspace CMS Team
+ * @since 2024-01-01
+ * 
+ * @example
+ * ```tsx
+ * import Sidebar from '@/components/layout/Sidebar'
+ * 
+ * function AdminLayout() {
+ *   const [sidebarOpen, setSidebarOpen] = useState(false)
+ *   const { data: session } = useSession()
+ * 
+ *   return (
+ *     <div>
+ *       <Sidebar 
+ *         isOpen={sidebarOpen}
+ *         onClose={() => setSidebarOpen(false)}
+ *         userRole={session?.user?.role}
+ *       />
+ *       // ... rest of layout
+ *     </div>
+ *   )
+ * }
+ * ```
  */
 
 'use client'
@@ -28,20 +65,38 @@ import {
 import { UserRole } from '@prisma/client'
 import clsx from 'clsx'
 
+/**
+ * Navigation item configuration interface
+ */
 interface NavigationItem {
+  /** Display name for the navigation item */
   name: string
+  /** URL path for the navigation item */
   href: string
+  /** Heroicon component for the navigation item */
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  /** Minimum required role to access this item */
   requiredRole?: UserRole
+  /** Optional badge text (e.g., "New", "Beta") */
   badge?: string
 }
 
+/**
+ * Sidebar component props interface
+ */
 interface SidebarProps {
+  /** Whether the mobile sidebar is open */
   isOpen: boolean
+  /** Callback function to close the mobile sidebar */
   onClose: () => void
+  /** Current user's role for permission checking */
   userRole?: UserRole
 }
 
+/**
+ * Main navigation items configuration
+ * These items are available to users based on their role permissions
+ */
 const navigation: NavigationItem[] = [
   {
     name: 'Dashboard',
@@ -97,7 +152,10 @@ const navigation: NavigationItem[] = [
   },
 ]
 
-// Admin-only navigation items (shown in a separate section)
+/**
+ * Admin-only navigation items (shown in a separate section)
+ * These items are only visible to users with ADMIN role
+ */
 const adminNavigation: NavigationItem[] = [
   {
     name: 'User Management',
@@ -149,11 +207,24 @@ const adminNavigation: NavigationItem[] = [
   },
 ]
 
+/**
+ * Check if user has permission to access a navigation item
+ * 
+ * Uses role hierarchy where ADMIN > EDITOR > VIEWER.
+ * Users can access items that require their role level or lower.
+ * 
+ * @param userRole - Current user's role
+ * @param requiredRole - Minimum required role for the item
+ * @returns boolean - True if user has permission
+ */
 function hasPermission(userRole: UserRole | undefined, requiredRole?: UserRole): boolean {
+  // If no role is required, everyone can access
   if (!requiredRole) return true
+  
+  // If user has no role, deny access to protected items
   if (!userRole) return false
 
-  // Role hierarchy: ADMIN > EDITOR > VIEWER
+  // Role hierarchy: ADMIN (3) > EDITOR (2) > VIEWER (1)
   const roleHierarchy = {
     [UserRole.VIEWER]: 1,
     [UserRole.EDITOR]: 2,
@@ -163,6 +234,14 @@ function hasPermission(userRole: UserRole | undefined, requiredRole?: UserRole):
   return roleHierarchy[userRole] >= roleHierarchy[requiredRole]
 }
 
+/**
+ * Sidebar content component
+ * 
+ * Renders the sidebar navigation content including logo, navigation items,
+ * and user role indicator. This component is shared between mobile and desktop layouts.
+ * 
+ * @param userRole - Current user's role for filtering navigation items
+ */
 function SidebarContent({ userRole }: { userRole?: UserRole }) {
   const pathname = usePathname()
 
@@ -289,6 +368,21 @@ function SidebarContent({ userRole }: { userRole?: UserRole }) {
   )
 }
 
+/**
+ * Main Sidebar component
+ * 
+ * Provides responsive sidebar navigation with role-based access control.
+ * Includes both mobile overlay and desktop fixed layouts with smooth transitions.
+ * 
+ * The sidebar automatically filters navigation items based on user permissions
+ * and highlights the current active page.
+ * 
+ * @param props - Sidebar component props
+ * @param props.isOpen - Whether mobile sidebar is open
+ * @param props.onClose - Callback to close mobile sidebar
+ * @param props.userRole - Current user's role for permission filtering
+ * @returns JSX.Element - Rendered sidebar component
+ */
 export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
   return (
     <>

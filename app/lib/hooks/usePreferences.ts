@@ -103,7 +103,7 @@ export function usePreferences() {
     if (!session?.user?.id) return null
 
     try {
-      const response = await fetch('/api/user/preferences', {
+      const response = await fetch(`/api/users/${session.user.id}/preferences`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ export function usePreferences() {
       }
 
       const data = await response.json()
-      return data
+      return data.preferences
     } catch (error) {
       console.error('Error fetching preferences:', error)
       throw error
@@ -135,7 +135,7 @@ export function usePreferences() {
     setState(prev => ({ ...prev, isUpdating: true, error: null }))
 
     try {
-      const response = await fetch('/api/user/preferences', {
+      const response = await fetch(`/api/users/${session.user.id}/preferences`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ export function usePreferences() {
       }
 
       const data = await response.json()
-      const updatedPreferences = data
+      const updatedPreferences = data.preferences
 
       // Update cache
       cachePreferences(updatedPreferences)
@@ -180,6 +180,9 @@ export function usePreferences() {
    * Load preferences with caching strategy
    */
   const loadPreferences = useCallback(async () => {
+    if (session?.status === 'loading') {
+      return
+    }
     if (!session?.user?.id) {
       setState(prev => ({ ...prev, isLoading: false, preferences: null }))
       return

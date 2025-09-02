@@ -102,7 +102,7 @@ describe('SecuritySettings Component', () => {
     it('renders all security sections', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('Security Settings')).toBeInTheDocument()
         expect(screen.getByText('Password Security')).toBeInTheDocument()
         expect(screen.getByText('Two-Factor Authentication')).toBeInTheDocument()
@@ -119,7 +119,7 @@ describe('SecuritySettings Component', () => {
     it('loads and displays security information', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('2FA is currently disabled')).toBeInTheDocument()
         expect(screen.getByText('2 active sessions')).toBeInTheDocument()
       })
@@ -130,7 +130,7 @@ describe('SecuritySettings Component', () => {
     it('shows password change form', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('Password Security')).toBeInTheDocument()
       })
 
@@ -145,7 +145,7 @@ describe('SecuritySettings Component', () => {
     it('validates password strength', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const changePasswordButton = screen.getByText('Change Password')
         await user.click(changePasswordButton)
       })
@@ -153,7 +153,7 @@ describe('SecuritySettings Component', () => {
       const newPasswordInput = screen.getByLabelText('New Password')
       await user.type(newPasswordInput, 'weak')
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText(/Password is too weak/)).toBeInTheDocument()
       })
     })
@@ -161,7 +161,7 @@ describe('SecuritySettings Component', () => {
     it('validates password confirmation', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const changePasswordButton = screen.getByText('Change Password')
         await user.click(changePasswordButton)
       })
@@ -172,7 +172,7 @@ describe('SecuritySettings Component', () => {
       await user.type(newPasswordInput, 'StrongPassword123!')
       await user.type(confirmPasswordInput, 'DifferentPassword456@')
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('Passwords do not match')).toBeInTheDocument()
       })
     })
@@ -185,7 +185,7 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const changePasswordButton = screen.getByText('Change Password')
         await user.click(changePasswordButton)
       })
@@ -201,7 +201,7 @@ describe('SecuritySettings Component', () => {
       const submitButton = screen.getByText('Update Password')
       await user.click(submitButton)
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockFetch).toHaveBeenCalledWith(
           '/api/users/user-123/security',
           expect.objectContaining({
@@ -220,7 +220,7 @@ describe('SecuritySettings Component', () => {
     it('shows 2FA setup when disabled', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('2FA is currently disabled')).toBeInTheDocument()
         expect(screen.getByText('Enable 2FA')).toBeInTheDocument()
       })
@@ -238,12 +238,12 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const enableButton = screen.getByText('Enable 2FA')
         await user.click(enableButton)
       })
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('Scan QR Code')).toBeInTheDocument()
         expect(screen.getByText('Enter Verification Code')).toBeInTheDocument()
         expect(screen.getByAltText('2FA QR Code')).toBeInTheDocument()
@@ -269,12 +269,12 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const enableButton = screen.getByText('Enable 2FA')
         await user.click(enableButton)
       })
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const tokenInput = screen.getByLabelText('Verification Code')
         expect(tokenInput).toBeInTheDocument()
       })
@@ -285,7 +285,7 @@ describe('SecuritySettings Component', () => {
       const verifyButton = screen.getByText('Verify & Enable')
       await user.click(verifyButton)
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('2FA enabled successfully')).toBeInTheDocument()
       })
     })
@@ -303,7 +303,7 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('2FA is enabled')).toBeInTheDocument()
         expect(screen.getByText('Disable 2FA')).toBeInTheDocument()
         expect(screen.getByText('Regenerate Backup Codes')).toBeInTheDocument()
@@ -328,7 +328,7 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const disableButton = screen.getByText('Disable 2FA')
         await user.click(disableButton)
       })
@@ -337,7 +337,7 @@ describe('SecuritySettings Component', () => {
       const confirmButton = screen.getByText('Yes, Disable 2FA')
       await user.click(confirmButton)
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('2FA disabled successfully')).toBeInTheDocument()
       })
     })
@@ -347,7 +347,7 @@ describe('SecuritySettings Component', () => {
     it('displays active sessions', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('Active Sessions')).toBeInTheDocument()
         expect(screen.getByText('2 active sessions')).toBeInTheDocument()
         expect(screen.getByText('Current session')).toBeInTheDocument()
@@ -364,7 +364,7 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const terminateButtons = screen.getAllByText('Terminate')
         expect(terminateButtons).toHaveLength(1) // Only non-current sessions
       })
@@ -372,7 +372,7 @@ describe('SecuritySettings Component', () => {
       const terminateButton = screen.getByText('Terminate')
       await user.click(terminateButton)
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockFetch).toHaveBeenCalledWith(
           '/api/users/user-123/sessions',
           expect.objectContaining({
@@ -391,12 +391,12 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const terminateAllButton = screen.getByText('Terminate All Other Sessions')
         await user.click(terminateAllButton)
       })
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockFetch).toHaveBeenCalledWith(
           '/api/users/user-123/sessions',
           expect.objectContaining({
@@ -412,7 +412,7 @@ describe('SecuritySettings Component', () => {
     it('displays recent security activity', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('Recent Activity')).toBeInTheDocument()
         expect(screen.getByText('LOGIN')).toBeInTheDocument()
         expect(screen.getByText('192.168.1.1')).toBeInTheDocument()
@@ -422,7 +422,7 @@ describe('SecuritySettings Component', () => {
     it('formats activity timestamps correctly', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         // Should show relative time like "just now" or "1 hour ago"
         expect(screen.getByText(/ago|now/)).toBeInTheDocument()
       })
@@ -435,7 +435,7 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('Failed to load security information')).toBeInTheDocument()
       })
     })
@@ -448,12 +448,12 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const enableButton = screen.getByText('Enable 2FA')
         await user.click(enableButton)
       })
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('Failed to setup 2FA')).toBeInTheDocument()
       })
     })
@@ -466,7 +466,7 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const changePasswordButton = screen.getByText('Change Password')
         await user.click(changePasswordButton)
       })
@@ -482,7 +482,7 @@ describe('SecuritySettings Component', () => {
       const submitButton = screen.getByText('Update Password')
       await user.click(submitButton)
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('Current password is incorrect')).toBeInTheDocument()
       })
     })
@@ -492,7 +492,7 @@ describe('SecuritySettings Component', () => {
     it('has proper form labels and ARIA attributes', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const changePasswordButton = screen.getByText('Change Password')
         await user.click(changePasswordButton)
       })
@@ -505,7 +505,7 @@ describe('SecuritySettings Component', () => {
     it('supports keyboard navigation', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const changePasswordButton = screen.getByText('Change Password')
         changePasswordButton.focus()
         expect(changePasswordButton).toHaveFocus()
@@ -524,12 +524,12 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const enableButton = screen.getByText('Enable 2FA')
         await user.click(enableButton)
       })
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const qrImage = screen.getByAltText('2FA QR Code')
         expect(qrImage).toBeInTheDocument()
       })
@@ -553,7 +553,7 @@ describe('SecuritySettings Component', () => {
 
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText('Security Recommendations')).toBeInTheDocument()
         expect(screen.getByText('Use a longer password')).toBeInTheDocument()
         expect(screen.getByText('Add special characters')).toBeInTheDocument()
@@ -563,7 +563,7 @@ describe('SecuritySettings Component', () => {
     it('shows 2FA recommendation when disabled', async () => {
       renderComponent()
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(screen.getByText(/Enable two-factor authentication/)).toBeInTheDocument()
       })
     })

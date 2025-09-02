@@ -447,28 +447,10 @@ if (typeof global.Element !== 'undefined') {
 }
 
 // Add comprehensive cleanup after each test
-afterEach(async () => {
-  // Clear all timers and intervals
+afterEach(() => {
+  // Clear all timers, intervals, and mocks
   jest.clearAllTimers();
   jest.clearAllMocks();
-  
-  // Clear DOM completely
-  if (document.body) {
-    document.body.innerHTML = '';
-  }
-  
-  // Clear any remaining event listeners
-  const events = ['click', 'change', 'submit', 'keydown', 'keyup', 'resize', 'scroll'];
-  events.forEach(event => {
-    // Remove all listeners for this event type
-    const listeners = document.querySelectorAll('*');
-    listeners.forEach(element => {
-      element.removeEventListener?.(event, () => {});
-    });
-  });
-  
-  // Clear any pending promises or async operations
-  await new Promise(resolve => setTimeout(resolve, 0));
   
   // Force garbage collection if available
   if (global.gc) {

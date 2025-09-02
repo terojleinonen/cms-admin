@@ -56,31 +56,32 @@ Object.defineProperty(window, 'matchMedia', {
 
 describe('usePreferences', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    mockLocalStorage.getItem.mockReturnValue(null)
-  })
+    jest.clearAllMocks();
+    mockLocalStorage.getItem.mockReturnValue(null);
+    mockFetch.mockClear();
+  });
 
   it('should initialize with loading state', () => {
     mockUseSession.mockReturnValue({
       data: null,
       status: 'loading',
-    } as any)
+    } as any);
 
-    const { result } = renderHook(() => usePreferences())
+    const { result } = renderHook(() => usePreferences());
 
-    expect(result.current.isLoading).toBe(true)
-    expect(result.current.preferences).toBe(null)
-    expect(result.current.error).toBe(null)
-  })
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.preferences).toBe(null);
+    expect(result.current.error).toBe(null);
+  });
 
   it('should load preferences from cache', async () => {
     const mockSession = {
       user: { id: 'user-123' },
-    }
+    };
     mockUseSession.mockReturnValue({
       data: mockSession,
       status: 'authenticated',
-    } as any)
+    } as any);
 
     const cachedPrefs = {
       data: {
@@ -100,28 +101,28 @@ describe('usePreferences', () => {
         },
       },
       timestamp: Date.now(),
-    }
+    };
 
-    mockLocalStorage.getItem.mockReturnValue(JSON.stringify(cachedPrefs))
+    mockLocalStorage.getItem.mockReturnValue(JSON.stringify(cachedPrefs));
 
-    const { result } = renderHook(() => usePreferences())
+    const { result } = renderHook(() => usePreferences());
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
+      expect(result.current.isLoading).toBe(false);
+    });
 
-    expect(result.current.preferences?.theme).toBe('DARK')
-    expect(result.current.preferences?.timezone).toBe('America/New_York')
-  })
+    expect(result.current.preferences?.theme).toBe('DARK');
+    expect(result.current.preferences?.timezone).toBe('America/New_York');
+  });
 
   it('should fetch preferences from API when cache is expired', async () => {
     const mockSession = {
       user: { id: 'user-123' },
-    }
+    };
     mockUseSession.mockReturnValue({
       data: mockSession,
       status: 'authenticated',
-    } as any)
+    } as any);
 
     // Expired cache
     const expiredCache = {
@@ -142,9 +143,9 @@ describe('usePreferences', () => {
         },
       },
       timestamp: Date.now() - 10 * 60 * 1000, // 10 minutes ago (expired)
-    }
+    };
 
-    mockLocalStorage.getItem.mockReturnValue(JSON.stringify(expiredCache))
+    mockLocalStorage.getItem.mockReturnValue(JSON.stringify(expiredCache));
 
     const apiResponse = {
       preferences: {
@@ -163,38 +164,38 @@ describe('usePreferences', () => {
           defaultView: 'analytics',
         },
       },
-    }
+    };
 
     mockFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(apiResponse),
-    } as Response)
+    } as Response);
 
-    const { result } = renderHook(() => usePreferences())
+    const { result } = renderHook(() => usePreferences());
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
+      expect(result.current.isLoading).toBe(false);
+    });
 
     expect(mockFetch).toHaveBeenCalledWith('/api/users/user-123/preferences', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-    })
+    });
 
-    expect(result.current.preferences?.theme).toBe('DARK')
-    expect(result.current.preferences?.timezone).toBe('America/New_York')
-  })
+    expect(result.current.preferences?.theme).toBe('DARK');
+    expect(result.current.preferences?.timezone).toBe('America/New_York');
+  });
 
   it('should update preferences', async () => {
     const mockSession = {
       user: { id: 'user-123' },
-    }
+    };
     mockUseSession.mockReturnValue({
       data: mockSession,
       status: 'authenticated',
-    } as any)
+    } as any);
 
     const initialPrefs = {
       theme: 'LIGHT' as const,
@@ -211,34 +212,34 @@ describe('usePreferences', () => {
         widgets: [],
         defaultView: 'dashboard',
       },
-    }
+    };
 
     // Mock initial fetch
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ preferences: initialPrefs }),
-    } as Response)
+    } as Response);
 
-    const { result } = renderHook(() => usePreferences())
+    const { result } = renderHook(() => usePreferences());
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
+      expect(result.current.isLoading).toBe(false);
+    });
 
     // Mock update response
     const updatedPrefs = {
       ...initialPrefs,
       theme: 'DARK' as const,
-    }
+    };
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ preferences: updatedPrefs }),
-    } as Response)
+    } as Response);
 
     await act(async () => {
-      await result.current.updatePreferences({ theme: 'DARK' })
-    })
+      await result.current.updatePreferences({ theme: 'DARK' });
+    });
 
     expect(mockFetch).toHaveBeenCalledWith('/api/users/user-123/preferences', {
       method: 'PUT',
@@ -246,20 +247,20 @@ describe('usePreferences', () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ theme: 'DARK' }),
-    })
+    });
 
-    expect(result.current.preferences?.theme).toBe('DARK')
-    expect(result.current.isUpdating).toBe(false)
-  })
+    expect(result.current.preferences?.theme).toBe('DARK');
+    expect(result.current.isUpdating).toBe(false);
+  });
 
   it('should handle update errors', async () => {
     const mockSession = {
       user: { id: 'user-123' },
-    }
+    };
     mockUseSession.mockReturnValue({
       data: mockSession,
       status: 'authenticated',
-    } as any)
+    } as any);
 
     // Mock initial successful fetch
     mockFetch.mockResolvedValueOnce({
@@ -282,13 +283,13 @@ describe('usePreferences', () => {
           },
         },
       }),
-    } as Response)
+    } as Response);
 
-    const { result } = renderHook(() => usePreferences())
+    const { result } = renderHook(() => usePreferences());
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
+      expect(result.current.isLoading).toBe(false);
+    });
 
     // Mock failed update
     mockFetch.mockResolvedValueOnce({
@@ -296,28 +297,28 @@ describe('usePreferences', () => {
       json: () => Promise.resolve({
         error: { message: 'Validation failed' },
       }),
-    } as Response)
+    } as Response);
 
     await act(async () => {
       try {
-        await result.current.updatePreferences({ theme: 'INVALID' as any })
+        await result.current.updatePreferences({ theme: 'INVALID' as any });
       } catch (error) {
         // Expected to throw
       }
-    })
+    });
 
-    expect(result.current.error).toBe('Validation failed')
-    expect(result.current.isUpdating).toBe(false)
-  })
+    expect(result.current.error).toBe('Validation failed');
+    expect(result.current.isUpdating).toBe(false);
+  });
 
-  it('should invalidate cache', async () => {
+  it('should invalidate cache and refetch', async () => {
     const mockSession = {
       user: { id: 'user-123' },
-    }
+    };
     mockUseSession.mockReturnValue({
       data: mockSession,
       status: 'authenticated',
-    } as any)
+    } as any);
 
     mockFetch.mockResolvedValue({
       ok: true,
@@ -339,18 +340,19 @@ describe('usePreferences', () => {
           },
         },
       }),
-    } as Response)
+    } as Response);
 
-    const { result } = renderHook(() => usePreferences())
+    const { result } = renderHook(() => usePreferences());
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
+      expect(result.current.isLoading).toBe(false);
+    });
 
     act(() => {
-      result.current.invalidateCache()
-    })
+      result.current.invalidateCache();
+    });
 
-    expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('user_preferences')
-  })
-})
+    expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('user_preferences');
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+});

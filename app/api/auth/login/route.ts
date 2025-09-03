@@ -5,10 +5,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { loginSchema } from '../../../lib/auth-schemas'
-import { verifyPassword } from '../../../lib/auth-utils'
-import { handleDatabaseError } from '../../../lib/db-errors'
-import { prisma } from '../../../lib/db'
+import { loginSchema } from '@/lib/auth-schemas'
+import { verifyPassword } from '@/lib/auth-utils'
+import { handleDatabaseError } from '@/lib/db-errors'
+import { prisma } from '@/lib/db'
 import jwt from 'jsonwebtoken'
 import { UserRole } from '@prisma/client'
 

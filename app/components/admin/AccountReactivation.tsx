@@ -5,9 +5,9 @@ import {
   CheckCircleIcon,
   EnvelopeIcon,
 } from '@heroicons/react/24/outline'
-import { Button } from '../ui/Button'
-import { FormField } from '../ui/FormField'
-import { LoadingState } from '../ui/LoadingState'
+import { Button } from '@/components/ui/Button'
+import { FormField } from '@/components/ui/FormField'
+import { LoadingState } from '@/components/ui/LoadingState'
 
 interface User {
   id: string

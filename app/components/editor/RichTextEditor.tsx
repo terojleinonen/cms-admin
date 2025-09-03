@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import DOMPurify from 'dompurify'
 import { PhotoIcon } from '@heroicons/react/24/outline'
-import { getEditorHeightClass } from '../../../utils/dynamic-styles'
+import { getEditorHeightClass } from '@/utils/dynamic-styles'
 
 // Dynamically import ReactQuill to avoid SSR issues
 const ReactQuill = dynamic(() => import('react-quill'), {

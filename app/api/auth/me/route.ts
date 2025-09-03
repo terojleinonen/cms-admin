@@ -5,8 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser, requireAuth } from '../../../lib/auth-utils'
-import { prisma } from '../../../lib/db'
+import { getCurrentUser, requireAuth } from '@/lib/auth-utils'
+import { prisma } from '@/lib/db'
 import jwt from 'jsonwebtoken'
 
 /**

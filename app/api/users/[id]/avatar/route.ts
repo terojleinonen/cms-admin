@@ -5,16 +5,16 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../../../../lib/auth-config'
-import { prisma } from '../../../../lib/db'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { 
   profilePictureService, 
   fileToBuffer, 
   PROFILE_PICTURE_CONFIG,
   formatFileSize
-} from '../../../../lib/profile-image-utils'
-import { getAuditService } from '../../../../lib/audit-service'
+} from '@/lib/profile-image-utils'
+import { getAuditService } from '@/lib/audit-service'
 
 // Check if user has access to avatar operations
 async function requireAvatarAccess(userId: string) {

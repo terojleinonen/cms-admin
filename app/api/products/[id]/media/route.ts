@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 // Validation schemas
@@ -29,7 +29,7 @@ const setPrimaryMediaSchema = z.object({
 // GET /api/products/[id]/media - Get product media
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -71,7 +71,7 @@ export async function GET(
     })
 
     return NextResponse.json({
-      productMedia: productMedia.map(pm => ({
+      productMedia: productMedia.map((pm: any) => ({
         mediaId: pm.mediaId,
         sortOrder: pm.sortOrder,
         isPrimary: pm.isPrimary,
@@ -91,7 +91,7 @@ export async function GET(
 // POST /api/products/[id]/media - Add media to product
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -174,7 +174,7 @@ export async function POST(
 
     return NextResponse.json({
       message: 'Media added to product successfully',
-      productMedia: updatedProductMedia.map(pm => ({
+      productMedia: updatedProductMedia.map((pm: any) => ({
         mediaId: pm.mediaId,
         sortOrder: pm.sortOrder,
         isPrimary: pm.isPrimary,
@@ -185,7 +185,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Invalid request data', details: error.issues },
         { status: 400 }
       )
     }
@@ -201,7 +201,7 @@ export async function POST(
 // PUT /api/products/[id]/media - Update media order or set primary
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -263,7 +263,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Invalid request data', details: error.issues },
         { status: 400 }
       )
     }
@@ -279,7 +279,7 @@ export async function PUT(
 // DELETE /api/products/[id]/media - Remove media from product
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions)

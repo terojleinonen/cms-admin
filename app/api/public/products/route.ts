@@ -5,8 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../lib/db'
-import { CacheService } from '../../../lib/cache'
+import { prisma } from '@/lib/db'
+import { CacheService } from '@/lib/cache'
 import { rateLimit, rateLimitConfigs, createRateLimitHeaders } from '../../../lib/rate-limit'
 import { z } from 'zod'
 

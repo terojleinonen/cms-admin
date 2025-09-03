@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
-import { authOptions } from '../../../lib/auth-config'
-import { prisma } from '../../../lib/db'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { Decimal } from '@prisma/client/runtime/library'
 
@@ -85,6 +85,13 @@ export async function GET(
     }
 
     // Transform Decimal fields to numbers for JSON response
+    if (!product) {
+      return NextResponse.json(
+        { error: 'Product not found after update' },
+        { status: 404 }
+      )
+    }
+
     const transformedProduct = {
       ...product,
       price: product.price.toNumber(),

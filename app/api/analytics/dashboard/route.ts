@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: {
-          createdBy: {
+          creator: {
             select: { id: true, name: true, email: true }
           }
         }

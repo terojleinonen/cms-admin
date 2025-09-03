@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     const { token, newPassword, confirmPassword } = validation.data
     const ipAddress = request.headers.get('x-forwarded-for') || 
                      request.headers.get('x-real-ip') || 
-                     request.ip || null
+                     '' || null
     const userAgent = request.headers.get('user-agent') || null
 
     const result = await completePasswordReset(

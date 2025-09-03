@@ -22,12 +22,12 @@ const backupConfig = {
   encryptionKey: process.env.BACKUP_ENCRYPTION_KEY
 };
 
-const backupService = new BackupService(prisma, backupConfig);
+const backupService = new BackupService(backupConfig.backupDir);
 
 // GET /api/admin/backup/status/[id] - Get backup status
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);

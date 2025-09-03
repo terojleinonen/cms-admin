@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 const updatePageSchema = z.object({
@@ -25,10 +25,10 @@ const updatePageSchema = z.object({
 // GET /api/pages/[id] - Get specific page
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params
+    const { id } = params
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -65,10 +65,10 @@ export async function GET(
 // PUT /api/pages/[id] - Update specific page
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params
+    const { id } = params
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -149,10 +149,10 @@ export async function PUT(
 // DELETE /api/pages/[id] - Delete specific page
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params
+    const { id } = params
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

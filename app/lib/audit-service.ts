@@ -49,6 +49,7 @@ export const AUDIT_ACTIONS = {
     BACKUP_RESTORED: 'system.backup_restored',
     SETTINGS_CHANGED: 'system.settings_changed',
     MAINTENANCE_MODE: 'system.maintenance_mode',
+    DATA_CLEANUP_PERFORMED: 'system.data_cleanup_performed',
   },
 } as const
 

@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 const previewSchema = z.object({
@@ -18,7 +18,7 @@ const previewSchema = z.object({
 // POST /api/pages/[id]/preview - Generate preview for page
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -84,7 +84,7 @@ export async function POST(
 // GET /api/pages/[id]/preview - Get preview URL for page
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions)

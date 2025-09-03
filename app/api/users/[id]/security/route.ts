@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../../../../lib/auth-config'
-import { prisma } from '../../../../lib/db'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { 
   passwordChangeSchema,
@@ -15,9 +15,9 @@ import {
   securitySettingsUpdateSchema,
   sessionTerminationSchema,
   formatValidationErrors
-} from '../../../../lib/user-validation-schemas'
-import { hashPassword, verifyPassword } from '../../../../lib/password-utils'
-import { getAuditService } from '../../../../lib/audit-service'
+} from '@/lib/user-validation-schemas'
+import { hashPassword, verifyPassword } from '@/lib/password-utils'
+import { getAuditService } from '@/lib/audit-service'
 import { z } from 'zod'
 import crypto from 'crypto'
 

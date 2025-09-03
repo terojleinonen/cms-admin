@@ -59,9 +59,8 @@ export async function POST(request: NextRequest) {
 
     // Log the cleanup operation
     const auditService = getAuditService(prisma)
-    await auditService.logUser(
+    await auditService.logSystem(
       session?.user?.id || 'system',
-      'system',
       'DATA_CLEANUP_PERFORMED',
       {
         policy,
@@ -69,8 +68,8 @@ export async function POST(request: NextRequest) {
         performedAt: new Date(),
         performedBy: session?.user?.id,
       },
-      request.headers.get('x-forwarded-for') || request.ip,
-      request.headers.get('user-agent')
+      request.headers.get('x-forwarded-for') || '',
+      request.headers.get('user-agent') || ''
     )
 
     return NextResponse.json({

@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../../lib/auth-config'
-import { prisma } from '../../lib/db'
-import { hashPassword } from '../../lib/password-utils'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
+import { hashPassword } from '@/lib/password-utils'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
 

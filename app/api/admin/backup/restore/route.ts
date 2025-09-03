@@ -34,7 +34,7 @@ const backupConfig = {
   encryptionKey: process.env.BACKUP_ENCRYPTION_KEY
 };
 
-const backupService = new BackupService(prisma, backupConfig);
+const backupService = new BackupService(backupConfig.backupDir);
 
 // POST /api/admin/backup/restore - Restore from backup
 export async function POST(request: NextRequest) {
@@ -48,12 +48,10 @@ export async function POST(request: NextRequest) {
     const validatedData = restoreBackupSchema.parse(body);
 
     // Perform restore operation
+    // TODO: Implement restoreMedia and overwriteExisting options
     await backupService.restoreFromBackup(
       {
-        backupId: validatedData.backupId,
-        restoreDatabase: validatedData.restoreDatabase,
-        restoreMedia: validatedData.restoreMedia,
-        overwriteExisting: validatedData.overwriteExisting
+        backupId: validatedData.backupId
       },
       session.user.id
     );

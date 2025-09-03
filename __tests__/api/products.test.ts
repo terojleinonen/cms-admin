@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 
-describe('Auth API', () => {
+describe('Products API', () => {
     it('should be true', () => {
         expect(true).toBe(true);
     });

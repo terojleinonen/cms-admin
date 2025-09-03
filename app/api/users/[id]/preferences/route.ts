@@ -5,16 +5,16 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../../../../lib/auth-config'
-import { prisma } from '../../../../lib/db'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { 
   userPreferencesUpdateSchema, 
   formatValidationErrors,
   notificationSettingsSchema,
   dashboardSettingsSchema
-} from '../../../../lib/user-validation-schemas'
-import { getAuditService } from '../../../../lib/audit-service'
+} from '@/lib/user-validation-schemas'
+import { getAuditService } from '@/lib/audit-service'
 import { z } from 'zod'
 
 // Check if user has access to preferences

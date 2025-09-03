@@ -34,7 +34,7 @@ const backupConfig = {
   encryptionKey: process.env.BACKUP_ENCRYPTION_KEY
 };
 
-const backupService = new BackupService(prisma, backupConfig);
+const backupService = new BackupService(backupConfig.backupDir);
 
 // POST /api/admin/backup - Create new backup
 export async function POST(request: NextRequest) {

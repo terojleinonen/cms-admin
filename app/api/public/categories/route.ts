@@ -5,13 +5,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../lib/db'
-import { CacheService } from '../../../lib/cache'
-import { rateLimit, rateLimitConfigs, createRateLimitHeaders } from '../../../lib/rate-limit'
+import { prisma } from '@/lib/db'
+import { CacheService } from '@/lib/cache'
+import { rateLimit, rateLimitConfigs, createRateLimitHeaders } from '@/lib/rate-limit'
 import { z } from 'zod'
 
 // Initialize cache service
-const cache = new CacheService(prisma, { maxSize: 500 })
+const cache = CacheService.getInstance({ maxSize: 500 });
+cache.initializeDatabase(prisma);
 
 // Validation schema for query parameters
 const querySchema = z.object({

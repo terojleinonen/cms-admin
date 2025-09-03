@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../../../../../lib/auth-config'
-import { prisma } from '../../../../../lib/db'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 
 // Check if user has admin permissions
@@ -182,17 +182,7 @@ export async function GET(
     // Filter active sessions
     const activeSessions = sessions.filter(session => session.isActive)
 
-    const securityInfo = {
-      twoFactorEnabled: user.twoFactorEnabled,
-      lastPasswordChange: lastPasswordChange?.createdAt || user.createdAt,
-      activeSessions,
-      recentActivity,
-      securityScore,
-      recommendations: []
-    }
-
-    // Add security recommendations
-    const recommendations = []
+    const recommendations: { type: string; title: string; description: string; action: string; }[] = [];
     
     if (!user.twoFactorEnabled) {
       recommendations.push({
@@ -233,7 +223,14 @@ export async function GET(
       })
     }
 
-    securityInfo.recommendations = recommendations
+    const securityInfo = {
+      twoFactorEnabled: user.twoFactorEnabled,
+      lastPasswordChange: lastPasswordChange?.createdAt || user.createdAt,
+      activeSessions,
+      recentActivity,
+      securityScore,
+      recommendations: recommendations
+    }
 
     return NextResponse.json({ security: securityInfo })
 

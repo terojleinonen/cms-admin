@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 const updateMediaSchema = z.object({
@@ -25,7 +25,7 @@ export async function GET(
     const media = await prisma.media.findUnique({
       where: { id },
       include: {
-        uploadedBy: {
+        creator: {
           select: { id: true, name: true, email: true }
         }
       }
@@ -68,7 +68,7 @@ export async function PUT(
       where: { id },
       data: validatedData,
       include: {
-        uploadedBy: {
+        creator: {
           select: { id: true, name: true, email: true }
         }
       }
@@ -77,7 +77,7 @@ export async function PUT(
     return NextResponse.json({ media: updatedMedia })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid data', details: error.issues }, { status: 400 })
     }
     console.error('Error updating media:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

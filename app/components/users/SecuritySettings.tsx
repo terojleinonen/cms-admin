@@ -21,10 +21,10 @@ import {
   QrCodeIcon,
   ClipboardDocumentIcon
 } from '@heroicons/react/24/outline'
-import Button from '../ui/Button'
-import FormField from '../ui/FormField'
-import Input from '../ui/Input'
-import LoadingSpinner from '../ui/LoadingSpinner'
+import Button from '@/components/ui/Button'
+import FormField from '@/components/ui/FormField'
+import Input from '@/components/ui/Input'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { validatePasswordStrength } from '@/lib/user-validation-schemas'
 import QRCode from 'qrcode'
 

@@ -4,7 +4,7 @@
     "lib": [
       "dom",
       "dom.iterable",
-      "ES6"
+      "esnext"
     ],
     "allowJs": true,
     "skipLibCheck": true,
@@ -12,18 +12,12 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "module": "commonjs",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
-    "composite": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
     "baseUrl": ".",
     "paths": {
       "@/*": [
@@ -42,22 +36,22 @@
         "./types/*"
       ]
     },
-    "types": ["jest", "@testing-library/jest-dom", "node"]
+    "types": [
+      "jest",
+      "@testing-library/jest-dom",
+      "node"
+    ]
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "__tests__/**/*.ts",
+    "__tests__/**/*.tsx",
+    "tests/**/*.ts",
     "types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    ".next",
-    "coverage",
-    "dist",
-    "__tests__",
-    "tests",
-    "scripts"
+    "node_modules"
   ]
 }

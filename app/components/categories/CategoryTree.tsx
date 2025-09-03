@@ -15,7 +15,7 @@ import {
   Bars3Icon,
 } from '@heroicons/react/24/outline'
 import { Category } from '@/lib/types'
-import { getCategoryTreeIndentClass } from '../../../utils/dynamic-styles'
+import { getCategoryTreeIndentClass } from '@/utils/dynamic-styles'
 
 interface CategoryTreeProps {
   categories: Category[]

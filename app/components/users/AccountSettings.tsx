@@ -17,11 +17,11 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
-import Button from '../ui/Button'
-import FormField from '../ui/FormField'
-import Select from '../ui/Select'
-import Input from '../ui/Input'
-import LoadingSpinner from '../ui/LoadingSpinner'
+import Button from '@/components/ui/Button'
+import FormField from '@/components/ui/FormField'
+import Select from '@/components/ui/Select'
+import Input from '@/components/ui/Input'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { UserPreferences, NotificationSettings, DashboardSettings } from '@/lib/types'
 import { Theme } from '@prisma/client'
 import { userPreferencesUpdateSchema, formatValidationErrors } from '@/lib/user-validation-schemas'

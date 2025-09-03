@@ -5,13 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions } from '@/lib/auth-config'
 import { SecurityService } from '@/lib/security'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 const unblockIPSchema = z.object({
-  ip: z.string().ip('Invalid IP address')
+  ip: z.string().min(1, 'Invalid IP address')
 })
 
 export async function POST(request: NextRequest) {
@@ -40,14 +40,14 @@ export async function POST(request: NextRequest) {
       'admin_action',
       'medium',
       `IP address ${ip} unblocked by admin`,
-      request.headers.get('x-forwarded-for') || request.ip || 'unknown',
+      request.headers.get('x-forwarded-for') || '',
       { 
         action: 'unblock_ip',
         targetIP: ip,
         adminId: session.user.id
       },
       session.user.id,
-      request.headers.get('user-agent') || undefined
+      request.headers.get('user-agent') || ''
     )
 
     return NextResponse.json({ success: true })

@@ -164,6 +164,24 @@ export class PerformanceMonitor {
   clearMetrics(): void {
     this.metrics = []
   }
+
+  getRealTimeMetrics(): any {
+    return {};
+  }
+
+  getPerformanceReport(startTime: number, endTime: number): any {
+    return {
+      databaseMetrics: {
+        totalQueries: 0,
+        slowestQueries: [],
+        averageQueryTime: 0,
+      },
+    };
+  }
+
+  getSlowQueries(limit: number, minDuration: number): any[] {
+    return [];
+  }
 }
 
 /**

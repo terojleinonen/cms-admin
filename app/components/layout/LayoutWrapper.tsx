@@ -8,10 +8,10 @@
 
 import { usePathname } from 'next/navigation'
 import AdminLayout from './AdminLayout'
-import ErrorBoundary from '../ui/ErrorBoundary'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { Suspense } from 'react'
-import LoadingSpinner from '../ui/LoadingSpinner'
-import KeyboardShortcuts from '../ui/KeyboardShortcuts'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import KeyboardShortcuts from '@/components/ui/KeyboardShortcuts'
 
 interface LayoutWrapperProps {
   children: React.ReactNode

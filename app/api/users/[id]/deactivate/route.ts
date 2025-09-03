@@ -5,11 +5,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../../../../lib/auth-config'
-import { prisma } from '../../../../lib/db'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
-import { getAuditService } from '../../../../lib/audit-service'
+import { getAuditService } from '@/lib/audit-service'
 
 const deactivationSchema = z.object({
   reason: z.string().min(1, 'Deactivation reason is required').max(500),

@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 // Simple in-memory cache for this route
@@ -27,10 +27,10 @@ const querySchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: { slug: string } }
 ) {
   try {
-    const { slug } = await params
+    const { slug } = params
     const { searchParams } = new URL(request.url)
     
     // Validate query parameters

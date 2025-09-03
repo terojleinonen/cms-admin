@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { v4 as uuidv4 } from 'uuid'
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          uploadedBy: {
+          creator: {
             select: { id: true, name: true, email: true }
           }
         }
@@ -151,13 +151,13 @@ export async function POST(request: NextRequest) {
         filename: uniqueFilename,
         originalName: file.name,
         mimeType: file.type,
-        size: file.size,
-        url: `/uploads/${folder}/${uniqueFilename}`,
-        altText,
-        uploadedById: session.user.id,
+        fileSize: file.size,
+        folder: folder,
+        altText: altText,
+        createdBy: session.user.id,
       },
       include: {
-        uploadedBy: {
+        creator: {
           select: { id: true, name: true, email: true }
         }
       }

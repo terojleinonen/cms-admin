@@ -5,14 +5,14 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../../../lib/auth-config'
-import { prisma } from '../../../lib/db'
-import { hashPassword } from '../../../lib/password-utils'
+import { authOptions } from '@/lib/auth-config'
+import { prisma } from '@/lib/db'
+import { hashPassword } from '@/lib/password-utils'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
-import { userProfileUpdateSchema, formatValidationErrors } from '../../../lib/user-validation-schemas'
-import { profilePictureService, fileToBuffer } from '../../../lib/profile-image-utils'
-import { getAuditService } from '../../../lib/audit-service'
+import { userProfileUpdateSchema, formatValidationErrors } from '@/lib/user-validation-schemas'
+import { profilePictureService, fileToBuffer } from '@/lib/profile-image-utils'
+import { getAuditService } from '@/lib/audit-service'
 
 const updateUserSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255).optional(),

@@ -30,8 +30,16 @@ async function requireAdminAccess() {
   return null
 }
 
+import { Session, AuditLog } from '@prisma/client'
+
+type SecurityUser = {
+  emailVerified: Date | null;
+  twoFactorEnabled: boolean;
+  lastLoginAt: Date | null;
+};
+
 // Calculate security score based on various factors
-function calculateSecurityScore(user: unknown, sessions: unknown[], auditLogs: unknown[]): number {
+function calculateSecurityScore(user: SecurityUser, sessions: Session[], auditLogs: AuditLog[]): number {
   let score = 0
 
   // Base score
@@ -124,6 +132,7 @@ export async function GET(
       },
       select: {
         id: true,
+        userId: true,
         token: true,
         expiresAt: true,
         ipAddress: true,
@@ -160,6 +169,7 @@ export async function GET(
       },
       select: {
         id: true,
+        userId: true,
         action: true,
         resource: true,
         details: true,

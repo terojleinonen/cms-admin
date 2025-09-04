@@ -8,6 +8,11 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { ProductMedia, Media } from '@prisma/client'
+
+type ProductMediaWithMedia = ProductMedia & {
+  media: Media | null
+}
 
 // Validation schemas
 const addMediaSchema = z.object({
@@ -63,7 +68,8 @@ export async function GET(
             height: true,
             altText: true,
             folder: true,
-            createdAt: true
+            createdAt: true,
+            createdBy: true
           }
         }
       },
@@ -71,7 +77,7 @@ export async function GET(
     })
 
     return NextResponse.json({
-      productMedia: productMedia.map((pm: unknown) => ({
+      productMedia: productMedia.map((pm: ProductMediaWithMedia) => ({
         mediaId: pm.mediaId,
         sortOrder: pm.sortOrder,
         isPrimary: pm.isPrimary,
@@ -165,7 +171,8 @@ export async function POST(
             height: true,
             altText: true,
             folder: true,
-            createdAt: true
+            createdAt: true,
+            createdBy: true
           }
         }
       },
@@ -174,7 +181,7 @@ export async function POST(
 
     return NextResponse.json({
       message: 'Media added to product successfully',
-      productMedia: updatedProductMedia.map((pm: unknown) => ({
+      productMedia: updatedProductMedia.map((pm: ProductMediaWithMedia) => ({
         mediaId: pm.mediaId,
         sortOrder: pm.sortOrder,
         isPrimary: pm.isPrimary,

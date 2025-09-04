@@ -40,6 +40,13 @@ async function requireAvatarAccess(userId: string) {
   return null
 }
 
+interface ImageVariant {
+  size: string;
+  url: string;
+  width: number;
+  height: number;
+}
+
 // POST /api/users/[id]/avatar - Upload profile picture
 export async function POST(
   request: NextRequest,
@@ -127,15 +134,15 @@ export async function POST(
         compressionRatio: result.metadata.compressionRatio,
         isOwnProfile: session?.user?.id === resolvedParams.id,
       },
-      request.headers.get('x-forwarded-for') || request.ip,
-      request.headers.get('user-agent')
+      request.headers.get('x-forwarded-for') || '',
+      request.headers.get('user-agent') || undefined
     )
 
     return NextResponse.json({
       message: 'Profile picture uploaded successfully',
       profilePicture: {
         url: profilePictureUrl,
-        variants: result.variants.map(variant => ({
+        variants: result.variants.map((variant: ImageVariant) => ({
           size: variant.size,
           url: variant.url,
           width: variant.width,
@@ -209,8 +216,8 @@ export async function DELETE(
         action: 'avatar_removed',
         isOwnProfile: session?.user?.id === resolvedParams.id,
       },
-      request.headers.get('x-forwarded-for') || request.ip,
-      request.headers.get('user-agent')
+      request.headers.get('x-forwarded-for') || '',
+      request.headers.get('user-agent') || undefined
     )
 
     return NextResponse.json({

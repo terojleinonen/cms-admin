@@ -5,13 +5,29 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { prisma, Prisma } from '@/lib/db'
 import { CacheService } from '@/lib/cache'
 import { rateLimit, rateLimitConfigs, createRateLimitHeaders } from '@/lib/rate-limit'
 import { z } from 'zod'
+import { Category } from '@prisma/client'
+
+type CategoryWithCount = Category & {
+  _count: {
+    products: number;
+    children: number;
+  };
+};
+
+type CategoryWithParentAndCount = Category & {
+  parent: { id: string; name: string; slug: string; } | null;
+  _count: {
+    products: number;
+    children: number;
+  };
+};
 
 // Initialize cache service
-const cache = CacheService.getInstance({ maxSize: 500 });
+const cache = CacheService.getInstance({ maxMemoryItems: 500 });
 cache.initializeDatabase(prisma);
 
 // Validation schema for query parameters
@@ -48,7 +64,7 @@ async function buildCategoryTree(
 ): Promise<CategoryTreeNode[]> {
   if (currentDepth >= maxDepth) return []
 
-  const where: unknown = {
+  const where: Prisma.CategoryWhereInput = {
     isActive: true,
     parentId,
   }
@@ -83,7 +99,7 @@ async function buildCategoryTree(
 
   const result = []
   
-  for (const category of categories) {
+  for (const category of categories as CategoryWithCount[]) {
     // Skip categories with no products if includeEmpty is false
     if (!includeEmpty && category._count.products === 0 && category._count.children === 0) {
       continue
@@ -126,7 +142,7 @@ async function getCategoryPath(categoryId: string): Promise<Array<{id: string, n
   let currentId: string | null = categoryId
 
   while (currentId) {
-    const category = await prisma.category.findUnique({
+    const category: { id: string; name: string; slug: string; parentId: string | null } | null = await prisma.category.findUnique({
       where: { id: currentId },
       select: { id: true, name: true, slug: true, parentId: true }
     })
@@ -192,7 +208,7 @@ export async function GET(request: NextRequest) {
       return response
     }
 
-    let result: unknown
+    let result: { categories: any[]; meta: any; total?: number }
 
     if (hierarchy === 'true') {
       // Fetch hierarchical categories
@@ -218,7 +234,7 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // Fetch flat list of categories
-      const where: unknown = {
+      const where: Prisma.CategoryWhereInput = {
         isActive: true,
       }
 
@@ -264,11 +280,11 @@ export async function GET(request: NextRequest) {
       // Filter out empty categories if requested
       const filteredCategories = includeEmpty === 'true' 
         ? categories 
-        : categories.filter(cat => cat._count.products > 0 || cat._count.children > 0)
+        : categories.filter((cat: CategoryWithParentAndCount) => cat._count.products > 0 || cat._count.children > 0)
 
       // Transform flat data with enhanced information
       const transformedCategories = await Promise.all(
-        filteredCategories.map(async category => ({
+        filteredCategories.map(async (category: CategoryWithParentAndCount) => ({
           id: category.id,
           name: category.name,
           slug: category.slug,

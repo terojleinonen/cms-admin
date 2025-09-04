@@ -55,7 +55,7 @@ export async function GET(
     // Mark current session if viewing own sessions
     const sessionsWithCurrent = sessions.map(s => ({
       ...s,
-      isCurrent: userId === currentUserId && s.token === session.user.sessionToken
+      isCurrent: userId === currentUserId && session.sessionToken && s.token === session.sessionToken
     }))
 
     return NextResponse.json({
@@ -109,14 +109,14 @@ export async function POST(
     const { action, sessionId, currentSessionToken } = validation.data
     const ipAddress = request.headers.get('x-forwarded-for') || 
                      request.headers.get('x-real-ip') || 
-                     request.ip || null
+                     '' || null
     const userAgent = request.headers.get('user-agent') || null
 
     switch (action) {
       case 'logout_all': {
         const invalidatedCount = await logoutFromAllDevices(userId, currentSessionToken)
         
-        await logAuditEvent({
+        await auditLog({
           userId,
           action: 'LOGOUT_ALL_DEVICES',
           resource: 'USER_SESSION',
@@ -146,7 +146,7 @@ export async function POST(
         const success = await invalidateSession(sessionId)
         
         if (success) {
-          await logAuditEvent({
+          await auditLog({
             userId,
             action: 'SESSION_INVALIDATED',
             resource: 'USER_SESSION',

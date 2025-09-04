@@ -6,9 +6,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth-config'
-import { prisma } from '@/lib/db'
+import { prisma, Prisma } from '@/lib/db'
 import { z } from 'zod'
 import { Decimal } from '@prisma/client/runtime/library'
+import { ProductStatus } from '@prisma/client'
+
+function isProductStatus(status: string): status is ProductStatus {
+  return ['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(status)
+}
+
+function isSortOrder(order: string): order is Prisma.SortOrder {
+  return order === 'asc' || order === 'desc'
+}
 
 // Validation schemas
 const createProductSchema = z.object({
@@ -51,9 +60,10 @@ export async function GET(request: NextRequest) {
     const maxPrice = searchParams.get('maxPrice')
     const sortBy = searchParams.get('sortBy') || 'createdAt'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const validSortOrder = isSortOrder(sortOrder) ? sortOrder : 'desc'
 
     // Build where clause
-    const where: Record<string, unknown> = {}
+    const where: Prisma.ProductWhereInput = {}
 
     if (search) {
       where.OR = [
@@ -64,7 +74,7 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    if (status) {
+    if (status && isProductStatus(status)) {
       where.status = status
     }
 
@@ -90,15 +100,15 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     // Build order by clause
-    const orderBy: Record<string, unknown> = {}
+    const orderBy: Prisma.ProductOrderByWithRelationInput = {}
     if (sortBy === 'price') {
-      orderBy.price = sortOrder
+      orderBy.price = validSortOrder
     } else if (sortBy === 'name') {
-      orderBy.name = sortOrder
+      orderBy.name = validSortOrder
     } else if (sortBy === 'inventoryQuantity') {
-      orderBy.inventoryQuantity = sortOrder
+      orderBy.inventoryQuantity = validSortOrder
     } else {
-      orderBy.createdAt = sortOrder
+      orderBy.createdAt = validSortOrder
     }
 
     // Fetch products with relations

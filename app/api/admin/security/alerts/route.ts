@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/db'
-import { getSecurityAlertingSystem } from '@/lib/security-alerting'
+import { getSecurityAlertingSystem, SecurityAlert } from '@/lib/security-alerting'
 import { z } from 'zod'
 
 const alertResolutionSchema = z.object({
@@ -55,12 +55,12 @@ export async function GET(request: NextRequest) {
 
     // Filter by severity
     if (severity) {
-      alerts = alerts.filter(alert => alert.severity === severity)
+      alerts = alerts.filter((alert: SecurityAlert) => alert.severity === severity)
     }
 
     // Filter by type
     if (type) {
-      alerts = alerts.filter(alert => alert.type === type)
+      alerts = alerts.filter((alert: SecurityAlert) => alert.type === type)
     }
 
     // Get security statistics

@@ -75,7 +75,7 @@ export class CacheMiddleware {
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
       const duration = performance.now() - start
       console.log(`🎯 Cache hit: ${key} (${duration.toFixed(2)}ms)`)
-      return cached.data
+      return cached.data as T
     }
     
     // Fetch fresh data

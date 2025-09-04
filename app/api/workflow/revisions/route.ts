@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { WorkflowService } from '@/lib/workflow';
-import { prisma } from '@/lib/db';
+import { prisma, Prisma } from '@/lib/db';
 import { z } from 'zod';
 
 // Validation schemas
@@ -262,17 +262,19 @@ export async function DELETE(request: NextRequest) {
 /**
  * Compare two revision data objects and return differences
  */
-function compareRevisions(data1: Record<string, unknown>, data2: Record<string, unknown>): Record<string, unknown> {
+function compareRevisions(data1: Prisma.JsonValue, data2: Prisma.JsonValue): Record<string, unknown> {
   const differences: Record<string, unknown> = {};
+  const d1 = (data1 as Record<string, unknown>) || {};
+  const d2 = (data2 as Record<string, unknown>) || {};
   
   // Simple comparison - in a real implementation, you'd want a more sophisticated diff
-  const keys = new Set([...Object.keys(data1 || {}), ...Object.keys(data2 || {})]);
+  const keys = new Set([...Object.keys(d1), ...Object.keys(d2)]);
   
   keys.forEach(key => {
     if (key === 'updatedAt' || key === 'createdAt') return; // Skip timestamp fields
     
-    const value1 = data1?.[key];
-    const value2 = data2?.[key];
+    const value1 = d1?.[key];
+    const value2 = d2?.[key];
     
     if (JSON.stringify(value1) !== JSON.stringify(value2)) {
       differences[key] = {

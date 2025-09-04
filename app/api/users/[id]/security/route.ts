@@ -54,9 +54,10 @@ function generateTOTPSecret(): string {
 function verifyTOTPToken(secret: string, token: string): boolean {
   // This is a simplified implementation
   // In production, use a proper TOTP library like 'otplib'
+  // TODO: Use a proper library that supports base32, or implement base32 decoding.
   const timeStep = Math.floor(Date.now() / 30000)
   const expectedToken = crypto
-    .createHmac('sha1', Buffer.from(secret, 'base32'))
+    .createHmac('sha1', Buffer.from(secret, 'base64'))
     .update(Buffer.from(timeStep.toString()))
     .digest('hex')
     .slice(-6)
@@ -441,8 +442,14 @@ async function handleSessionTermination(
   return NextResponse.json({ message: 'Sessions terminated successfully' })
 }
 
+interface SecurityUser {
+  twoFactorEnabled: boolean;
+  lastLoginAt: Date | null;
+  sessions: any[];
+}
+
 // Calculate security score
-function calculateSecurityScore(user: unknown): number {
+function calculateSecurityScore(user: SecurityUser): number {
   let score = 0
   
   // Base score

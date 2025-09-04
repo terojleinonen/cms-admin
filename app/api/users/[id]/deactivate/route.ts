@@ -149,19 +149,19 @@ export async function POST(
       })
 
       // Create audit log
-      const auditService = getAuditService(tx)
+      const auditService = getAuditService(tx as any)
       await auditService.logUser(
         session?.user?.id || resolvedParams.id,
         resolvedParams.id,
-        'ACCOUNT_DEACTIVATED',
+        'DEACTIVATED',
         {
           reason: data.reason,
           deactivatedBy: isOwnProfile ? 'self' : 'admin',
           dataRetention: data.dataRetention,
           deactivatedAt: new Date(),
         },
-        request.headers.get('x-forwarded-for') || request.ip,
-        request.headers.get('user-agent')
+        request.headers.get('x-forwarded-for') || '',
+        request.headers.get('user-agent') || undefined
       )
 
       return deactivatedUser
@@ -255,19 +255,19 @@ export async function PUT(
       })
 
       // Create audit log
-      const auditService = getAuditService(tx)
+      const auditService = getAuditService(tx as any)
       await auditService.logUser(
         session?.user?.id || '',
         resolvedParams.id,
-        'ACCOUNT_REACTIVATED',
+        'ACTIVATED',
         {
           reason: data.reason,
           reactivatedBy: session?.user?.id,
           notifyUser: data.notifyUser,
           reactivatedAt: new Date(),
         },
-        request.headers.get('x-forwarded-for') || request.ip,
-        request.headers.get('user-agent')
+        request.headers.get('x-forwarded-for') || '',
+        request.headers.get('user-agent') || undefined
       )
 
       return reactivatedUser

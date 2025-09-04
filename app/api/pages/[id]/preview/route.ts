@@ -12,7 +12,7 @@ import { z } from 'zod'
 const previewSchema = z.object({
   content: z.string().optional(),
   template: z.string().optional(),
-  customFields: z.record(z.any()).optional()
+  customFields: z.record(z.string(), z.any()).optional()
 })
 
 // POST /api/pages/[id]/preview - Generate preview for page

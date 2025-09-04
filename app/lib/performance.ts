@@ -61,6 +61,14 @@ export interface FrontendPerformanceMetrics {
   componentRenderTime: Record<string, number>
 }
 
+export interface PerformanceReport {
+  databaseMetrics: {
+    totalQueries: number;
+    slowestQueries: any[];
+    averageQueryTime: number;
+  };
+}
+
 /**
  * Performance monitoring class for tracking and optimizing application performance
  */
@@ -169,7 +177,7 @@ export class PerformanceMonitor {
     return {};
   }
 
-  getPerformanceReport(startTime: number, endTime: number): unknown {
+  getPerformanceReport(startTime: number, endTime: number): PerformanceReport {
     return {
       databaseMetrics: {
         totalQueries: 0,

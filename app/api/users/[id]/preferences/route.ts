@@ -145,18 +145,7 @@ export async function PUT(
     
     // Handle notifications update
     if (data.notifications !== undefined) {
-      interface NotificationSettings {
-        email: boolean;
-        push: boolean;
-        security: boolean;
-        marketing: boolean;
-      }
-      const currentNotifications = (existingPreferences?.notifications as NotificationSettings) || {
-        email: true,
-        push: true,
-        security: true,
-        marketing: false,
-      }
+      const currentNotifications = notificationSettingsSchema.parse(existingPreferences?.notifications || {})
       
       updateData.notifications = {
         ...currentNotifications,
@@ -166,16 +155,7 @@ export async function PUT(
     
     // Handle dashboard settings update
     if (data.dashboard !== undefined) {
-      interface DashboardSettings {
-        layout: string;
-        widgets: string[];
-        defaultView: string;
-      }
-      const currentDashboard = (existingPreferences?.dashboard as DashboardSettings) || {
-        layout: 'default',
-        widgets: [],
-        defaultView: 'dashboard',
-      }
+      const currentDashboard = dashboardSettingsSchema.parse(existingPreferences?.dashboard || {})
       
       updateData.dashboard = {
         ...currentDashboard,
@@ -216,8 +196,8 @@ export async function PUT(
         updatedFields: Object.keys(updateData),
         isOwnProfile: session?.user?.id === resolvedParams.id,
       },
-      request.headers.get('x-forwarded-for') || request.ip,
-      request.headers.get('user-agent')
+      request.headers.get('x-forwarded-for') || '',
+      request.headers.get('user-agent') || undefined
     )
 
     return NextResponse.json({ preferences })

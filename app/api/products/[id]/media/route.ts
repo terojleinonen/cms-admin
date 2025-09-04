@@ -71,7 +71,7 @@ export async function GET(
     })
 
     return NextResponse.json({
-      productMedia: productMedia.map((pm: any) => ({
+      productMedia: productMedia.map((pm: unknown) => ({
         mediaId: pm.mediaId,
         sortOrder: pm.sortOrder,
         isPrimary: pm.isPrimary,
@@ -174,7 +174,7 @@ export async function POST(
 
     return NextResponse.json({
       message: 'Media added to product successfully',
-      productMedia: updatedProductMedia.map((pm: any) => ({
+      productMedia: updatedProductMedia.map((pm: unknown) => ({
         mediaId: pm.mediaId,
         sortOrder: pm.sortOrder,
         isPrimary: pm.isPrimary,

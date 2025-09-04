@@ -152,7 +152,7 @@ export class NotificationService {
     }
   }
 
-  private shouldSendEmailForType(type: NotificationType, settings: any): boolean {
+  private shouldSendEmailForType(type: NotificationType, settings: unknown): boolean {
     // Security notifications should always be sent if email is enabled
     const securityTypes = [
       NotificationType.SECURITY_ALERT,

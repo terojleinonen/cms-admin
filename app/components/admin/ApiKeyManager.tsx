@@ -132,7 +132,7 @@ export default function ApiKeyManager() {
         <div className="flex space-x-4">
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
+          onChange={(e) => setFilter(e.target.value as 'all' | 'active' | 'inactive')}
             className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
             <option value="all">All Keys</option>

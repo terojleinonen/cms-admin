@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { BellIcon } from '@heroicons/react/24/outline'
 import { BellIcon as BellSolidIcon } from '@heroicons/react/24/solid'
 import { NotificationDropdown } from './NotificationDropdown'
+import { Notification } from '@/lib/types'
 
 interface NotificationBellProps {
   userId: string
@@ -12,11 +13,11 @@ interface NotificationBellProps {
 export function NotificationBell({ userId }: NotificationBellProps) {
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
-  const [notifications, setNotifications] = useState([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
 
   useEffect(() => {
     fetchNotifications()
-    
+
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchNotifications, 30000)
     return () => clearInterval(interval)
@@ -40,13 +41,13 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       const response = await fetch('/api/notifications', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'markAllAsRead' })
+        body: JSON.stringify({ action: 'markAllAsRead' }),
       })
-      
+
       if (response.ok) {
         setUnreadCount(0)
-        setNotifications(prev => 
-          prev.map((notif: any) => ({ ...notif, read: true, readAt: new Date() }))
+        setNotifications(prev =>
+          prev.map(notif => ({ ...notif, read: true, readAt: new Date() }))
         )
       }
     } catch (error) {
@@ -59,13 +60,13 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       const response = await fetch(`/api/notifications/${notificationId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'markAsRead' })
+        body: JSON.stringify({ action: 'markAsRead' }),
       })
-      
+
       if (response.ok) {
-        setNotifications(prev => 
-          prev.map((notif: any) => 
-            notif.id === notificationId 
+        setNotifications(prev =>
+          prev.map(notif =>
+            notif.id === notificationId
               ? { ...notif, read: true, readAt: new Date() }
               : notif
           )
@@ -80,13 +81,13 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   const deleteNotification = async (notificationId: string) => {
     try {
       const response = await fetch(`/api/notifications/${notificationId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
       })
-      
+
       if (response.ok) {
-        setNotifications(prev => prev.filter((notif: any) => notif.id !== notificationId))
-        const deletedNotif = notifications.find((notif: any) => notif.id === notificationId)
-        if (deletedNotif && !(deletedNotif as any).read) {
+        const deletedNotif = notifications.find(notif => notif.id === notificationId)
+        setNotifications(prev => prev.filter(notif => notif.id !== notificationId))
+        if (deletedNotif && !deletedNotif.read) {
           setUnreadCount(prev => Math.max(0, prev - 1))
         }
       }

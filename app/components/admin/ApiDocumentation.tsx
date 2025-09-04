@@ -21,12 +21,12 @@ interface ApiEndpoint {
   }>
   requestBody?: {
     type: string
-    example: any
+    example: unknown
   }
   responses: Array<{
     status: number
     description: string
-    example: any
+    example: unknown
   }>
   permissions: string[]
 }
@@ -138,10 +138,18 @@ const apiEndpoints: ApiEndpoint[] = [
   }
 ]
 
+type TestResult = {
+  status: number;
+  data?: unknown;
+  headers?: unknown;
+  error?: string;
+  message?: string;
+};
+
 export default function ApiDocumentation() {
   const [expandedEndpoint, setExpandedEndpoint] = useState<string | null>(null)
   const [testingEndpoint, setTestingEndpoint] = useState<string | null>(null)
-  const [testResults, setTestResults] = useState<any>(null)
+  const [testResults, setTestResults] = useState<TestResult | null>(null)
 
   const toggleEndpoint = (endpointKey: string) => {
     setExpandedEndpoint(expandedEndpoint === endpointKey ? null : endpointKey)

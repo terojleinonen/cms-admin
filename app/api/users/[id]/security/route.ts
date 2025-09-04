@@ -197,9 +197,9 @@ export async function PUT(
 // Handle password change
 async function handlePasswordChange(
   userId: string,
-  data: any,
+  data: unknown,
   request: NextRequest,
-  session: any
+  session: unknown
 ) {
   const validatedData = passwordChangeSchema.parse(data)
   
@@ -254,9 +254,9 @@ async function handlePasswordChange(
 // Handle 2FA setup
 async function handleTwoFactorSetup(
   userId: string,
-  data: any,
+  data: unknown,
   request: NextRequest,
-  session: any
+  session: unknown
 ) {
   // Generate new TOTP secret
   const secret = generateTOTPSecret()
@@ -278,9 +278,9 @@ async function handleTwoFactorSetup(
 // Handle 2FA verification
 async function handleTwoFactorVerification(
   userId: string,
-  data: any,
+  data: unknown,
   request: NextRequest,
-  session: any
+  session: unknown
 ) {
   const validatedData = twoFactorVerificationSchema.parse(data)
   
@@ -328,9 +328,9 @@ async function handleTwoFactorVerification(
 // Handle 2FA disable
 async function handleTwoFactorDisable(
   userId: string,
-  data: any,
+  data: unknown,
   request: NextRequest,
-  session: any
+  session: unknown
 ) {
   const { currentPassword } = data
 
@@ -396,9 +396,9 @@ async function handleTwoFactorDisable(
 // Handle session termination
 async function handleSessionTermination(
   userId: string,
-  data: any,
+  data: unknown,
   request: NextRequest,
-  session: any
+  session: unknown
 ) {
   const validatedData = sessionTerminationSchema.parse(data)
 
@@ -442,7 +442,7 @@ async function handleSessionTermination(
 }
 
 // Calculate security score
-function calculateSecurityScore(user: any): number {
+function calculateSecurityScore(user: unknown): number {
   let score = 0
   
   // Base score

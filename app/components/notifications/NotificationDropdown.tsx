@@ -11,17 +11,7 @@ import {
   CogIcon
 } from '@heroicons/react/24/outline'
 import { NotificationType } from '@prisma/client'
-
-interface Notification {
-  id: string
-  type: NotificationType
-  title: string
-  message: string
-  read: boolean
-  readAt?: Date
-  createdAt: Date
-  data?: Record<string, any>
-}
+import { Notification } from '@/lib/types'
 
 interface NotificationDropdownProps {
   notifications: Notification[]

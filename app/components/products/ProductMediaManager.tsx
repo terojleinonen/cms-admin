@@ -81,7 +81,7 @@ export default function ProductMediaManager({
     setActiveModal(null)
   }, [productId, images, onImagesChange])
 
-  const handleUploadComplete = useCallback((uploadedFiles: any[]) => {
+  const handleUploadComplete = useCallback((uploadedFiles: unknown[]) => {
     // Convert uploaded files to ProductMedia format
     const newImages: ProductMedia[] = uploadedFiles.map((file, index) => ({
       productId: productId || '',

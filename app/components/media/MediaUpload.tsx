@@ -148,12 +148,12 @@ export default function MediaUpload({ onClose, onSuccess }: MediaUploadProps) {
       // Update file statuses
       setFiles(prev => prev.map(f => {
         if (f.status === 'pending') {
-          const hasError = result.errors?.some((err: any) => err.filename === f.file.name)
+          const hasError = result.errors?.some((err: unknown) => err.filename === f.file.name)
           return {
             ...f,
             status: hasError ? 'error' : 'success',
             progress: 100,
-            error: hasError ? result.errors.find((err: any) => err.filename === f.file.name)?.error : undefined,
+            error: hasError ? result.errors.find((err: unknown) => err.filename === f.file.name)?.error : undefined,
           }
         }
         return f

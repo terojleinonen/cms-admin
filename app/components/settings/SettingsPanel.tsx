@@ -48,7 +48,7 @@ export default function SettingsPanel() {
     }
   }
 
-  const handleInputChange = (field: keyof SystemSettings, value: any) => {
+  const handleInputChange = (field: keyof SystemSettings, value: unknown) => {
     setSettings(prev => ({
       ...prev,
       [field]: value

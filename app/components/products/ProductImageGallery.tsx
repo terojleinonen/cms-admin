@@ -154,6 +154,7 @@ export default function ProductImageGallery({
 
   const handleRemoveImage = useCallback((imageId: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    // eslint-disable-next-line react/no-unescaped-entities
     if (confirm('Are you sure you want to remove this image?')) {
       onImageRemove(imageId)
     }

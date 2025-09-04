@@ -119,7 +119,7 @@ export default function CreateApiKeyForm() {
           </div>
           
           <p className="text-sm text-green-700 mb-4">
-            Your API key has been created. Please copy it now as it won't be shown again for security reasons.
+            Your API key has been created. Please copy it now as it won&apos;t be shown again for security reasons.
           </p>
           
           <div className="bg-white border border-green-200 rounded-md p-4 mb-4">

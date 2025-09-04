@@ -77,7 +77,7 @@ function findTypeScriptFiles(dir) {
 console.log('Starting lint fixes...');
 
 const tsFiles = findTypeScriptFiles('./app');
-const testFiles = findTypeScriptFiles('./tests');
+const testFiles = findTypeScriptFiles('./__tests__');
 const allFiles = [...tsFiles, ...testFiles];
 
 console.log(`Found ${allFiles.length} TypeScript files`);

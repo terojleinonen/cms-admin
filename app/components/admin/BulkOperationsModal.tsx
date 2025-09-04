@@ -33,7 +33,7 @@ interface BulkOperationsModalProps {
   selectedUserIds: string[]
   users: SimpleUser[]
   onClose: () => void
-  onConfirm: (operation: string, data?: any) => void
+  onConfirm: (operation: string, data?: unknown) => void
 }
 
 type BulkOperation = 
@@ -115,9 +115,12 @@ export default function BulkOperationsModal({
   onClose,
   onConfirm,
 }: BulkOperationsModalProps) {
+  interface OperationData {
+    role?: UserRole;
+  }
   const [selectedOperation, setSelectedOperation] = useState<BulkOperation | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
-  const [operationData, setOperationData] = useState<any>({})
+  const [operationData, setOperationData] = useState<OperationData>({})
   const [loading, setLoading] = useState(false)
 
   const selectedCount = selectedUserIds.length

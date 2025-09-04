@@ -242,7 +242,7 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'overview' | 'activity' | 'security' | 'sessions')}
                 className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
@@ -398,7 +398,7 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                   <ClockIcon className="mx-auto h-12 w-12 text-gray-400" />
                   <h3 className="mt-2 text-sm font-medium text-gray-900">No recent activity</h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    This user hasn't performed any actions recently.
+                    This user hasn&apos;t performed any actions recently.
                   </p>
                 </div>
               )}

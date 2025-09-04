@@ -5,9 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { prisma, ProductStatus } from '@/lib/db'
 import { CacheService } from '@/lib/cache'
-import { rateLimit, rateLimitConfigs, createRateLimitHeaders } from '../../../lib/rate-limit'
+import { rateLimit, rateLimitConfigs, createRateLimitHeaders } from '@/lib/rate-limit'
 import { z } from 'zod'
 
 // Initialize cache service
@@ -91,8 +91,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where clause with improved filtering
-    const where: any = {
-      status: status as any,
+    const where: unknown = {
+      status: status as ProductStatus,
       isActive: true, // Only show active products
     }
 
@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     // Build order by clause with multiple sort options
-    const orderBy: any = {}
+    const orderBy: unknown = {}
     switch (sortBy) {
       case 'price':
         orderBy.price = sortOrder
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build include clause based on parameters
-    const include: any = {}
+    const include: unknown = {}
     
     if (includeCategories === 'true') {
       include.categories = {
@@ -232,14 +232,39 @@ export async function GET(request: NextRequest) {
         updatedAt: product.updatedAt.toISOString(),
       }
 
+      interface ProductCategory {
+        category: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          parentId: string | null;
+        }
+      }
+
+      interface ProductMedia {
+        media: {
+          id: string;
+          filename: string;
+          originalName: string;
+          altText: string | null;
+          width: number | null;
+          height: number | null;
+          mimeType: string;
+          fileSize: number;
+        };
+        sortOrder: number;
+        isPrimary: boolean;
+      }
+
       // Add categories if requested
       if (includeCategories === 'true' && product.categories) {
-        baseProduct.categories = product.categories.map((pc: any) => pc.category)
+        baseProduct.categories = product.categories.map((pc: ProductCategory) => pc.category)
       }
 
       // Add media if requested
       if (includeMedia === 'true' && product.media) {
-        baseProduct.media = product.media.map((pm: any) => ({
+        baseProduct.media = product.media.map((pm: ProductMedia) => ({
           id: pm.media.id,
           filename: pm.media.filename,
           originalName: pm.media.originalName,

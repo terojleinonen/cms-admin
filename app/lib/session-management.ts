@@ -132,7 +132,7 @@ export async function logoutFromAllDevices(
   userId: string, 
   currentSessionToken?: string
 ): Promise<number> {
-  const whereClause: any = {
+  const whereClause: unknown = {
     userId,
     isActive: true
   }

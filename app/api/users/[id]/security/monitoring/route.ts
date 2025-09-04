@@ -282,10 +282,10 @@ function calculateSecurityScore(factors: {
  * Generate security recommendations based on user data
  */
 function generateSecurityRecommendations(data: {
-  user: any
-  suspiciousActivity: any[]
-  sessionStats: any
-  recentSecurityEvents: any[]
+  user: unknown
+  suspiciousActivity: unknown[]
+  sessionStats: unknown
+  recentSecurityEvents: unknown[]
 }): string[] {
   const recommendations: string[] = []
 

@@ -36,7 +36,7 @@ export interface ProductQueryParams {
 }
 
 export interface ProductsResult {
-  products: any[]
+  products: unknown[]
   total: number
   page: number
   limit: number
@@ -190,7 +190,7 @@ export class DatabaseCache {
     const { page = 1, limit = 10, status, categoryId, search } = params
     const skip = (page - 1) * limit
 
-    const where: any = {}
+    const where: unknown = {}
     if (status) where.status = status
     if (categoryId) where.categoryId = categoryId
     if (search) {
@@ -260,7 +260,7 @@ export class DatabaseCache {
 
     // Fetch from database
     const { includeProducts = false, isActive } = params
-    const where: any = {}
+    const where: unknown = {}
     if (isActive !== undefined) where.isActive = isActive
 
     const categories = await this.prisma.category.findMany({

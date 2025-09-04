@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { use } from 'react'
 import PageForm from '@/components/pages/PageForm'
@@ -22,11 +22,7 @@ export default function EditPagePage({ params }: EditPagePageProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    fetchPage()
-  }, [id])
-
-  const fetchPage = async () => {
+  const fetchPage = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -46,7 +42,11 @@ export default function EditPagePage({ params }: EditPagePageProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
+
+  useEffect(() => {
+    fetchPage()
+  }, [fetchPage])
 
   const handleSave = (updatedPage: Page) => {
     setPage(updatedPage)

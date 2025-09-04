@@ -61,7 +61,7 @@ export function withDatabasePerformanceMonitoring<T>(
  * Cache middleware with performance tracking
  */
 export class CacheMiddleware {
-  private static cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
+  private static cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>()
 
   static async withCache<T>(
     key: string,

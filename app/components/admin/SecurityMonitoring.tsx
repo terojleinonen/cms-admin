@@ -5,7 +5,7 @@
  * Admin interface for monitoring user security and suspicious activities
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { 
   ShieldExclamationIcon,
@@ -33,7 +33,7 @@ interface SecurityData {
   suspiciousActivity: Array<{
     type: string
     severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
-    details: Record<string, any>
+    details: Record<string, unknown>
     timestamp: string
   }>
   sessionStatistics: {
@@ -51,7 +51,7 @@ interface SecurityData {
   recentSecurityEvents: Array<{
     id: string
     action: string
-    details: Record<string, any>
+    details: Record<string, unknown>
     ipAddress: string | null
     createdAt: string
   }>
@@ -69,13 +69,7 @@ export default function SecurityMonitoring({ userId }: SecurityMonitoringProps) 
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (session?.user?.role === 'ADMIN') {
-      fetchSecurityData()
-    }
-  }, [userId, session])
-
-  const fetchSecurityData = async () => {
+  const fetchSecurityData = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/users/${userId}/security/monitoring`)
@@ -91,7 +85,13 @@ export default function SecurityMonitoring({ userId }: SecurityMonitoringProps) 
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
+
+  useEffect(() => {
+    if (session?.user?.role === 'ADMIN') {
+      fetchSecurityData()
+    }
+  }, [session, fetchSecurityData])
 
   const handleSecurityAction = async (action: string, reason?: string) => {
     try {

@@ -4,7 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client'
-import { promises as fs } from 'fs'
+import { promises as fs, createWriteStream, createReadStream } from 'fs'
 import path from 'path'
 import { createGzip } from 'zlib'
 import { pipeline } from 'stream/promises'
@@ -19,7 +19,7 @@ export interface RetentionPolicy {
   archiveConfig?: {
     bucket?: string
     region?: string
-    credentials?: any
+    credentials?: unknown
   }
 }
 
@@ -174,7 +174,7 @@ export class AuditRetentionManager {
           yield Buffer.from(jsonData, 'utf8')
         },
         createGzip(),
-        require('fs').createWriteStream(compressedPath)
+          createWriteStream(compressedPath)
       )
 
       const stats = await fs.stat(compressedPath)
@@ -396,9 +396,9 @@ export class AuditRetentionManager {
    */
   async restoreFromArchive(archiveFilePath: string): Promise<{
     restoredCount: number
-    archiveMetadata: any
+    archiveMetadata: unknown
   }> {
-    let archiveData: any
+    let archiveData: unknown
 
     try {
       if (archiveFilePath.endsWith('.gz')) {
@@ -408,7 +408,7 @@ export class AuditRetentionManager {
         
         let decompressedData = ''
         await pipeline(
-          require('fs').createReadStream(archiveFilePath),
+          createReadStream(archiveFilePath),
           createGunzip(),
           async function* (source) {
             for await (const chunk of source) {
@@ -433,7 +433,7 @@ export class AuditRetentionManager {
     }
 
     // Restore logs to database
-    const logs = archiveData.logs.map((log: any) => ({
+    const logs = archiveData.logs.map((log: unknown) => ({
       id: log.id,
       userId: log.userId,
       action: log.action,

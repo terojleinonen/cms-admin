@@ -3,6 +3,7 @@
  * Optimized for memory usage and focused testing
  */
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const nextJest = require('next/jest')
 
 const createJestConfig = nextJest({

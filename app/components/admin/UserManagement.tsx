@@ -200,7 +200,7 @@ export default function UserManagement({
   }
 
   // Handle bulk operations
-  const handleBulkOperation = async (operation: string, data?: any) => {
+  const handleBulkOperation = async (operation: string, data?: unknown) => {
     try {
       const userIds = Array.from(selectedUsers)
       const response = await fetch('/api/admin/users/bulk', {
@@ -627,11 +627,11 @@ export default function UserManagement({
 
       {viewingUser && (
         <UserDetailModal
-          user={viewingUser as any}
+          user={viewingUser as UserWithDetails}
           onClose={() => setViewingUser(null)}
           onEdit={(user) => {
             setViewingUser(null)
-            setEditingUser(user as any)
+            setEditingUser(user as UserWithStats)
           }}
         />
       )}
@@ -639,7 +639,7 @@ export default function UserManagement({
       {showBulkModal && (
         <BulkOperationsModal
           selectedUserIds={Array.from(selectedUsers)}
-          users={users.filter(u => selectedUsers.has(u.id)) as any}
+          users={users.filter(u => selectedUsers.has(u.id))}
           onClose={() => setBulkModal(false)}
           onConfirm={handleBulkOperation}
         />

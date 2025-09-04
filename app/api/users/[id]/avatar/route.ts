@@ -257,11 +257,12 @@ export async function GET(
 
     if (hasProfilePicture && user.profilePicture) {
       // Return profile picture information
+      type ProfilePictureSize = 'small' | 'medium' | 'large';
       const variants = Object.keys(PROFILE_PICTURE_CONFIG.sizes).map(size => ({
         size,
-        url: profilePictureService.getProfilePictureUrl(resolvedParams.id, size as any),
-        width: PROFILE_PICTURE_CONFIG.sizes[size as keyof typeof PROFILE_PICTURE_CONFIG.sizes].width,
-        height: PROFILE_PICTURE_CONFIG.sizes[size as keyof typeof PROFILE_PICTURE_CONFIG.sizes].height,
+        url: profilePictureService.getProfilePictureUrl(resolvedParams.id, size as ProfilePictureSize),
+        width: PROFILE_PICTURE_CONFIG.sizes[size as ProfilePictureSize].width,
+        height: PROFILE_PICTURE_CONFIG.sizes[size as ProfilePictureSize].height,
       }))
 
       return NextResponse.json({

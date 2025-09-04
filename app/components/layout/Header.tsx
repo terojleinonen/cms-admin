@@ -22,6 +22,7 @@
 'use client'
 
 import { Fragment, useState, useEffect } from 'react'
+import Image from 'next/image'
 import { signOut } from 'next-auth/react'
 import { Menu, Transition, Combobox } from '@headlessui/react'
 import {
@@ -119,17 +120,17 @@ const quickActions = [
 /**
  * Global search component
  */
+// Mock search results - replace with actual search API
+const mockResults: SearchResult[] = [
+  { id: '1', title: 'Ergonomic Chair', type: 'product', url: '/admin/products/1', description: 'Office furniture' },
+  { id: '2', title: 'John Doe', type: 'user', url: '/admin/users/2', description: 'Admin user' },
+  { id: '3', title: 'About Us', type: 'page', url: '/admin/pages/3', description: 'Company information' },
+]
+
 function GlobalSearch() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
-
-  // Mock search results - replace with actual search API
-  const mockResults: SearchResult[] = [
-    { id: '1', title: 'Ergonomic Chair', type: 'product', url: '/admin/products/1', description: 'Office furniture' },
-    { id: '2', title: 'John Doe', type: 'user', url: '/admin/users/2', description: 'Admin user' },
-    { id: '3', title: 'About Us', type: 'page', url: '/admin/pages/3', description: 'Company information' },
-  ]
 
   useEffect(() => {
     if (query.length > 2) {
@@ -394,10 +395,12 @@ export default function Header({ onMenuClick, user }: HeaderProps) {
             <Menu.Button className="-m-1.5 flex items-center p-1.5 hover:bg-warm-beige rounded-lg transition-colors duration-200">
               <span className="sr-only">Open user menu</span>
               {user?.profilePicture ? (
-                <img
+                <Image
                   className="h-8 w-8 rounded-full object-cover"
                   src={user.profilePicture}
-                  alt={user.name}
+                  alt={user.name || 'user profile picture'}
+                  width={32}
+                  height={32}
                 />
               ) : (
                 <div className="h-8 w-8 rounded-full bg-dusty-sage flex items-center justify-center">
@@ -441,10 +444,12 @@ export default function Header({ onMenuClick, user }: HeaderProps) {
                 <div className="px-4 py-3 border-b border-warm-beige">
                   <div className="flex items-center">
                     {user?.profilePicture ? (
-                      <img
+                      <Image
                         className="h-10 w-10 rounded-full object-cover"
                         src={user.profilePicture}
-                        alt={user.name}
+                        alt={user.name || 'user profile picture'}
+                        width={40}
+                        height={40}
                       />
                     ) : (
                       <div className="h-10 w-10 rounded-full bg-dusty-sage flex items-center justify-center">

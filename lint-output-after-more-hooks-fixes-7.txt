@@ -1,0 +1,428 @@
+
+> kin-workspace-cms@0.1.0 lint
+> eslint .
+
+
+/app/__mocks__/@auth/prisma-adapter.js
+  2:24  warning  'prisma' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/__mocks__/next-auth.js
+  115:7   warning  'PrismaAdapter' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  134:61  warning  'providerAccountId' is defined but never used       @typescript-eslint/no-unused-vars
+  134:80  warning  'provider' is defined but never used                @typescript-eslint/no-unused-vars
+  141:53  warning  'userId' is defined but never used                  @typescript-eslint/no-unused-vars
+  147:58  warning  'providerAccountId' is defined but never used       @typescript-eslint/no-unused-vars
+  147:77  warning  'provider' is defined but never used                @typescript-eslint/no-unused-vars
+  175:56  warning  'sessionToken' is defined but never used            @typescript-eslint/no-unused-vars
+
+/app/__mocks__/next-auth/next.js
+  7:22  warning  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+/app/__tests__/api/auth.test.ts
+  1:10  warning  'prisma' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/__tests__/api/categories.test.ts
+  1:10  warning  'prisma' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/__tests__/api/products.test.ts
+  1:10  warning  'prisma' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/admin/search/page.tsx
+  1:10  warning  'Suspense' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/admin/users/[id]/page.tsx
+  21:42  warning  'params' is defined but never used  @typescript-eslint/no-unused-vars
+  67:30  warning  'userId' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/api-keys/[id]/route.ts
+  9:10  warning  'ApiAuthService' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/api-keys/[id]/stats/route.ts
+  24:11  warning  'timeframe' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/api-keys/route.ts
+  23:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/audit-logs/retention/route.ts
+  26:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/backup/restore/route.ts
+  13:7  warning  'prisma' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/backup/route.ts
+   13:7   warning  'prisma' is assigned a value but never used           @typescript-eslint/no-unused-vars
+   54:15  warning  'dbBackupPath' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   60:15  warning  'mediaBackupPath' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  136:30  warning  'request' is defined but never used                   @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/backup/status/[id]/route.ts
+  12:7  warning  'prisma' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/database/config/route.ts
+   10:27  warning  'request' is defined but never used       @typescript-eslint/no-unused-vars
+  122:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/api/admin/database/health/route.ts
+  10:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/performance/metrics/route.ts
+  13:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/performance/route.ts
+  16:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/security/events/route.ts
+  33:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/api/admin/security/stats/route.ts
+  12:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/admin/two-factor/enforce/route.ts
+  17:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/analytics/dashboard/route.ts
+  7:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/auth/login/route.ts
+  13:10  warning  'UserRole' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/auth/me/route.ts
+  30:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/api/auth/password-reset/verify/route.ts
+  10:7  warning  'tokenVerificationSchema' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/csrf-token/route.ts
+  12:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/products/[id]/route.ts
+  208:13  warning  'updatedProduct' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/public/categories/route.ts
+  33:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/api/public/products/route.ts
+  95:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/api/search/route.ts
+  10:25  warning  'SearchOptions' is defined but never used  @typescript-eslint/no-unused-vars
+  88:28  warning  'request' is defined but never used        @typescript-eslint/no-unused-vars
+
+/app/app/api/user/preferences/route.ts
+  12:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/users/[id]/avatar/route.ts
+  262:84  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/api/users/[id]/preferences/route.ts
+   14:3   warning  'notificationSettingsSchema' is defined but never used  @typescript-eslint/no-unused-vars
+   15:3   warning  'dashboardSettingsSchema' is defined but never used     @typescript-eslint/no-unused-vars
+  148:74  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  163:66  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+/app/app/api/users/[id]/route.ts
+  13:10  warning  'userProfileUpdateSchema' is defined but never used  @typescript-eslint/no-unused-vars
+  14:33  warning  'fileToBuffer' is defined but never used             @typescript-eslint/no-unused-vars
+
+/app/app/api/users/[id]/security/monitoring/route.ts
+  15:10  warning  'auditLog' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/users/[id]/security/route.ts
+  13:3  warning  'twoFactorSetupSchema' is defined but never used          @typescript-eslint/no-unused-vars
+  15:3  warning  'securitySettingsUpdateSchema' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/users/[id]/sessions/route.ts
+  16:10  warning  'auditLog' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/api/users/[id]/two-factor/verify/route.ts
+  7:10  warning  'getServerSession' is defined but never used  @typescript-eslint/no-unused-vars
+  8:10  warning  'authOptions' is defined but never used       @typescript-eslint/no-unused-vars
+
+/app/app/api/users/route.ts
+  22:7  warning  'updateUserSchema' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/components/admin/ApiAnalytics.tsx
+  144:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/components/admin/ApiDocumentation.tsx
+  144:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/components/admin/ApiKeyManager.tsx
+  135:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/components/admin/BulkOperationsModal.tsx
+  120:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/components/admin/CreateApiKeyForm.tsx
+  65:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/components/admin/SecurityDashboard.tsx
+  16:3   warning  'ChartBarIcon' is defined but never used  @typescript-eslint/no-unused-vars
+  56:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/components/admin/SecurityMonitoring.tsx
+  36:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/components/admin/UserActivityMonitor.tsx
+  100:10  warning  '_selectedLogs' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  100:25  warning  '_setSelectedLogs' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  234:28  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+/app/app/components/admin/UserDetailModal.tsx
+  245:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/components/admin/UserDetailView.tsx
+   74:10  warning  '_stats' is assigned a value but never used             @typescript-eslint/no-unused-vars
+   74:18  warning  '_setStats' is assigned a value but never used          @typescript-eslint/no-unused-vars
+   80:10  warning  '_showEditModal' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   80:26  warning  '_setShowEditModal' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  135:14  warning  '_err' is defined but never used                        @typescript-eslint/no-unused-vars
+  153:14  warning  '_err' is defined but never used                        @typescript-eslint/no-unused-vars
+  338:57  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+/app/app/components/admin/UserManagement.tsx
+  630:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  634:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  642:64  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/components/categories/CategoryTree.tsx
+  60:9  warning  '_paddingLeft' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/components/editor/RichTextEditor.tsx
+  42:9  warning  '_quillRef' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/components/media/MediaLibrary.tsx
+  12:17  warning  'session' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  13:38  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+/app/app/components/notifications/NotificationBell.tsx
+  89:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/components/notifications/NotificationDropdown.tsx
+  23:25  warning  Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  62:9   warning  'getNotificationColor' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/components/pages/PageForm.tsx
+   49:10  warning  '_previewUrl' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   49:23  warning  '_setPreviewUrl' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  311:90  warning  Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+
+/app/app/components/pages/PageStatusManager.tsx
+  73:11  warning  '_pageId' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/components/products/ImageUpload.tsx
+  101:6  warning  React Hook useCallback has a missing dependency: 'validateFile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/app/app/components/products/MediaPicker.tsx
+  17:3  warning  'FolderOpenIcon' is defined but never used                                                                                          @typescript-eslint/no-unused-vars
+  23:3  warning  'PlusIcon' is defined but never used                                                                                                @typescript-eslint/no-unused-vars
+  67:3  warning  'allowedMediaTypes' is assigned a value but never used                                                                              @typescript-eslint/no-unused-vars
+  98:6  warning  React Hook useEffect has missing dependencies: 'fetchFolders' and 'fetchMedia'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/app/app/components/products/ProductForm.tsx
+  319:90  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/components/products/ProductImageGallery.tsx
+   63:9   warning  'primaryImage' is assigned a value but never used                @typescript-eslint/no-unused-vars
+  257:33  warning  'e' is defined but never used                                    @typescript-eslint/no-unused-vars
+  337:16  warning  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+/app/app/components/products/ProductMediaManager.tsx
+  38:10  warning  'selectedImageId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/components/profile/SessionManagement.tsx
+  40:27  warning  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  62:6   warning  React Hook useEffect has a missing dependency: 'fetchSessionData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/app/app/components/settings/SettingsPanel.tsx
+  8:20  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/components/ui/DataTable.tsx
+  28:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:67  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/components/ui/KeyboardShortcuts.tsx
+   30:3  warning  'MagnifyingGlassIcon' is defined but never used                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   31:3  warning  'PlusIcon' is defined but never used                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+   32:3  warning  'DocumentDuplicateIcon' is defined but never used                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   33:3  warning  'ArrowPathIcon' is defined but never used                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   34:3  warning  'Cog6ToothIcon' is defined but never used                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  405:6  warning  React Hook useCallback has an unnecessary dependency: 'router'. Either exclude it or remove the dependency array                                                                                                                              react-hooks/exhaustive-deps
+  466:6  warning  React Hook useEffect was passed a dependency list that is not an array literal. This means we can't statically verify whether you've passed the correct dependencies                                                                          react-hooks/exhaustive-deps
+  466:6  warning  React Hook useEffect has missing dependencies: 'callback' and 'keys'. Either include them or remove the dependency array. If 'callback' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+/app/app/components/ui/Modal.tsx
+  11:8  warning  'Button' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/components/users/AccountSettings.tsx
+  23:8   warning  'Input' is defined but never used             @typescript-eslint/no-unused-vars
+  86:17  warning  'session' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/components/users/ProfilePictureManager.tsx
+   11:3   warning  'XMarkIcon' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  126:14  warning  'error' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+  132:6   warning  React Hook useCallback has a missing dependency: 'compressImage'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/app/app/components/users/SecuritySettings.tsx
+  21:3   warning  'QrCodeIcon' is defined but never used        @typescript-eslint/no-unused-vars
+  58:28  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  78:17  warning  'session' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/lib/analytics.ts
+  309:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/api-auth.ts
+  21:27  warning  'userId' is defined but never used   @typescript-eslint/no-unused-vars
+  26:26  warning  'keyId' is defined but never used    @typescript-eslint/no-unused-vars
+  31:29  warning  'keyId' is defined but never used    @typescript-eslint/no-unused-vars
+  31:44  warning  'updates' is defined but never used  @typescript-eslint/no-unused-vars
+  36:29  warning  'keyId' is defined but never used    @typescript-eslint/no-unused-vars
+  41:31  warning  'keyId' is defined but never used    @typescript-eslint/no-unused-vars
+  51:31  warning  'key' is defined but never used      @typescript-eslint/no-unused-vars
+
+/app/app/lib/audit-retention.ts
+  187:16  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/lib/audit-service.ts
+    9:10  warning  'z' is defined but never used             @typescript-eslint/no-unused-vars
+   76:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  203:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  246:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  408:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  799:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/auth-config.ts
+  14:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/auth.ts
+  70:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/backup.ts
+   37:22  warning  'options' is assigned a value but never used    @typescript-eslint/no-unused-vars
+   72:26  warning  'userId' is defined but never used              @typescript-eslint/no-unused-vars
+   72:42  warning  'description' is defined but never used         @typescript-eslint/no-unused-vars
+   77:13  warning  'timestamp' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  224:14  warning  'error' is defined but never used               @typescript-eslint/no-unused-vars
+  232:84  warning  'userId' is defined but never used              @typescript-eslint/no-unused-vars
+  267:14  warning  'error' is defined but never used               @typescript-eslint/no-unused-vars
+
+/app/app/lib/cache.ts
+    7:33  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  226:41  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  230:41  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  252:61  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  256:41  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  457:11  warning  'memoryStats' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/lib/data-retention.ts
+   4:7   warning  'retentionPolicySchema' is assigned a value but only used as a type  @typescript-eslint/no-unused-vars
+  17:83  warning  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+  29:61  warning  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+
+/app/app/lib/error-handling.ts
+  327:34  warning  The `Function` type accepts any function-like value.
+Prefer explicitly defining any function parameters and return type  @typescript-eslint/no-unsafe-function-type
+
+/app/app/lib/hooks/usePreferences.ts
+  177:6  warning  React Hook useCallback has a missing dependency: 'applyPreferencesToDOM'. Either include it or remove the dependency array                          react-hooks/exhaustive-deps
+  243:6  warning  React Hook useCallback has missing dependencies: 'applyPreferencesToDOM' and 'session?.status'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/app/app/lib/image-processing.ts
+   47:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   49:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:61  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  143:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  276:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  412:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/media-utils.ts
+  45:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/monitoring.ts
+   8:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/notification-service.ts
+   10:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   63:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  186:80  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/performance.ts
+   14:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   85:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  172:24  warning  'startTime' is defined but never used     @typescript-eslint/no-unused-vars
+  172:43  warning  'endTime' is defined but never used       @typescript-eslint/no-unused-vars
+  182:18  warning  'limit' is defined but never used         @typescript-eslint/no-unused-vars
+  182:33  warning  'minDuration' is defined but never used   @typescript-eslint/no-unused-vars
+
+/app/app/lib/preferences-middleware.ts
+  130:35  warning  'userId' is defined but never used        @typescript-eslint/no-unused-vars
+  266:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  267:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/preferences-migration.ts
+   25:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  271:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  272:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/profile-image-utils.ts
+  31:90  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/search.ts
+   62:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   69:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:84  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/security-alerting.ts
+   5:43  warning  'prisma' is defined but never used        @typescript-eslint/no-unused-vars
+   9:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/security.ts
+   17:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/session-management.ts
+   25:27  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  179:9   warning  'oneDayAgo' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/app/lib/types.ts
+  6:10  warning  'Prisma' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/lib/user-validation-schemas.ts
+  476:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  476:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  477:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/lib/workflow.ts
+  265:90  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/app/orders/page.tsx
+  7:3  warning  'ClockIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/app/users/page.tsx
+  67:6  warning  React Hook useEffect has a missing dependency: 'fetchUsers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/app/app/utils/dynamic-styles.ts
+  59:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/components/products/MediaPicker.tsx
+  85:6  warning  React Hook useEffect has missing dependencies: 'fetchMedia' and 'searchQuery'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/app/components/products/ProductImageGallery.tsx
+  59:6  warning  React Hook useEffect has missing dependencies: 'handleNext' and 'handlePrevious'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/app/prisma/seed.ts
+  73:9  warning  'accessoriesCategory' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/types/next-auth.d.ts
+  2:8  warning  'NextAuth' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 213 problems (0 errors, 213 warnings)

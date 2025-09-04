@@ -9,7 +9,7 @@ import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 // Simple in-memory cache for this route
-const cache = new Map<string, { data: any; expires: number }>()
+const cache = new Map<string, { data: unknown; expires: number }>()
 
 // Helper function to check if string is a valid UUID
 function isValidUUID(str: string): boolean {
@@ -59,7 +59,7 @@ export async function GET(
     }
 
     // Build include clause based on parameters
-    const include: any = {}
+    const include: unknown = {}
     
     if (includeCategories === 'true') {
       include.categories = {
@@ -123,7 +123,7 @@ export async function GET(
     }
 
     // Transform data for frontend consumption
-    const transformedProduct: any = {
+    const transformedProduct: unknown = {
       id: product.id,
       name: product.name,
       slug: product.slug,
@@ -145,7 +145,7 @@ export async function GET(
 
     // Add categories if requested
     if (includeCategories === 'true' && product.categories) {
-      transformedProduct.categories = product.categories.map((pc: any) => ({
+      transformedProduct.categories = product.categories.map((pc: unknown) => ({
         ...pc.category,
         breadcrumb: pc.category.parent 
           ? [pc.category.parent, { id: pc.category.id, name: pc.category.name, slug: pc.category.slug }]
@@ -155,7 +155,7 @@ export async function GET(
 
     // Add media if requested
     if (includeMedia === 'true' && product.media) {
-      transformedProduct.media = product.media.map((pm: any) => ({
+      transformedProduct.media = product.media.map((pm: unknown) => ({
         id: pm.media.id,
         filename: pm.media.filename,
         originalName: pm.media.originalName,

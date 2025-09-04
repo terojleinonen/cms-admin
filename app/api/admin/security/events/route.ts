@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const securityService = SecurityService.getInstance(prisma)
     
     // Get security events
-    const events = await securityService.getSecurityEvents(limit, severity, type as any)
+    const events = await securityService.getSecurityEvents(limit, severity, type as SecurityEventType)
 
     return NextResponse.json({ events })
 

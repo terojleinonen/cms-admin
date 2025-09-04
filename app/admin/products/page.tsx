@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { 
   PlusIcon, 
@@ -41,7 +41,7 @@ export default function ProductsPage() {
   const [showFilters, setShowFilters] = useState(false)
 
   // Fetch products
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams()
@@ -71,11 +71,11 @@ export default function ProductsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters, pagination.page, pagination.limit])
 
   useEffect(() => {
     fetchProducts()
-  }, [filters, pagination.page, pagination.limit])
+  }, [fetchProducts])
 
   const handleFilterChange = (newFilters: Partial<ProductFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }))

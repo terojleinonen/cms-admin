@@ -165,11 +165,11 @@ export class PerformanceMonitor {
     this.metrics = []
   }
 
-  getRealTimeMetrics(): any {
+  getRealTimeMetrics(): unknown {
     return {};
   }
 
-  getPerformanceReport(startTime: number, endTime: number): any {
+  getPerformanceReport(startTime: number, endTime: number): unknown {
     return {
       databaseMetrics: {
         totalQueries: 0,
@@ -179,7 +179,7 @@ export class PerformanceMonitor {
     };
   }
 
-  getSlowQueries(limit: number, minDuration: number): any[] {
+  getSlowQueries(limit: number, minDuration: number): unknown[] {
     return [];
   }
 }

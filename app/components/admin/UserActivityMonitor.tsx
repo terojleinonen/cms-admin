@@ -165,7 +165,7 @@ export default function UserActivityMonitor({
   }, [fetchLogs, fetchStats])
 
   // Handle filter changes
-  const handleFilterChange = (key: keyof AuditLogFilters, value: any) => {
+  const handleFilterChange = (key: keyof AuditLogFilters, value: unknown) => {
     setFilters(prev => ({
       ...prev,
       [key]: value,
@@ -231,7 +231,18 @@ export default function UserActivityMonitor({
 
   // Get severity from log details
   const getSeverity = (log: AuditLogWithUser): 'low' | 'medium' | 'high' | 'critical' => {
-    return (log.details as any)?.severity || 'low'
+    if (
+      log.details &&
+      typeof log.details === 'object' &&
+      'severity' in log.details &&
+      typeof log.details.severity === 'string'
+    ) {
+      const severity = log.details.severity.toLowerCase();
+      if (['low', 'medium', 'high', 'critical'].includes(severity)) {
+        return severity as 'low' | 'medium' | 'high' | 'critical';
+      }
+    }
+    return 'low'
   }
 
   // Memoized filtered and sorted logs

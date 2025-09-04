@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { UserRole } from '@prisma/client'
 import UserTable from '../components/users/UserTable'
@@ -56,17 +56,7 @@ export default function UsersPage() {
   // Check if user has admin access
   const isAdmin = session?.user?.role === UserRole.ADMIN
 
-  useEffect(() => {
-    if (!isAdmin) {
-      setError('Admin access required')
-      setLoading(false)
-      return
-    }
-    
-    fetchUsers()
-  }, [isAdmin, pagination.page, filters])
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -96,7 +86,17 @@ export default function UsersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [pagination.page, pagination.limit, filters])
+
+  useEffect(() => {
+    if (!isAdmin) {
+      setError('Admin access required')
+      setLoading(false)
+      return
+    }
+
+    fetchUsers()
+  }, [isAdmin, fetchUsers])
 
   const handleCreateUser = () => {
     setEditingUser(null)

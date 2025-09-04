@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -82,7 +82,7 @@ export default function UserDetailView({ userId, initialData }: UserDetailViewPr
   const [showDeactivateModal, setShowDeactivateModal] = useState(false)
 
   // Fetch user data
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -108,13 +108,13 @@ export default function UserDetailView({ userId, initialData }: UserDetailViewPr
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
 
   useEffect(() => {
     if (!initialData) {
       fetchUserData()
     }
-  }, [userId, initialData])
+  }, [initialData, fetchUserData])
 
   // Handle user actions
   const handleDeactivateUser = async () => {
@@ -335,7 +335,7 @@ export default function UserDetailView({ userId, initialData }: UserDetailViewPr
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'overview' | 'security' | 'activity' | 'settings')}
                   className={`${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'

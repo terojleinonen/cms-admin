@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { XMarkIcon, PhotoIcon, DocumentIcon } from '@heroicons/react/24/outline'
 import { Media } from '@/lib/types'
 import Image from 'next/image'
@@ -28,13 +28,7 @@ export default function MediaPicker({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState<string>('')
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchMedia()
-    }
-  }, [isOpen, searchQuery, selectedType])
-
-  const fetchMedia = async () => {
+  const fetchMedia = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams()
@@ -52,7 +46,13 @@ export default function MediaPicker({
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchQuery, selectedType])
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchMedia()
+    }
+  }, [isOpen, fetchMedia])
 
   const handleSelect = (selectedMedia: Media) => {
     onSelect(selectedMedia)

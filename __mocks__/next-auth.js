@@ -131,20 +131,20 @@ const PrismaAdapter = jest.fn().mockImplementation(() => {
       const session = Object.values(mockSessions).find(s => s.user.email === email)
       return session?.user || null
     }),
-    getUserByAccount: jest.fn().mockImplementation(async ({ providerAccountId, provider }) => {
+    getUserByAccount: jest.fn().mockImplementation(async () => {
       // Simulate account lookup
       return mockUser
     }),
     updateUser: jest.fn().mockImplementation(async (user) => {
       return { ...mockUser, ...user }
     }),
-    deleteUser: jest.fn().mockImplementation(async (userId) => {
+    deleteUser: jest.fn().mockImplementation(async () => {
       return mockUser
     }),
     linkAccount: jest.fn().mockImplementation(async (account) => {
       return account
     }),
-    unlinkAccount: jest.fn().mockImplementation(async ({ providerAccountId, provider }) => {
+    unlinkAccount: jest.fn().mockImplementation(async () => {
       return undefined
     }),
     createSession: jest.fn().mockImplementation(async ({ sessionToken, userId, expires }) => {
@@ -172,7 +172,7 @@ const PrismaAdapter = jest.fn().mockImplementation(() => {
     updateSession: jest.fn().mockImplementation(async (session) => {
       return session
     }),
-    deleteSession: jest.fn().mockImplementation(async (sessionToken) => {
+    deleteSession: jest.fn().mockImplementation(async () => {
       return undefined
     }),
     createVerificationToken: jest.fn().mockImplementation(async ({ identifier, expires, token }) => {

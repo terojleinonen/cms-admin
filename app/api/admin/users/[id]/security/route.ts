@@ -31,7 +31,7 @@ async function requireAdminAccess() {
 }
 
 // Calculate security score based on various factors
-function calculateSecurityScore(user: any, sessions: any[], auditLogs: any[]): number {
+function calculateSecurityScore(user: unknown, sessions: unknown[], auditLogs: unknown[]): number {
   let score = 0
 
   // Base score

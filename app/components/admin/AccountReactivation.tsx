@@ -115,7 +115,7 @@ export function AccountReactivation({
         <div className="flex items-center space-x-3 mb-6">
           <CheckCircleIcon className="h-6 w-6 text-green-500" />
           <h3 className="text-lg font-medium text-gray-900">
-            Reactivate {user.name}'s Account
+            Reactivate {user.name}&apos;s Account
           </h3>
         </div>
 

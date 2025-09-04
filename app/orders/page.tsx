@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function OrdersPage() {
   // In a real app, you would fetch orders from your database
-  const orders: any[] = []
+  const orders: unknown[] = []
 
   if (orders.length === 0) {
     return (

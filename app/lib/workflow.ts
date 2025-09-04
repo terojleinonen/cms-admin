@@ -191,7 +191,7 @@ export class WorkflowService {
       throw new Error(`Invalid action for page: ${action.action}`)
     }
 
-    const updateData: any = { 
+    const updateData: unknown = {
       status: newStatus,
       updatedAt: new Date()
     }
@@ -215,7 +215,7 @@ export class WorkflowService {
     contentId: string, 
     userId: string
   ): Promise<void> {
-    let revisionData: any = {}
+    let revisionData: unknown = {}
 
     if (contentType === 'product') {
       const product = await prisma.product.findUnique({

@@ -95,13 +95,13 @@ export default function MediaPicker({
       fetchMedia()
       fetchFolders()
     }
-  }, [isOpen, search, currentFolder, pagination.page])
+  }, [isOpen, fetchMedia, fetchFolders])
 
   useEffect(() => {
     setSelected(selectedMedia)
   }, [selectedMedia])
 
-  const fetchMedia = async () => {
+  const fetchMedia = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -124,9 +124,9 @@ export default function MediaPicker({
     } finally {
       setLoading(false)
     }
-  }
+  }, [pagination, search, currentFolder, accept])
 
-  const fetchFolders = async () => {
+  const fetchFolders = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (currentFolder) params.append('parent', currentFolder)
@@ -141,7 +141,7 @@ export default function MediaPicker({
       // Set empty folders if API doesn't exist yet
       setFolders([])
     }
-  }
+  }, [currentFolder])
 
   const handleSelect = useCallback((mediaItem: Media) => {
     if (multiple) {

@@ -269,7 +269,7 @@ export default function ProfilePage() {
       }
 
       // Prepare update data
-      const updateData: any = {
+      const updateData: unknown = {
         name: data.name,
         email: data.email,
       }

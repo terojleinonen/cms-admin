@@ -43,7 +43,7 @@ export interface SearchResult {
     creator?: string
     createdAt?: string
     updatedAt?: string
-    [key: string]: any
+    [key: string]: unknown
   }
 }
 
@@ -277,7 +277,7 @@ export class SearchService {
   }
 
   // Private helper methods
-  private calculateFacets(results: any[]): Record<string, Record<string, number>> {
+  private calculateFacets(results: unknown[]): Record<string, Record<string, number>> {
     const facets: Record<string, Record<string, number>> = {
       types: {},
       statuses: {},
@@ -348,7 +348,7 @@ export async function searchProducts(query: string, options: {
   status?: string
   limit?: number
   offset?: number
-} = {}): Promise<{ products: any[], total: number }> {
+} = {}): Promise<{ products: unknown[], total: number }> {
   const {
     categoryId,
     minPrice,
@@ -358,7 +358,7 @@ export async function searchProducts(query: string, options: {
     offset = 0
   } = options
 
-  const whereConditions: any[] = []
+  const whereConditions: unknown[] = []
 
   // Add text search conditions
   if (query.trim()) {
@@ -407,7 +407,7 @@ export async function searchPages(query: string, options: {
   template?: string
   limit?: number
   offset?: number
-} = {}): Promise<{ pages: any[], total: number }> {
+} = {}): Promise<{ pages: unknown[], total: number }> {
   const {
     status,
     template,
@@ -415,7 +415,7 @@ export async function searchPages(query: string, options: {
     offset = 0
   } = options
 
-  const whereConditions: any[] = []
+  const whereConditions: unknown[] = []
 
   // Add text search conditions
   if (query.trim()) {
@@ -453,10 +453,10 @@ export async function searchAll(query: string, options: {
   types?: ('product' | 'page')[]
   limit?: number
   offset?: number
-} = {}): Promise<{ results: any[], total: number, breakdown: { products: number, pages: number } }> {
+} = {}): Promise<{ results: unknown[], total: number, breakdown: { products: number, pages: number } }> {
   const { types, limit = 20, offset = 0 } = options
   
-  const results: any[] = []
+  const results: unknown[] = []
   const breakdown = { products: 0, pages: 0 }
 
   // Search products if included
@@ -546,7 +546,7 @@ export async function getSearchAnalytics(
     endDate?: Date
     limit?: number
   } = {}
-): Promise<SearchAnalytics | { events: any[], total: number }> {
+): Promise<SearchAnalytics | { events: unknown[], total: number }> {
   const { startDate, endDate, limit = 100 } = options
 
   const dateFilter = {
@@ -686,7 +686,7 @@ export const searchService = {
     return service.getPopularTerms(limit)
   },
 
-  async indexContent(contentType: string, contentId: string, data: any): Promise<boolean> {
+  async indexContent(contentType: string, contentId: string, data: unknown): Promise<boolean> {
     // This would add/update a single document in the search index
     const service = getSearchService()
     

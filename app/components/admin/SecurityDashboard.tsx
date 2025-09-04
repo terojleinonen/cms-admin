@@ -53,7 +53,7 @@ interface SecurityEvent {
   userId?: string
   timestamp: string
   resolved: boolean
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export default function SecurityDashboard() {

@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
 import { getAuditService } from '@/lib/audit-service'
+import bcrypt from 'bcryptjs'
 
 const deactivationSchema = z.object({
   reason: z.string().min(1, 'Deactivation reason is required').max(500),
@@ -108,7 +109,6 @@ export async function POST(
 
     // For self-deactivation, verify password
     if (isOwnProfile && data.confirmPassword) {
-      const bcrypt = require('bcryptjs')
       const isValidPassword = await bcrypt.compare(data.confirmPassword, existingUser.passwordHash)
       
       if (!isValidPassword) {

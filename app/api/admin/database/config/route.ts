@@ -110,6 +110,13 @@ async function getDatabaseConfig() {
       LIMIT 10
     `
 
+    interface PostgresqlConfig {
+      value: string;
+      unit: string | null;
+      category: string;
+      description: string;
+    }
+
     return {
       postgresql: pgConfig.reduce((acc, row) => {
         acc[row.name] = {
@@ -119,7 +126,7 @@ async function getDatabaseConfig() {
           description: row.short_desc
         }
         return acc
-      }, {} as Record<string, any>),
+      }, {} as Record<string, PostgresqlConfig>),
       database: dbStats[0],
       topIndexes: indexStats
     }

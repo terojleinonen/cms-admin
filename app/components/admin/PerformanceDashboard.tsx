@@ -66,9 +66,8 @@ export default function PerformanceDashboard() {
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null)
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/performance')
       if (!response.ok) {
@@ -82,21 +81,18 @@ export default function PerformanceDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchMetrics()
     
     // Set up auto-refresh every 30 seconds
     const interval = setInterval(fetchMetrics, 30000)
-    setRefreshInterval(interval)
 
     return () => {
-      if (refreshInterval) {
-        clearInterval(refreshInterval)
-      }
+      clearInterval(interval)
     }
-  }, [])
+  }, [fetchMetrics])
 
   const formatBytes = (bytes: number): string => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB']

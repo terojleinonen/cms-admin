@@ -326,3 +326,14 @@ export interface FilterOption {
   type: 'text' | 'select' | 'date' | 'boolean'
   options?: SelectOption[]
 }
+
+export interface Notification {
+  id: string
+  type: NotificationType
+  title: string
+  message: string
+  read: boolean
+  readAt?: Date
+  createdAt: Date
+  data?: Record<string, unknown>
+}

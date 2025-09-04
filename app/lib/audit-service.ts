@@ -272,7 +272,7 @@ export class AuditService {
       const validatedFilters = auditLogFiltersSchema.parse(filters)
 
       // Build where clause
-      const where: any = {}
+      const where: unknown = {}
 
       if (validatedFilters.userId) {
         where.userId = validatedFilters.userId
@@ -744,12 +744,12 @@ export class AuditService {
  * Audit logging middleware for Express/Next.js
  */
 export function createAuditMiddleware(auditService: AuditService) {
-  return async (req: any, res: any, next: any) => {
+  return async (req: unknown, res: unknown, next: unknown) => {
     // Store original end function
     const originalEnd = res.end
 
     // Override end function to log after response
-    res.end = function(chunk: any, encoding: any) {
+    res.end = function(chunk: unknown, encoding: unknown) {
       // Call original end function
       originalEnd.call(this, chunk, encoding)
 

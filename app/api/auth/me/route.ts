@@ -27,7 +27,10 @@ async function verifyJWTToken(request: NextRequest) {
       throw new Error('NEXTAUTH_SECRET is not configured')
     }
 
-    const decoded = jwt.verify(token, jwtSecret) as any
+    interface DecodedToken {
+      sub: string;
+    }
+    const decoded = jwt.verify(token, jwtSecret) as DecodedToken
     
     // Get user from database to ensure they still exist and are active
     const user = await prisma.user.findUnique({

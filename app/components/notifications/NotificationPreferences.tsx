@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Switch } from '@headlessui/react'
 import { 
   EnvelopeIcon, 
@@ -35,11 +35,7 @@ export function NotificationPreferences({ userId, onUpdate }: NotificationPrefer
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
-  useEffect(() => {
-    fetchPreferences()
-  }, [userId])
-
-  const fetchPreferences = async () => {
+  const fetchPreferences = useCallback(async () => {
     try {
       const response = await fetch(`/api/users/${userId}/notification-preferences`)
       if (response.ok) {
@@ -51,7 +47,11 @@ export function NotificationPreferences({ userId, onUpdate }: NotificationPrefer
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
+
+  useEffect(() => {
+    fetchPreferences()
+  }, [fetchPreferences])
 
   const updatePreferences = async (newPreferences: NotificationPreferences) => {
     setSaving(true)

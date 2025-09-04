@@ -22,7 +22,7 @@ const CURRENT_SCHEMA_VERSION = 1
 /**
  * Migration functions for each schema version
  */
-const migrations: Record<number, (preferences: any) => any> = {
+const migrations: Record<number, (preferences: unknown) => any> = {
   1: migrateToV1,
 }
 
@@ -110,7 +110,7 @@ export async function validateAndMigrateUserPreferences(
 /**
  * Get schema version from preferences object
  */
-function getSchemaVersion(preferences: any): number {
+function getSchemaVersion(preferences: unknown): number {
   // For now, we assume all existing preferences are version 1
   // In future versions, we can add a schemaVersion field
   return preferences.schemaVersion || 1
@@ -119,7 +119,7 @@ function getSchemaVersion(preferences: any): number {
 /**
  * Migration to version 1 (current baseline)
  */
-function migrateToV1(preferences: any): any {
+function migrateToV1(preferences: unknown): unknown {
   const defaultPrefs = getDefaultPreferences()
 
   return {
@@ -153,7 +153,7 @@ function validatePreferencesStructure(
 /**
  * Validate theme value
  */
-function validateTheme(theme: any): 'LIGHT' | 'DARK' | 'SYSTEM' | null {
+function validateTheme(theme: unknown): 'LIGHT' | 'DARK' | 'SYSTEM' | null {
   const validThemes = ['LIGHT', 'DARK', 'SYSTEM']
   return validThemes.includes(theme) ? theme : null
 }
@@ -161,7 +161,7 @@ function validateTheme(theme: any): 'LIGHT' | 'DARK' | 'SYSTEM' | null {
 /**
  * Validate timezone value
  */
-function validateTimezone(timezone: any): string | null {
+function validateTimezone(timezone: unknown): string | null {
   if (typeof timezone !== 'string' || timezone.length === 0) {
     return null
   }
@@ -178,7 +178,7 @@ function validateTimezone(timezone: any): string | null {
 /**
  * Validate language value
  */
-function validateLanguage(language: any): string | null {
+function validateLanguage(language: unknown): string | null {
   if (typeof language !== 'string' || language.length === 0) {
     return null
   }
@@ -191,7 +191,7 @@ function validateLanguage(language: any): string | null {
 /**
  * Validate notifications object
  */
-function validateNotifications(notifications: any): {
+function validateNotifications(notifications: unknown): {
   email: boolean
   push: boolean
   security: boolean
@@ -222,7 +222,7 @@ function validateNotifications(notifications: any): {
 /**
  * Validate dashboard object
  */
-function validateDashboard(dashboard: any): {
+function validateDashboard(dashboard: unknown): {
   layout: string
   widgets: string[]
   defaultView: string

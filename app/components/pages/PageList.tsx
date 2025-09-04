@@ -107,7 +107,7 @@ export default function PageList({ onEdit, onDelete, onStatusChange }: PageListP
 
   useEffect(() => {
     fetchPages()
-  }, [])
+  }, [fetchPages])
 
   const handleFilterChange = (key: keyof PageFilters, value: string) => {
     const newFilters = { ...filters, [key]: value }

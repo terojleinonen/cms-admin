@@ -28,7 +28,7 @@ export class ApiAuthService {
     return null
   }
 
-  static async updateApiKey(keyId: string, updates: any) {
+  static async updateApiKey(keyId: string, updates: unknown) {
     // Placeholder implementation
     return null
   }

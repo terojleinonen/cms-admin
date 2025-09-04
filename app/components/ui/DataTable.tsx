@@ -87,7 +87,7 @@ export default function DataTable<T extends Record<string, any>>({
   }
 
   // Handle filter change
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: unknown) => {
     const newFilters = { ...filterValues, [key]: value }
     setFilterValues(newFilters)
     

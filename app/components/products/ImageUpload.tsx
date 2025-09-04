@@ -20,7 +20,7 @@ interface UploadFile {
 }
 
 interface ImageUploadProps {
-  onUploadComplete: (uploadedFiles: any[]) => void
+  onUploadComplete: (uploadedFiles: unknown[]) => void
   onClose: () => void
   maxFiles?: number
   maxFileSize?: number // in bytes
@@ -51,7 +51,7 @@ export default function ImageUpload({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  const validateFile = (file: File): string | null => {
+  const validateFile = useCallback((file: File): string | null => {
     // Check file size
     if (file.size > maxFileSize) {
       return `File size exceeds ${formatFileSize(maxFileSize)} limit`
@@ -63,7 +63,7 @@ export default function ImageUpload({
     }
 
     return null
-  }
+  }, [maxFileSize, acceptedTypes])
 
   const createPreview = (file: File): Promise<string> => {
     return new Promise((resolve) => {
@@ -98,7 +98,7 @@ export default function ImageUpload({
     }
 
     setFiles(prev => [...prev, ...uploadFiles])
-  }, [files.length, maxFiles, maxFileSize, acceptedTypes])
+  }, [files.length, maxFiles, validateFile])
 
   const removeFile = (id: string) => {
     setFiles(prev => prev.filter(f => f.id !== id))
@@ -167,12 +167,12 @@ export default function ImageUpload({
       // Update file statuses
       setFiles(prev => prev.map(f => {
         if (f.status === 'uploading') {
-          const hasError = result.errors?.some((err: any) => err.filename === f.file.name)
+          const hasError = result.errors?.some((err: unknown) => err.filename === f.file.name)
           return {
             ...f,
             status: hasError ? 'error' : 'success',
             progress: 100,
-            error: hasError ? result.errors.find((err: any) => err.filename === f.file.name)?.error : undefined,
+            error: hasError ? result.errors.find((err: unknown) => err.filename === f.file.name)?.error : undefined,
           }
         }
         return f
@@ -258,10 +258,12 @@ export default function ImageUpload({
                 {/* Preview */}
                 <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded overflow-hidden">
                   {uploadFile.preview ? (
-                    <img
+                    <Image
                       src={uploadFile.preview}
                       alt={uploadFile.file.name}
                       className="w-full h-full object-cover"
+                      width={48}
+                      height={48}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">

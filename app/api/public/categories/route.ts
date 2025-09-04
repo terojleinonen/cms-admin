@@ -23,6 +23,21 @@ const querySchema = z.object({
   search: z.string().min(1).max(100).optional(),
 })
 
+interface CategoryTreeNode {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  sortOrder: number;
+  productCount: number;
+  totalProductCount: number;
+  childrenCount: number;
+  depth: number;
+  hasChildren: boolean;
+  children: CategoryTreeNode[] | undefined;
+  path: { id: string; name: string; slug: string; }[];
+}
+
 // Helper function to build category tree recursively
 async function buildCategoryTree(
   parentId: string | null, 
@@ -30,10 +45,10 @@ async function buildCategoryTree(
   currentDepth: number = 0,
   includeEmpty: boolean = false,
   search?: string
-): Promise<any[]> {
+): Promise<CategoryTreeNode[]> {
   if (currentDepth >= maxDepth) return []
 
-  const where: any = {
+  const where: unknown = {
     isActive: true,
     parentId,
   }
@@ -177,7 +192,7 @@ export async function GET(request: NextRequest) {
       return response
     }
 
-    let result: any
+    let result: unknown
 
     if (hierarchy === 'true') {
       // Fetch hierarchical categories
@@ -203,7 +218,7 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // Fetch flat list of categories
-      const where: any = {
+      const where: unknown = {
         isActive: true,
       }
 

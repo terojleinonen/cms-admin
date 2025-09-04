@@ -443,6 +443,7 @@ export default function ProfilePictureManager({
             <h4 className="text-sm font-medium text-gray-900 mb-3">Crop Your Image</h4>
             
             <div className="relative inline-block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 ref={imageRef}
                 src={previewUrl}

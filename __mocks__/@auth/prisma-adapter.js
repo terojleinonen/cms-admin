@@ -1,5 +1,5 @@
 // Mock for @auth/prisma-adapter
-function PrismaAdapter(prisma) {
+function PrismaAdapter() {
   return {
     createUser: jest.fn(),
     getUser: jest.fn(),

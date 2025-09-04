@@ -97,14 +97,14 @@ export class AppError extends Error {
  */
 export class ValidationError extends AppError {
   /** Detailed validation error information */
-  public readonly details?: any
+  public readonly details?: unknown
 
   /**
    * Create a validation error
    * @param message - Error message
    * @param details - Detailed validation errors (e.g., field-specific errors)
    */
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, 400, 'VALIDATION_ERROR')
     this.name = 'ValidationError'
     this.details = details
@@ -225,7 +225,7 @@ export class DatabaseError extends AppError {
 /**
  * Check if error is an AppError instance
  */
-export function isAppError(error: any): error is AppError {
+export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError
 }
 
@@ -236,7 +236,7 @@ export interface ErrorResponse {
   error: {
     code: string
     message: string
-    details?: any
+    details?: unknown
     timestamp: string
   }
   success?: boolean
@@ -256,7 +256,7 @@ export function formatErrorResponse(error: AppError | Error): ErrorResponse {
   }
 }
 
-export function createErrorResponse(error: any): ErrorResponse {
+export function createErrorResponse(error: unknown): ErrorResponse {
   if (error instanceof AppError) {
     return {
       error: {
@@ -325,7 +325,7 @@ export function handleApiError(error: unknown): Response {
  * Async error wrapper for API route handlers
  */
 export function asyncHandler(fn: Function) {
-  return async (...args: any[]) => {
+  return async (...args: unknown[]) => {
     try {
       return await fn(...args)
     } catch (error) {

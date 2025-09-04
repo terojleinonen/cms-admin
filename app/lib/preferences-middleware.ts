@@ -166,7 +166,7 @@ export function getDefaultPreferences(): UserPreferencesData {
  * Ensures preferences conform to current schema and migrates old data
  */
 export function validateAndMigratePreferences(
-  preferences: any
+  preferences: unknown
 ): UserPreferencesData {
   const defaultPrefs = getDefaultPreferences()
 

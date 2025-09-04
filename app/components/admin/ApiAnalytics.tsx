@@ -141,7 +141,7 @@ export default function ApiAnalytics() {
       <div className="flex justify-end">
         <select
           value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value as any)}
+          onChange={(e) => setTimeRange(e.target.value as '24h' | '7d' | '30d')}
           className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="24h">Last 24 Hours</option>

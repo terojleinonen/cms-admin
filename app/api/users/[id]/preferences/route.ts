@@ -145,7 +145,13 @@ export async function PUT(
     
     // Handle notifications update
     if (data.notifications !== undefined) {
-      const currentNotifications = existingPreferences?.notifications as any || {
+      interface NotificationSettings {
+        email: boolean;
+        push: boolean;
+        security: boolean;
+        marketing: boolean;
+      }
+      const currentNotifications = (existingPreferences?.notifications as NotificationSettings) || {
         email: true,
         push: true,
         security: true,
@@ -160,7 +166,12 @@ export async function PUT(
     
     // Handle dashboard settings update
     if (data.dashboard !== undefined) {
-      const currentDashboard = existingPreferences?.dashboard as any || {
+      interface DashboardSettings {
+        layout: string;
+        widgets: string[];
+        defaultView: string;
+      }
+      const currentDashboard = (existingPreferences?.dashboard as DashboardSettings) || {
         layout: 'default',
         widgets: [],
         defaultView: 'dashboard',

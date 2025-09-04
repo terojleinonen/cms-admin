@@ -7,10 +7,11 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { Media } from '@/lib/types'
 
 export default function MediaLibrary() {
   const { data: session } = useSession()
-  const [media, setMedia] = useState<any[]>([])
+  const [media, setMedia] = useState<Media[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

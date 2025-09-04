@@ -73,7 +73,7 @@ export interface AuditLogEntry {
   action: string
   resource: string
   resourceId?: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
   ipAddress?: string
   userAgent?: string
   severity?: 'low' | 'medium' | 'high' | 'critical'
@@ -177,7 +177,7 @@ export class AuditService {
   async logAuth(
     userId: string,
     action: keyof typeof AUDIT_ACTIONS.AUTH,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<AuditLog> {
@@ -200,7 +200,7 @@ export class AuditService {
     userId: string,
     targetUserId: string,
     action: keyof typeof AUDIT_ACTIONS.USER,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<AuditLog> {
@@ -222,7 +222,7 @@ export class AuditService {
   async logSecurity(
     userId: string,
     action: keyof typeof AUDIT_ACTIONS.SECURITY,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<AuditLog> {
@@ -243,7 +243,7 @@ export class AuditService {
   async logSystem(
     userId: string,
     action: keyof typeof AUDIT_ACTIONS.SYSTEM,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<AuditLog> {
@@ -405,7 +405,15 @@ export class AuditService {
       })
 
       const severityBreakdown = allLogs.reduce((acc, log) => {
-        const severity = (log.details as any)?.severity || 'low'
+        let severity = 'low';
+        if (
+          log.details &&
+          typeof log.details === 'object' &&
+          'severity' in log.details &&
+          typeof (log.details as { severity?: unknown }).severity === 'string'
+        ) {
+          severity = (log.details as { severity: string }).severity;
+        }
         acc[severity] = (acc[severity] || 0) + 1
         return acc
       }, {} as Record<string, number>)
@@ -796,7 +804,7 @@ export async function auditLog(params: {
   userId: string
   action: string
   resource: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
   request?: Request
 }): Promise<void> {
   try {

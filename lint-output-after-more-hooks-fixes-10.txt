@@ -414,3 +414,4 @@ Prefer explicitly defining any function parameters and return type  @typescript-
   2:8  warning  'NextAuth' is defined but never used  @typescript-eslint/no-unused-vars
 
 ✖ 205 problems (0 errors, 205 warnings)
+

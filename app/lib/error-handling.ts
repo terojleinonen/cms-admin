@@ -324,8 +324,8 @@ export function handleApiError(error: unknown): Response {
 /**
  * Async error wrapper for API route handlers
  */
-export function asyncHandler(fn: Function) {
-  return async (...args: unknown[]) => {
+export function asyncHandler<T extends (...args: unknown[]) => Promise<unknown>>(fn: T) {
+  return async (...args: Parameters<T>): Promise<ReturnType<T> | Response> => {
     try {
       return await fn(...args)
     } catch (error) {

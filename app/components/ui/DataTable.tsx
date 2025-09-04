@@ -25,7 +25,7 @@ interface DataTableProps<T> {
   sortable?: boolean
   pagination?: PaginationInfo
   onSort?: (column: string, direction: 'asc' | 'desc') => void
-  onFilter?: (filters: Record<string, any>) => void
+  onFilter?: (filters: Record<string, unknown>) => void
   onSearch?: (query: string) => void
   onPageChange?: (page: number) => void
   loading?: boolean
@@ -35,7 +35,7 @@ interface DataTableProps<T> {
 
 type SortDirection = 'asc' | 'desc' | null
 
-export default function DataTable<T extends Record<string, any>>({
+export default function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
   filters = [],
@@ -53,7 +53,7 @@ export default function DataTable<T extends Record<string, any>>({
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterValues, setFilterValues] = useState<Record<string, any>>({})
+  const [filterValues, setFilterValues] = useState<Record<string, unknown>>({})
   const [showFilters, setShowFilters] = useState(false)
 
   // Handle sorting

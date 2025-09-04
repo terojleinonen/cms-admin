@@ -55,7 +55,7 @@ interface AuditLog {
   action: string
   createdAt: Date
   ipAddress?: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 }
 
 interface PasswordStrength {

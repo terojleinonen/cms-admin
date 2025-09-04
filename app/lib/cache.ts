@@ -3,8 +3,9 @@
  */
 
 import { PrismaClient } from '@prisma/client'
+import { Product, Category } from '@/lib/types'
 
-export interface CacheEntry<T = any> {
+export interface CacheEntry<T = unknown> {
   key: string
   value: T
   expiresAt: Date
@@ -223,11 +224,11 @@ export class DatabaseCache {
     return result
   }
 
-  async getProduct(id: string): Promise<any | null> {
+  async getProduct(id: string): Promise<Product | null> {
     const cacheKey = `product:${id}`
     
     // Try memory cache first
-    const cached = this.memoryCache.get<any>(cacheKey)
+    const cached = this.memoryCache.get<Product>(cacheKey)
     if (cached) {
       return cached
     }
@@ -249,11 +250,11 @@ export class DatabaseCache {
     return product
   }
 
-  async getCategories(params: CategoryQueryParams): Promise<any[]> {
+  async getCategories(params: CategoryQueryParams): Promise<Category[]> {
     const cacheKey = `categories:${JSON.stringify(params)}`
     
     // Try memory cache first
-    const cached = this.memoryCache.get<any[]>(cacheKey)
+    const cached = this.memoryCache.get<Category[]>(cacheKey)
     if (cached) {
       return cached
     }

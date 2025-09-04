@@ -305,8 +305,18 @@ export class AnalyticsService {
         contentTitle = page?.title || 'Unknown Page';
       }
 
+      let action = 'Content updated';
+      if (
+        revision.revisionData &&
+        typeof revision.revisionData === 'object' &&
+        'action' in revision.revisionData &&
+        typeof (revision.revisionData as { action?: unknown }).action === 'string'
+      ) {
+        action = (revision.revisionData as { action: string }).action;
+      }
+
       activities.push({
-        action: (revision.revisionData as any)?.action || 'Content updated',
+        action,
         contentType: revision.contentType,
         contentTitle,
         userName: revision.creator.name,

@@ -37,7 +37,7 @@ interface SessionStatistics {
 interface SuspiciousActivity {
   type: string
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
-  details: Record<string, any>
+  details: Record<string, unknown>
   timestamp: string
 }
 

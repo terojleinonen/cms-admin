@@ -191,7 +191,7 @@ export class WorkflowService {
       throw new Error(`Invalid action for page: ${action.action}`)
     }
 
-    const updateData: unknown = {
+    const updateData: unknown = { 
       status: newStatus,
       updatedAt: new Date()
     }

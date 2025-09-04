@@ -94,7 +94,7 @@ export async function GET(
     const securityScore = calculateSecurityScore({
       twoFactorEnabled: user.twoFactorEnabled,
       suspiciousActivityCount: suspiciousActivity.length,
-      recentFailedLogins: recentSecurityEvents.filter(e => e.action === 'LOGIN_FAILED').length,
+      recentFailedLogins: recentSecurityEvents.filter((e: SecurityEvent) => e.action === 'LOGIN_FAILED').length,
       activeSessions: sessionStats.activeSessions
     })
 
@@ -156,7 +156,7 @@ export async function POST(
     const { action, reason, lockDuration } = validation.data
     const ipAddress = request.headers.get('x-forwarded-for') || 
                      request.headers.get('x-real-ip') || 
-                     request.ip || null
+                     '' || null
     const userAgent = request.headers.get('user-agent') || null
 
     switch (action) {
@@ -253,6 +253,10 @@ export async function POST(
 /**
  * Calculate security score based on various factors
  */
+interface SecurityEvent {
+  action: string;
+}
+
 function calculateSecurityScore(factors: {
   twoFactorEnabled: boolean
   suspiciousActivityCount: number
@@ -282,10 +286,10 @@ function calculateSecurityScore(factors: {
  * Generate security recommendations based on user data
  */
 function generateSecurityRecommendations(data: {
-  user: unknown
-  suspiciousActivity: unknown[]
-  sessionStats: unknown
-  recentSecurityEvents: unknown[]
+  user: { twoFactorEnabled: boolean }
+  suspiciousActivity: any[]
+  sessionStats: { activeSessions: number }
+  recentSecurityEvents: SecurityEvent[]
 }): string[] {
   const recommendations: string[] = []
 

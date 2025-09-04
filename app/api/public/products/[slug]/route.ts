@@ -5,8 +5,44 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { prisma, Prisma } from '@/lib/db'
 import { z } from 'zod'
+import { ProductCategory, Category, ProductMedia, Media } from '@prisma/client'
+
+type ProductCategoryWithCategory = ProductCategory & {
+  category: Category & {
+    parent: Category | null;
+  };
+}
+
+type ProductMediaWithMedia = ProductMedia & {
+  media: Media;
+}
+
+interface TransformedProduct {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  shortDescription: string | null;
+  price: number;
+  comparePrice: number | null;
+  sku: string | null;
+  inventoryQuantity: number;
+  weight: number | null;
+  dimensions: any;
+  status: string;
+  featured: boolean;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  createdAt: string;
+  updatedAt: string;
+  categories?: any[];
+  media?: any[];
+  primaryImage?: any;
+  galleryImages?: any[];
+  relatedProducts?: any[];
+}
 
 // Simple in-memory cache for this route
 const cache = new Map<string, { data: unknown; expires: number }>()
@@ -59,7 +95,7 @@ export async function GET(
     }
 
     // Build include clause based on parameters
-    const include: unknown = {}
+    const include: Prisma.ProductInclude = {}
     
     if (includeCategories === 'true') {
       include.categories = {
@@ -123,7 +159,7 @@ export async function GET(
     }
 
     // Transform data for frontend consumption
-    const transformedProduct: unknown = {
+    const transformedProduct: TransformedProduct = {
       id: product.id,
       name: product.name,
       slug: product.slug,
@@ -145,7 +181,7 @@ export async function GET(
 
     // Add categories if requested
     if (includeCategories === 'true' && product.categories) {
-      transformedProduct.categories = product.categories.map((pc: unknown) => ({
+      transformedProduct.categories = product.categories.map((pc: any) => ({
         ...pc.category,
         breadcrumb: pc.category.parent 
           ? [pc.category.parent, { id: pc.category.id, name: pc.category.name, slug: pc.category.slug }]
@@ -155,7 +191,7 @@ export async function GET(
 
     // Add media if requested
     if (includeMedia === 'true' && product.media) {
-      transformedProduct.media = product.media.map((pm: unknown) => ({
+      transformedProduct.media = product.media.map((pm: any) => ({
         id: pm.media.id,
         filename: pm.media.filename,
         originalName: pm.media.originalName,

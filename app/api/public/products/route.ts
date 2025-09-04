@@ -5,13 +5,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma, ProductStatus } from '@/lib/db'
+import { prisma, Prisma, ProductStatus } from '@/lib/db'
 import { CacheService } from '@/lib/cache'
 import { rateLimit, rateLimitConfigs, createRateLimitHeaders } from '@/lib/rate-limit'
 import { z } from 'zod'
+import { ProductCategory, ProductMedia } from '@prisma/client'
 
 // Initialize cache service
-const cache = new CacheService(prisma, { maxSize: 1000 })
+const cache = CacheService.getInstance({ maxMemoryItems: 1000 });
+cache.initializeDatabase(prisma);
 
 // Validation schema for query parameters
 const querySchema = z.object({
@@ -91,9 +93,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where clause with improved filtering
-    const where: unknown = {
+    const where: Prisma.ProductWhereInput = {
       status: status as ProductStatus,
-      isActive: true, // Only show active products
     }
 
     if (featured !== undefined) {
@@ -135,7 +136,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     // Build order by clause with multiple sort options
-    const orderBy: unknown = {}
+    const orderBy: Prisma.ProductOrderByWithRelationInput = {}
     switch (sortBy) {
       case 'price':
         orderBy.price = sortOrder
@@ -157,7 +158,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build include clause based on parameters
-    const include: unknown = {}
+    const include: Prisma.ProductInclude = {}
     
     if (includeCategories === 'true') {
       include.categories = {
@@ -212,7 +213,27 @@ export async function GET(request: NextRequest) {
 
     // Transform data for frontend consumption
     const transformedProducts = products.map(product => {
-      const baseProduct = {
+      const baseProduct: {
+        id: string;
+        name: string;
+        slug: string;
+        description: string | null;
+        shortDescription: string | null;
+        price: number;
+        comparePrice: number | null;
+        sku: string | null;
+        inventoryQuantity: number;
+        weight: number | null;
+        dimensions: any;
+        status: ProductStatus;
+        featured: boolean;
+        seoTitle: string | null;
+        seoDescription: string | null;
+        createdAt: string;
+        updatedAt: string;
+        categories?: any[];
+        media?: any[];
+      } = {
         id: product.id,
         name: product.name,
         slug: product.slug,
@@ -232,39 +253,14 @@ export async function GET(request: NextRequest) {
         updatedAt: product.updatedAt.toISOString(),
       }
 
-      interface ProductCategory {
-        category: {
-          id: string;
-          name: string;
-          slug: string;
-          description: string | null;
-          parentId: string | null;
-        }
-      }
-
-      interface ProductMedia {
-        media: {
-          id: string;
-          filename: string;
-          originalName: string;
-          altText: string | null;
-          width: number | null;
-          height: number | null;
-          mimeType: string;
-          fileSize: number;
-        };
-        sortOrder: number;
-        isPrimary: boolean;
-      }
-
       // Add categories if requested
       if (includeCategories === 'true' && product.categories) {
-        baseProduct.categories = product.categories.map((pc: ProductCategory) => pc.category)
+        baseProduct.categories = product.categories.map((pc: any) => pc.category)
       }
 
       // Add media if requested
       if (includeMedia === 'true' && product.media) {
-        baseProduct.media = product.media.map((pm: ProductMedia) => ({
+        baseProduct.media = product.media.map((pm: any) => ({
           id: pm.media.id,
           filename: pm.media.filename,
           originalName: pm.media.originalName,

@@ -11,6 +11,15 @@ import { UserRole } from '@prisma/client'
 import { z } from 'zod'
 import { getAuditService } from '@/lib/audit-service'
 
+interface ExportData {
+  user: any;
+  exportMetadata: any;
+  preferences?: any;
+  auditLogs?: any;
+  sessions?: any;
+  createdContent?: any;
+}
+
 const exportQuerySchema = z.object({
   format: z.enum(['json', 'csv']).default('json'),
   includeAuditLogs: z.boolean().default(true),
@@ -108,7 +117,7 @@ export async function GET(
     }
 
     // Build export data object
-    const exportData: Record<string, unknown> = {
+    const exportData: ExportData = {
       user: {
         ...user,
         // Remove sensitive fields from export
@@ -222,17 +231,16 @@ export async function GET(
 
     // Log the data export
     const auditService = getAuditService(prisma)
-    await auditService.logUser(
+    await auditService.logSecurity(
       session?.user?.id || resolvedParams.id,
-      resolvedParams.id,
-      'DATA_EXPORTED',
+      'DATA_EXPORT',
       {
         format: validatedQuery.format,
         includes: validatedQuery,
         exportedAt: new Date(),
       },
-      request.headers.get('x-forwarded-for') || request.ip,
-      request.headers.get('user-agent')
+      request.headers.get('x-forwarded-for') || '',
+      request.headers.get('user-agent') || undefined
     )
 
     // Return data in requested format

@@ -16,7 +16,7 @@ const searchEventSchema = z.object({
   resultsCount: z.number().min(0).optional(),
   clickedResultId: z.string().optional(),
   searchTime: z.number().min(0).optional(),
-  filters: z.record(z.any()).optional()
+  filters: z.record(z.string(), z.any()).optional()
 })
 
 // Validation schema for analytics queries

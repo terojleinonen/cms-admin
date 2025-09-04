@@ -217,8 +217,8 @@ export async function PUT(
         updatedFields: Object.keys(updateData),
         isOwnProfile,
       },
-      request.headers.get('x-forwarded-for') || request.ip,
-      request.headers.get('user-agent')
+      request.headers.get('x-forwarded-for') || '',
+      request.headers.get('user-agent') || undefined
     )
 
     // Generate profile picture URL if user has one
@@ -306,8 +306,8 @@ export async function DELETE(
         deletedUserName: existingUser.name,
         deletedUserEmail: existingUser.email,
       },
-      request.headers.get('x-forwarded-for') || request.ip,
-      request.headers.get('user-agent')
+      request.headers.get('x-forwarded-for') || '',
+      request.headers.get('user-agent') || undefined
     )
 
     return NextResponse.json({ message: 'User deleted successfully' })

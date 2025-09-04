@@ -9,6 +9,21 @@ import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { Decimal } from '@prisma/client/runtime/library'
+import type { Product } from '@prisma/client'
+
+/**
+ * Helper function to transform Decimal fields to numbers for JSON responses.
+ * @param product The product object from Prisma.
+ * @returns A new product object with number fields.
+ */
+function transformProductForResponse(product: Product) {
+  return {
+    ...product,
+    price: product.price.toNumber(),
+    comparePrice: product.comparePrice?.toNumber() || null,
+    weight: product.weight?.toNumber() || null,
+  };
+}
 
 // Validation schema for updates
 const updateProductSchema = z.object({
@@ -84,21 +99,7 @@ export async function GET(
       )
     }
 
-    // Transform Decimal fields to numbers for JSON response
-    if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found after update' },
-        { status: 404 }
-      )
-    }
-
-    const transformedProduct = {
-      ...product,
-      price: product.price.toNumber(),
-      comparePrice: product.comparePrice?.toNumber() || null,
-      weight: product.weight?.toNumber() || null,
-    }
-
+    const transformedProduct = transformProductForResponse(product)
     return NextResponse.json({ product: transformedProduct })
   } catch (error) {
     console.error('Error fetching product:', error)
@@ -263,12 +264,13 @@ export async function PUT(
     })
 
     // Transform Decimal fields to numbers for JSON response
-    const transformedProduct = {
-      ...product,
-      price: product.price.toNumber(),
-      comparePrice: product.comparePrice?.toNumber() || null,
-      weight: product.weight?.toNumber() || null,
+    if (!product) {
+      return NextResponse.json(
+        { error: 'Product not found after update' },
+        { status: 404 }
+      )
     }
+    const transformedProduct = transformProductForResponse(product)
 
     return NextResponse.json({ product: transformedProduct })
   } catch (error) {

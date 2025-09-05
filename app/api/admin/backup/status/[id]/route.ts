@@ -7,9 +7,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { BackupService } from '@/lib/backup';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
 
 // Initialize backup service
 const backupConfig = {

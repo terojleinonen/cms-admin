@@ -57,7 +57,6 @@ function CategoryNode({
   isDragOver,
 }: CategoryNodeProps) {
   const hasChildren = category.children && category.children.length > 0
-  const _paddingLeft = level * 24
 
   return (
     <div>

@@ -10,7 +10,6 @@ import { verifyPassword } from '@/lib/auth-utils'
 import { handleDatabaseError } from '@/lib/db-errors'
 import { prisma } from '@/lib/db'
 import jwt from 'jsonwebtoken'
-import { UserRole } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
   try {

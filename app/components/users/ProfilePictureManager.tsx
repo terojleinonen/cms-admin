@@ -8,7 +8,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { 
   PhotoIcon, 
-  XMarkIcon, 
   ArrowUpTrayIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon
@@ -123,13 +122,13 @@ export default function ProfilePictureManager({
         isValid: true,
         compressedFile
       }
-    } catch (error) {
+    } catch {
       return {
         isValid: false,
         error: 'Invalid image file'
       }
     }
-  }, [allowedFormats, maxFileSize])
+  }, [allowedFormats, maxFileSize, compressImage])
 
   /**
    * Compress image using canvas

@@ -9,7 +9,28 @@ import { prisma, Prisma, ProductStatus } from '@/lib/db'
 import { CacheService } from '@/lib/cache'
 import { rateLimit, rateLimitConfigs, createRateLimitHeaders } from '@/lib/rate-limit'
 import { z } from 'zod'
-import { ProductCategory, ProductMedia } from '@prisma/client'
+
+interface TransformedCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  parentId: string | null;
+}
+
+interface TransformedMedia {
+  id: string;
+  filename: string;
+  originalName: string;
+  altText: string | null;
+  width: number | null;
+  height: number | null;
+  mimeType: string;
+  fileSize: number;
+  sortOrder: number;
+  isPrimary: boolean;
+  url: string;
+}
 
 // Initialize cache service
 const cache = CacheService.getInstance({ maxMemoryItems: 1000 });
@@ -224,15 +245,15 @@ export async function GET(request: NextRequest) {
         sku: string | null;
         inventoryQuantity: number;
         weight: number | null;
-        dimensions: any;
+        dimensions: Prisma.JsonValue;
         status: ProductStatus;
         featured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
         createdAt: string;
         updatedAt: string;
-        categories?: any[];
-        media?: any[];
+        categories?: TransformedCategory[];
+        media?: TransformedMedia[];
       } = {
         id: product.id,
         name: product.name,
@@ -255,12 +276,12 @@ export async function GET(request: NextRequest) {
 
       // Add categories if requested
       if (includeCategories === 'true' && product.categories) {
-        baseProduct.categories = product.categories.map((pc: any) => pc.category)
+        baseProduct.categories = product.categories.map((pc: { category: TransformedCategory }) => pc.category)
       }
 
       // Add media if requested
       if (includeMedia === 'true' && product.media) {
-        baseProduct.media = product.media.map((pm: any) => ({
+        baseProduct.media = product.media.map((pm: { media: { id: string; filename: string; originalName: string; altText: string | null; width: number | null; height: number | null; mimeType: string; fileSize: number; }; sortOrder: number; isPrimary: boolean; }) => ({
           id: pm.media.id,
           filename: pm.media.filename,
           originalName: pm.media.originalName,

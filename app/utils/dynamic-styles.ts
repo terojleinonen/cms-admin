@@ -52,14 +52,14 @@ export function getEditorHeightClass(height: string | number): string {
  * @returns React CSSProperties object
  */
 export function createDynamicStyles(properties: Record<string, string | number>): React.CSSProperties {
-  const styles: React.CSSProperties = {};
+  const styles: Record<string, string | number> = {};
   
   Object.entries(properties).forEach(([key, value]) => {
     const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-    (styles as any)[cssVar] = typeof value === 'number' ? `${value}px` : value;
+    styles[cssVar] = typeof value === 'number' ? `${value}px` : value;
   });
   
-  return styles;
+  return styles as React.CSSProperties;
 }
 
 /**

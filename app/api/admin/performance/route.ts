@@ -13,7 +13,7 @@ import {
 } from '@/lib/performance'
 import { MemoryMonitor } from '@/middleware/performance'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check authentication
     const session = await getServerSession(authOptions)

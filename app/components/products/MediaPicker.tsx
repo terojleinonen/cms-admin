@@ -14,13 +14,11 @@ import {
   VideoCameraIcon,
   MusicalNoteIcon,
   FolderIcon,
-  FolderOpenIcon,
   MagnifyingGlassIcon,
   ChevronRightIcon,
   ChevronLeftIcon,
   ArrowUpIcon,
   CheckIcon,
-  PlusIcon,
 } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
 import { Media, PaginationInfo } from '@/lib/types'
@@ -64,7 +62,6 @@ export default function MediaPicker({
   multiple = false,
   accept = [],
   selectedMedia = [],
-  allowedMediaTypes = ['image', 'document', 'video', 'audio'],
   maxSelection = 10,
   folder: initialFolder = '',
 }: MediaPickerProps) {

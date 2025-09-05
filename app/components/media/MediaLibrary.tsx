@@ -10,7 +10,7 @@ import { useSession } from 'next-auth/react'
 import { Media } from '@/lib/types'
 
 export default function MediaLibrary() {
-  const { data: session } = useSession()
+  useSession()
   const [media, setMedia] = useState<Media[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

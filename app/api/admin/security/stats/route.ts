@@ -9,7 +9,7 @@ import { authOptions } from '@/lib/auth-config'
 import { SecurityService } from '@/lib/security'
 import { prisma } from '@/lib/db'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check authentication and admin role
     const session = await getServerSession(authOptions)

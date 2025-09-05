@@ -11,6 +11,22 @@ import { rateLimit, rateLimitConfigs, createRateLimitHeaders } from '@/lib/rate-
 import { z } from 'zod'
 import { Category } from '@prisma/client'
 
+interface TransformedFlatCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  parentId: string | null;
+  parent: { id: string; name: string; slug: string; } | null;
+  sortOrder: number;
+  productCount: number;
+  childrenCount: number;
+  hasChildren: boolean;
+  path: { id: string; name: string; slug: string; }[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 type CategoryWithCount = Category & {
   _count: {
     products: number;
@@ -97,7 +113,7 @@ async function buildCategoryTree(
     orderBy: { sortOrder: 'asc' }
   })
 
-  const result = []
+  const result: CategoryTreeNode[] = []
   
   for (const category of categories as CategoryWithCount[]) {
     // Skip categories with no products if includeEmpty is false
@@ -115,7 +131,7 @@ async function buildCategoryTree(
 
     // Calculate total product count including children
     const totalProductCount = category._count.products + 
-      children.reduce((sum, child) => sum + (child.totalProductCount || 0), 0)
+      children.reduce((sum: number, child: CategoryTreeNode) => sum + (child.totalProductCount || 0), 0)
 
     result.push({
       id: category.id,
@@ -208,7 +224,7 @@ export async function GET(request: NextRequest) {
       return response
     }
 
-    let result: { categories: any[]; meta: any; total?: number }
+    let result: { categories: CategoryTreeNode[] | TransformedFlatCategory[]; meta: { type: string; maxDepth?: number; includeEmpty: boolean; parentId: string | null; search: string | null; timestamp: string; cached: boolean; }; total?: number }
 
     if (hierarchy === 'true') {
       // Fetch hierarchical categories

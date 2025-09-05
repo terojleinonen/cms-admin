@@ -18,7 +18,6 @@ import {
   CheckCircleIcon,
   EyeIcon,
   EyeSlashIcon,
-  QrCodeIcon,
   ClipboardDocumentIcon
 } from '@heroicons/react/24/outline'
 import Button from '@/components/ui/Button'
@@ -75,7 +74,7 @@ interface FormErrors {
 }
 
 export default function SecuritySettings({ userId, className = '' }: SecuritySettingsProps) {
-  const { data: session } = useSession()
+  useSession()
   const [securityInfo, setSecurityInfo] = useState<SecurityInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)

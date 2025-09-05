@@ -59,14 +59,14 @@ export interface SearchDocument {
   createdAt: string
   updatedAt: string
   url: string
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
 }
 
 export interface SearchAnalyticsEvent {
   query: string
   resultsCount: number
   userId?: string
-  filters?: Record<string, any>
+  filters?: Record<string, unknown>
   userAgent?: string
   ipAddress?: string
   searchTime?: number
@@ -145,7 +145,7 @@ export class SearchService {
 
     // Apply type filters
     if (types && types.length > 0) {
-      searchResults = searchResults.filter(result => types.includes(result.type as any))
+      searchResults = searchResults.filter(result => types.includes(result.type as 'product' | 'page' | 'media'))
     }
 
     // Apply status filters
@@ -277,7 +277,7 @@ export class SearchService {
   }
 
   // Private helper methods
-  private calculateFacets(results: unknown[]): Record<string, Record<string, number>> {
+  private calculateFacets(results: SearchResult[]): Record<string, Record<string, number>> {
     const facets: Record<string, Record<string, number>> = {
       types: {},
       statuses: {},
@@ -686,16 +686,16 @@ export const searchService = {
     return service.getPopularTerms(limit)
   },
 
-  async indexContent(contentType: string, contentId: string, data: unknown): Promise<boolean> {
+  async indexContent(contentType: string, contentId: string, data: Partial<SearchDocument>): Promise<boolean> {
     // This would add/update a single document in the search index
     const service = getSearchService()
     
     const document: SearchDocument = {
       id: `${contentType}-${contentId}`,
       type: contentType as 'product' | 'page' | 'media',
-      title: data.title || data.name || '',
-      content: data.content || data.description || '',
-      excerpt: data.excerpt || data.shortDescription || '',
+      title: data.title || '',
+      content: data.content || '',
+      excerpt: data.excerpt || '',
       tags: data.tags || [],
       status: data.status || 'published',
       category: data.category || '',

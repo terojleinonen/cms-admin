@@ -22,7 +22,7 @@ export interface SessionInfo {
 export interface SuspiciousActivity {
   type: 'MULTIPLE_FAILED_LOGINS' | 'UNUSUAL_LOCATION' | 'CONCURRENT_SESSIONS' | 'BRUTE_FORCE'
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
-  details: Record<string, any>
+  details: Record<string, unknown>
   timestamp: Date
 }
 
@@ -176,7 +176,6 @@ export async function detectSuspiciousActivity(userId: string): Promise<Suspicio
   const suspiciousActivities: SuspiciousActivity[] = []
   const now = new Date()
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
-  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
   // Check for multiple concurrent sessions from different IPs
   const activeSessions = await prisma.session.findMany({

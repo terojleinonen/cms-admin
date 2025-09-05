@@ -7,7 +7,7 @@ import { getDatabaseHealth, DatabaseConnectionManager } from '@/lib/db'
  * Database health monitoring endpoint for admin users
  * GET /api/admin/database/health
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check authentication and admin role
     const session = await getServerSession(authOptions)

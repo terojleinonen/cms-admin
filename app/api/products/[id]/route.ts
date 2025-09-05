@@ -206,7 +206,7 @@ export async function PUT(
     // Update product with transaction for category updates
     const product = await prisma.$transaction(async (tx) => {
       // Update product data
-      const updatedProduct = await tx.product.update({
+      await tx.product.update({
         where: { id },
         data: processedUpdateData,
       })

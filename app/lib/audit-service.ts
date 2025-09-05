@@ -6,7 +6,6 @@
 
 import { PrismaClient, AuditLog, User } from '@prisma/client'
 import { auditLogCreateSchema, auditLogFiltersSchema, sanitizeAuditLogDetails } from './user-validation-schemas'
-import { z } from 'zod'
 
 // Audit action categories
 export const AUDIT_ACTIONS = {

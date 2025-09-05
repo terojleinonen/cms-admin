@@ -22,7 +22,7 @@ const CURRENT_SCHEMA_VERSION = 1
 /**
  * Migration functions for each schema version
  */
-const migrations: Record<number, (preferences: unknown) => any> = {
+const migrations: Record<number, (preferences: unknown) => unknown> = {
   1: migrateToV1,
 }
 
@@ -268,8 +268,8 @@ async function createDefaultPreferencesForUser(userId: string): Promise<UserPref
       theme: preferences.theme,
       timezone: preferences.timezone,
       language: preferences.language,
-      notifications: preferences.notifications as any,
-      dashboard: preferences.dashboard as any,
+      notifications: preferences.notifications,
+      dashboard: preferences.dashboard,
     }
   } catch (error) {
     console.error('Error creating default preferences:', error)

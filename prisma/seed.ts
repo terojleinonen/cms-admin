@@ -70,7 +70,7 @@ async function main() {
     },
   })
 
-  const accessoriesCategory = await prisma.category.upsert({
+  await prisma.category.upsert({
     where: { slug: 'accessories' },
     update: {},
     create: {

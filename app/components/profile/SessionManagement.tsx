@@ -59,9 +59,9 @@ export default function SessionManagement() {
     if (session?.user?.id) {
       fetchSessionData()
     }
-  }, [session])
+  }, [session, fetchSessionData])
 
-  const fetchSessionData = async () => {
+  const fetchSessionData = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/users/${session?.user?.id}/sessions`)
@@ -77,7 +77,7 @@ export default function SessionManagement() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [session?.user?.id])
 
   const handleLogoutAllDevices = async () => {
     try {

@@ -184,7 +184,7 @@ export class AuditRetentionManager {
       // Remove uncompressed file if it exists
       try {
         await fs.unlink(archivePath)
-      } catch (error) {
+      } catch {
         // Ignore if file doesn't exist
       }
     } else {

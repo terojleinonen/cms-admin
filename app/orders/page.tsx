@@ -3,8 +3,7 @@ import Link from 'next/link'
 import { 
   ShoppingBagIcon, 
   PlusIcon,
-  ChartBarIcon,
-  ClockIcon 
+  ChartBarIcon
 } from '@heroicons/react/24/outline'
 
 export const metadata: Metadata = {

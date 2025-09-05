@@ -7,10 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { BackupService } from '@/lib/backup';
-import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
 
 // Validation schemas
 const createBackupSchema = z.object({
@@ -51,13 +48,13 @@ export async function POST(request: NextRequest) {
 
     switch (validatedData.type) {
       case 'database':
-        const dbBackupPath = await backupService.createDatabaseBackup();
+        await backupService.createDatabaseBackup();
         // For individual backups, we need to handle metadata separately
         backupId = 'db_' + Date.now();
         break;
         
       case 'media':
-        const mediaBackupPath = await backupService.createMediaBackup();
+        await backupService.createMediaBackup();
         backupId = 'media_' + Date.now();
         break;
         
@@ -133,7 +130,7 @@ export async function GET(request: NextRequest) {
 }
 
 // DELETE /api/admin/backup - Cleanup old backups
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.role !== 'ADMIN') {

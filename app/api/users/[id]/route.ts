@@ -10,8 +10,8 @@ import { prisma } from '@/lib/db'
 import { hashPassword } from '@/lib/password-utils'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
-import { userProfileUpdateSchema, formatValidationErrors } from '@/lib/user-validation-schemas'
-import { profilePictureService, fileToBuffer } from '@/lib/profile-image-utils'
+import { formatValidationErrors } from '@/lib/user-validation-schemas'
+import { profilePictureService } from '@/lib/profile-image-utils'
 import { getAuditService } from '@/lib/audit-service'
 
 const updateUserSchema = z.object({

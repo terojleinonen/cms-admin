@@ -4,7 +4,7 @@
  */
 
 import { prisma } from './db'
-import { ProductStatus, PageStatus } from '@prisma/client'
+import { ProductStatus, PageStatus, ContentRevision } from '@prisma/client'
 
 export type WorkflowStatus = 'DRAFT' | 'REVIEW' | 'PUBLISHED' | 'ARCHIVED'
 export type ContentType = 'product' | 'page' | 'category'
@@ -262,7 +262,7 @@ export class WorkflowService {
   /**
    * Get content revisions
    */
-  static async getContentRevisions(contentType: ContentType, contentId: string): Promise<any[]> {
+  static async getContentRevisions(contentType: ContentType, contentId: string): Promise<ContentRevision[]> {
     try {
       const revisions = await prisma.contentRevision.findMany({
         where: {

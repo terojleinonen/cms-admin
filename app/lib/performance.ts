@@ -11,7 +11,7 @@ export interface PerformanceMetrics {
   duration: number
   success: boolean
   error?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface DatabasePerformanceMetrics {
@@ -61,10 +61,16 @@ export interface FrontendPerformanceMetrics {
   componentRenderTime: Record<string, number>
 }
 
+export interface SlowQuery {
+  query: string;
+  duration: number;
+  timestamp: number;
+}
+
 export interface PerformanceReport {
   databaseMetrics: {
     totalQueries: number;
-    slowestQueries: any[];
+    slowestQueries: SlowQuery[];
     averageQueryTime: number;
   };
 }
@@ -90,7 +96,7 @@ export class PerformanceMonitor {
   async trackOperation<T>(
     operation: string,
     fn: () => Promise<T>,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<T> {
     const start = performance.now()
     let success = true
@@ -177,7 +183,7 @@ export class PerformanceMonitor {
     return {};
   }
 
-  getPerformanceReport(startTime: number, endTime: number): PerformanceReport {
+  getPerformanceReport(_startTime: number, _endTime: number): PerformanceReport {
     return {
       databaseMetrics: {
         totalQueries: 0,
@@ -187,7 +193,7 @@ export class PerformanceMonitor {
     };
   }
 
-  getSlowQueries(limit: number, minDuration: number): unknown[] {
+  getSlowQueries(_limit: number, _minDuration: number): unknown[] {
     return [];
   }
 }

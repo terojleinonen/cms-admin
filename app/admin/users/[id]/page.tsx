@@ -18,7 +18,7 @@ interface UserManagementPageProps {
   }
 }
 
-export async function generateMetadata({ params }: UserManagementPageProps): Promise<Metadata> {
+export async function generateMetadata(): Promise<Metadata> {
   // In a real implementation, you'd fetch the user name for the title
   return {
     title: `User Management | Admin Dashboard`,
@@ -64,7 +64,7 @@ function UserDetailLoading() {
 }
 
 // Fetch user data server-side
-async function fetchUserData(userId: string) {
+async function fetchUserData(_userId: string) {
   try {
     // In a real implementation, this would fetch from your database
     // For now, we'll return null and let the client component handle the API calls

@@ -53,7 +53,7 @@ export default function MediaPicker({
   const itemsPerPage = 20
 
   // Fetch media files
-  const fetchMedia = async (page = 1, search = '') => {
+  const fetchMedia = useCallback(async (page = 1, search = '') => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -75,14 +75,14 @@ export default function MediaPicker({
     } finally {
       setLoading(false)
     }
-  }
+  }, [allowedTypes, itemsPerPage])
 
   // Load media when component opens
   useEffect(() => {
     if (isOpen) {
       fetchMedia(currentPage, searchQuery)
     }
-  }, [isOpen, currentPage])
+  }, [isOpen, currentPage, searchQuery, fetchMedia])
 
   // Handle search
   const handleSearch = (query: string) => {

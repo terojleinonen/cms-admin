@@ -473,8 +473,8 @@ export function validatePasswordStrength(password: string): {
 /**
  * Sanitize user input for audit logs
  */
-export function sanitizeAuditLogDetails(details: Record<string, any>): Record<string, any> {
-  const sanitized: Record<string, any> = {}
+export function sanitizeAuditLogDetails(details: Record<string, unknown>): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {}
   
   for (const [key, value] of Object.entries(details)) {
     // Remove sensitive fields

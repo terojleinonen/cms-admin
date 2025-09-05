@@ -34,7 +34,7 @@ export class BackupService {
   /**
    * Create a full backup including database and media
    */
-  async createBackup(options: BackupOptions = {}): Promise<BackupResult> {
+  async createBackup(_options: BackupOptions = {}): Promise<BackupResult> {
     const timestamp = new Date()
     const filename = `backup-${timestamp.toISOString().replace(/[:.]/g, '-')}.sql`
     const filepath = path.join(this.backupDir, filename)
@@ -55,13 +55,13 @@ export class BackupService {
         size: stats.size,
         timestamp
       }
-    } catch (error) {
+    } catch (err) {
       return {
         success: false,
         filename,
         size: 0,
         timestamp,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: err instanceof Error ? err.message : 'Unknown error'
       }
     }
   }
@@ -69,12 +69,11 @@ export class BackupService {
   /**
    * Create a full backup with user ID and description
    */
-  async createFullBackup(userId: string, description?: string): Promise<string> {
+  async createFullBackup(_userId: string, _description?: string): Promise<string> {
     const backupId = `backup-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     this.backupStatuses.set(backupId, 'in_progress')
 
     try {
-      const timestamp = new Date()
       const filename = `${backupId}.sql`
       const filepath = path.join(this.backupDir, filename)
 
@@ -86,9 +85,9 @@ export class BackupService {
 
       this.backupStatuses.set(backupId, 'completed')
       return backupId
-    } catch (error) {
+    } catch (err) {
       this.backupStatuses.set(backupId, 'failed')
-      throw new Error(`Database backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw new Error(`Database backup failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
@@ -108,8 +107,8 @@ export class BackupService {
       const command = `pg_dump "${databaseUrl}" > "${backupPath}"`
       await this.execAsync(command)
       return backupPath
-    } catch (error) {
-      throw new Error(`Database backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } catch (err) {
+      throw new Error(`Database backup failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
@@ -125,8 +124,8 @@ export class BackupService {
       const command = `tar -czf "${backupPath}" public/uploads/`
       await this.execAsync(command)
       return backupPath
-    } catch (error) {
-      throw new Error(`Media backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } catch (err) {
+      throw new Error(`Media backup failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
@@ -159,13 +158,13 @@ export class BackupService {
         size: stats.size,
         timestamp
       }
-    } catch (error) {
+    } catch (err) {
       return {
         success: false,
         filename,
         size: 0,
         timestamp,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: err instanceof Error ? err.message : 'Unknown error'
       }
     }
   }
@@ -221,7 +220,7 @@ export class BackupService {
 
       const sorted = backups.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       return limit ? sorted.slice(0, limit) : sorted
-    } catch (error) {
+    } catch {
       return []
     }
   }
@@ -229,7 +228,7 @@ export class BackupService {
   /**
    * Restore from backup with options
    */
-  async restoreFromBackup(options: { backupId: string; verifyChecksum?: boolean }, userId: string): Promise<void> {
+  async restoreFromBackup(options: { backupId: string; verifyChecksum?: boolean }, _userId: string): Promise<void> {
     const backups = await this.listBackups()
     const backup = backups.find(b => b.id === options.backupId)
     
@@ -264,7 +263,7 @@ export class BackupService {
     try {
       const actualChecksum = await this.calculateChecksum(backupPath)
       return actualChecksum === expectedChecksum
-    } catch (error) {
+    } catch {
       return false
     }
   }

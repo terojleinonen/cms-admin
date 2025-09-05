@@ -3,7 +3,6 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 import globals from "globals";
 import tseslint from "typescript-eslint";
-import react from "eslint-plugin-react";
 import js from "@eslint/js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,7 +11,6 @@ const __dirname = dirname(__filename);
 const compat = new FlatCompat({
     baseDirectory: __dirname,
     recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all,
 });
 
 const eslintConfig = [
@@ -20,19 +18,13 @@ const eslintConfig = [
     {
         files: ["app/**/*.ts", "app/**/*.tsx", "types/**/*.ts", "components/**/*.tsx"],
         languageOptions: {
-            parser: tseslint.parser,
             parserOptions: {
-                ecmaFeatures: { jsx: true },
                 project: "./tsconfig.json",
             },
             globals: {
                 ...globals.browser,
                 ...globals.node,
             },
-        },
-        plugins: {
-            react,
-            "@typescript-eslint": tseslint.plugin,
         },
         rules: {
             "@typescript-eslint/no-explicit-any": "warn",
@@ -51,19 +43,13 @@ const eslintConfig = [
     {
         files: ["__tests__/**/*.ts", "__tests__/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"],
         languageOptions: {
-            parser: tseslint.parser,
             parserOptions: {
-                ecmaFeatures: { jsx: true },
                 project: "./tsconfig.jest.json",
             },
             globals: {
                 ...globals.jest,
                 ...globals.node,
             },
-        },
-        plugins: {
-            react,
-            "@typescript-eslint": tseslint.plugin,
         },
         rules: {
             "@typescript-eslint/no-explicit-any": "off",
@@ -72,9 +58,6 @@ const eslintConfig = [
     },
     {
         files: ["**/*.js", "**/*.cjs", "**/*.mjs"],
-        plugins: {
-            "@typescript-eslint": tseslint.plugin,
-        },
         languageOptions: {
             globals: {
                 ...globals.node,
@@ -104,4 +87,4 @@ const eslintConfig = [
     },
 ];
 
-export default eslintConfig;
+export default tseslint.config(...eslintConfig);

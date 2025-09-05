@@ -10,9 +10,7 @@ import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { 
   passwordChangeSchema,
-  twoFactorSetupSchema,
   twoFactorVerificationSchema,
-  securitySettingsUpdateSchema,
   sessionTerminationSchema,
   formatValidationErrors
 } from '@/lib/user-validation-schemas'
@@ -442,10 +440,18 @@ async function handleSessionTermination(
   return NextResponse.json({ message: 'Sessions terminated successfully' })
 }
 
+interface SessionInfo {
+  id: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+  expiresAt: Date;
+}
+
 interface SecurityUser {
   twoFactorEnabled: boolean;
   lastLoginAt: Date | null;
-  sessions: any[];
+  sessions: SessionInfo[];
 }
 
 // Calculate security score

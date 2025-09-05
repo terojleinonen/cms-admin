@@ -7,10 +7,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyPasswordResetToken, completePasswordReset } from '@/lib/password-reset'
 import { z } from 'zod'
 
-const tokenVerificationSchema = z.object({
-  token: z.string().min(1, 'Token is required')
-})
-
 const passwordResetCompletionSchema = z.object({
   token: z.string().min(1, 'Token is required'),
   newPassword: z.string().min(8, 'Password must be at least 8 characters long'),

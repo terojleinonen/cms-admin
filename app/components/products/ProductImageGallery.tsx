@@ -60,7 +60,6 @@ export default function ProductImageGallery({
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null)
   const dragCounter = useRef(0)
 
-  const primaryImage = images.find(img => img.isPrimary)
   const sortedImages = [...images].sort((a, b) => a.sortOrder - b.sortOrder)
 
   const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
@@ -147,15 +146,12 @@ export default function ProductImageGallery({
     onImageSelect(image)
   }, [onImageSelect])
 
-  const handleSetPrimary = useCallback((imageId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleSetPrimary = useCallback((imageId: string) => {
     onPrimaryImageChange(imageId)
   }, [onPrimaryImageChange])
 
-  const handleRemoveImage = useCallback((imageId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    // eslint-disable-next-line react/no-unescaped-entities
-    if (confirm('Are you sure you want to remove this image?')) {
+  const handleRemoveImage = useCallback((imageId: string) => {
+    if (confirm("Are you sure you want to remove this image?")) {
       onImageRemove(imageId)
     }
   }, [onImageRemove])
@@ -254,7 +250,7 @@ export default function ProductImageGallery({
                   <div className="absolute bottom-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       type="button"
-                      onClick={(e) => handleImageClick(media)}
+                      onClick={() => handleImageClick(media)}
                       className="p-1 bg-white bg-opacity-90 rounded shadow-sm hover:bg-opacity-100 transition-all"
                       title="View image"
                     >
@@ -264,7 +260,7 @@ export default function ProductImageGallery({
                     {showPrimarySelector && !productMedia.isPrimary && (
                       <button
                         type="button"
-                        onClick={(e) => handleSetPrimary(media.id, e)}
+                        onClick={() => handleSetPrimary(media.id)}
                         className="p-1 bg-white bg-opacity-90 rounded shadow-sm hover:bg-opacity-100 transition-all"
                         title="Set as primary image"
                       >
@@ -281,7 +277,7 @@ export default function ProductImageGallery({
                     {allowRemove && (
                       <button
                         type="button"
-                        onClick={(e) => handleRemoveImage(media.id, e)}
+                        onClick={() => handleRemoveImage(media.id)}
                         className="p-1 bg-white bg-opacity-90 rounded shadow-sm hover:bg-opacity-100 transition-all"
                         title="Remove image"
                       >
@@ -334,7 +330,7 @@ export default function ProductImageGallery({
       {images.length >= maxImages && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
           <p className="text-sm text-yellow-800">
-            You've reached the maximum of {maxImages} images per product.
+            You&apos;ve reached the maximum of {maxImages} images per product.
             Remove some images to add new ones.
           </p>
         </div>

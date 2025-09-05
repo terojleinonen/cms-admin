@@ -45,18 +45,6 @@ interface UserDetailViewProps {
   initialData?: UserWithDetails | null
 }
 
-interface UserStats {
-  totalLogins: number
-  lastLogin: Date | null
-  accountAge: number
-  securityScore: number
-  recentActivity: Array<{
-    action: string
-    timestamp: Date
-    details: string
-  }>
-}
-
 const roleColors: Record<UserRole, string> = {
   ADMIN: 'bg-red-100 text-red-800 border-red-200',
   EDITOR: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -71,13 +59,11 @@ const roleLabels: Record<UserRole, string> = {
 
 export default function UserDetailView({ userId, initialData }: UserDetailViewProps) {
   const [user, setUser] = useState<UserWithDetails | null>(initialData)
-  const [_stats, _setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(!initialData)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'security' | 'activity' | 'settings'>('overview')
   
   // Modal states
-  const [_showEditModal, _setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showDeactivateModal, setShowDeactivateModal] = useState(false)
 
@@ -87,10 +73,7 @@ export default function UserDetailView({ userId, initialData }: UserDetailViewPr
       setLoading(true)
       setError(null)
 
-      const [userResponse, statsResponse] = await Promise.all([
-        fetch(`/api/admin/users/${userId}`),
-        fetch(`/api/admin/users/${userId}/stats`)
-      ])
+      const userResponse = await fetch(`/api/admin/users/${userId}`)
 
       if (!userResponse.ok) {
         throw new Error('Failed to fetch user data')
@@ -98,11 +81,6 @@ export default function UserDetailView({ userId, initialData }: UserDetailViewPr
 
       const userData = await userResponse.json()
       setUser(userData.user)
-
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json()
-        setStats(statsData.stats)
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch user data')
     } finally {
@@ -132,7 +110,7 @@ export default function UserDetailView({ userId, initialData }: UserDetailViewPr
       setUser(prev => prev ? { ...prev, isActive: false } : null)
       setShowDeactivateModal(false)
       alert('User deactivated successfully')
-    } catch (_err) {
+    } catch {
       alert('Failed to deactivate user')
     }
   }
@@ -150,7 +128,7 @@ export default function UserDetailView({ userId, initialData }: UserDetailViewPr
       alert('User deleted successfully')
       // Redirect to users list
       window.location.href = '/admin/users'
-    } catch (_err) {
+    } catch {
       alert('Failed to delete user')
     }
   }

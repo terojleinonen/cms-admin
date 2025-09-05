@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/db'
-import { UserRole } from '@prisma/client'
+import { UserRole, Prisma } from '@prisma/client'
 import { z } from 'zod'
 import { getAuditService } from '@/lib/audit-service'
 import bcrypt from 'bcryptjs'
@@ -120,7 +120,7 @@ export async function POST(
     }
 
     // Perform deactivation in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Deactivate the user
       const deactivatedUser = await tx.user.update({
         where: { id: resolvedParams.id },
@@ -149,7 +149,7 @@ export async function POST(
       })
 
       // Create audit log
-      const auditService = getAuditService(tx as any)
+      const auditService = getAuditService(tx)
       await auditService.logUser(
         session?.user?.id || resolvedParams.id,
         resolvedParams.id,
@@ -237,7 +237,7 @@ export async function PUT(
     }
 
     // Perform reactivation in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Reactivate the user
       const reactivatedUser = await tx.user.update({
         where: { id: resolvedParams.id },
@@ -255,7 +255,7 @@ export async function PUT(
       })
 
       // Create audit log
-      const auditService = getAuditService(tx as any)
+      const auditService = getAuditService(tx)
       await auditService.logUser(
         session?.user?.id || '',
         resolvedParams.id,

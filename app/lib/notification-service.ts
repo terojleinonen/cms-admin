@@ -1,5 +1,5 @@
 import { prisma } from './prisma'
-import { NotificationType, EmailStatus } from '@prisma/client'
+import { NotificationType, EmailStatus, NotificationSettings } from '@prisma/client'
 import nodemailer from 'nodemailer'
 
 export interface NotificationData {
@@ -7,7 +7,7 @@ export interface NotificationData {
   type: NotificationType
   title: string
   message: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
   sendEmail?: boolean
 }
 
@@ -60,7 +60,7 @@ export class NotificationService {
         throw new Error('User preferences not found')
       }
 
-      const notificationSettings = userPreferences.notifications as any
+      const notificationSettings = userPreferences.notifications as NotificationSettings
       
       // Create in-app notification
       await this.createInAppNotification(data)
@@ -183,7 +183,7 @@ export class NotificationService {
     })
   }
 
-  private replaceTemplateVariables(template: string, variables: Record<string, any>): string {
+  private replaceTemplateVariables(template: string, variables: Record<string, unknown>): string {
     let result = template
     
     Object.entries(variables).forEach(([key, value]) => {

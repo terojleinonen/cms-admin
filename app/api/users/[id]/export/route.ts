@@ -10,14 +10,42 @@ import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
 import { getAuditService } from '@/lib/audit-service'
+import { User, UserPreferences, AuditLog, Session, Product, Page, Media } from '@prisma/client'
+
+interface UserExport extends Omit<User, 'passwordHash' | 'twoFactorSecret'> {
+  profilePicture: string | null;
+}
+
+interface ExportMetadata {
+  exportedAt: string;
+  exportedBy: string | undefined;
+  format: 'json' | 'csv';
+  includes: {
+    auditLogs: boolean;
+    preferences: boolean;
+    sessions: boolean;
+    createdContent: boolean;
+  };
+}
+
+interface CreatedContent {
+  products: Pick<Product, 'id' | 'name' | 'slug' | 'status' | 'createdAt' | 'updatedAt'>[];
+  pages: Pick<Page, 'id' | 'title' | 'slug' | 'status' | 'createdAt' | 'updatedAt'>[];
+  media: Pick<Media, 'id' | 'filename' | 'originalName' | 'mimeType' | 'fileSize' | 'createdAt'>[];
+  summary: {
+    totalProducts: number;
+    totalPages: number;
+    totalMediaFiles: number;
+  };
+}
 
 interface ExportData {
-  user: any;
-  exportMetadata: any;
-  preferences?: any;
-  auditLogs?: any;
-  sessions?: any;
-  createdContent?: any;
+  user: UserExport;
+  exportMetadata: ExportMetadata;
+  preferences?: UserPreferences | null;
+  auditLogs?: AuditLog[];
+  sessions?: Session[];
+  createdContent?: CreatedContent;
 }
 
 const exportQuerySchema = z.object({

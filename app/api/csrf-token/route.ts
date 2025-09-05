@@ -9,7 +9,7 @@ import { authOptions } from '@/lib/auth-config';
 import { SecurityService } from '@/lib/security';
 
 // GET /api/csrf-token - Get CSRF token
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

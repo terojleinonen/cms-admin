@@ -7,16 +7,46 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma, Prisma } from '@/lib/db'
 import { z } from 'zod'
-import { ProductCategory, Category, ProductMedia, Media } from '@prisma/client'
 
-type ProductCategoryWithCategory = ProductCategory & {
-  category: Category & {
-    parent: Category | null;
-  };
+interface TransformedCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  parentId: string | null;
+  parent: { id: string; name: string; slug: string; } | null;
+  breadcrumb: { id: string; name: string; slug: string; }[];
 }
 
-type ProductMediaWithMedia = ProductMedia & {
-  media: Media;
+interface TransformedMedia {
+  id: string;
+  filename: string;
+  originalName: string;
+  altText: string | null;
+  width: number | null;
+  height: number | null;
+  mimeType: string;
+  fileSize: number;
+  sortOrder: number;
+  isPrimary: boolean;
+  url: string;
+  thumbnailUrl: string;
+}
+
+interface RelatedProduct {
+  id: string;
+  name: string;
+  slug: string;
+  shortDescription: string | null;
+  price: number;
+  comparePrice: number | null;
+  featured: boolean;
+  primaryImage: {
+    id: string;
+    filename: string;
+    altText: string | null;
+    url: string;
+  } | null;
 }
 
 interface TransformedProduct {
@@ -30,18 +60,18 @@ interface TransformedProduct {
   sku: string | null;
   inventoryQuantity: number;
   weight: number | null;
-  dimensions: any;
+  dimensions: Prisma.JsonValue;
   status: string;
   featured: boolean;
   seoTitle: string | null;
   seoDescription: string | null;
   createdAt: string;
   updatedAt: string;
-  categories?: any[];
-  media?: any[];
-  primaryImage?: any;
-  galleryImages?: any[];
-  relatedProducts?: any[];
+  categories?: TransformedCategory[];
+  media?: TransformedMedia[];
+  primaryImage?: TransformedMedia | null;
+  galleryImages?: TransformedMedia[];
+  relatedProducts?: RelatedProduct[];
 }
 
 // Simple in-memory cache for this route
@@ -181,7 +211,7 @@ export async function GET(
 
     // Add categories if requested
     if (includeCategories === 'true' && product.categories) {
-      transformedProduct.categories = product.categories.map((pc: any) => ({
+      transformedProduct.categories = product.categories.map((pc: { category: { id: string; name: string; slug: string; description: string | null; parentId: string | null; parent: { id: string; name: string; slug: string; } | null; }; }) => ({
         ...pc.category,
         breadcrumb: pc.category.parent 
           ? [pc.category.parent, { id: pc.category.id, name: pc.category.name, slug: pc.category.slug }]
@@ -191,7 +221,7 @@ export async function GET(
 
     // Add media if requested
     if (includeMedia === 'true' && product.media) {
-      transformedProduct.media = product.media.map((pm: any) => ({
+      transformedProduct.media = product.media.map((pm: { media: { id: string; filename: string; originalName: string; altText: string | null; width: number | null; height: number | null; mimeType: string; fileSize: number; folder: string; }; sortOrder: number; isPrimary: boolean; }) => ({
         id: pm.media.id,
         filename: pm.media.filename,
         originalName: pm.media.originalName,

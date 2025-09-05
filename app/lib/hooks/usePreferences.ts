@@ -174,7 +174,7 @@ export function usePreferences() {
       }))
       throw error
     }
-  }, [session?.user?.id, cachePreferences])
+  }, [session?.user?.id, cachePreferences, applyPreferencesToDOM])
 
   /**
    * Load preferences with caching strategy
@@ -240,7 +240,7 @@ export function usePreferences() {
         error: error instanceof Error ? error.message : 'Failed to load preferences',
       }))
     }
-  }, [session?.user?.id, getCachedPreferences, fetchPreferences, cachePreferences])
+  }, [session?.user?.id, getCachedPreferences, fetchPreferences, cachePreferences, applyPreferencesToDOM, session?.status])
 
   /**
    * Apply preferences to DOM (theme, etc.)

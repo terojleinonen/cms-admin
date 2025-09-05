@@ -13,7 +13,6 @@ import {
   ClockIcon,
   ComputerDesktopIcon,
   UserIcon,
-  ChartBarIcon,
   EyeIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline'

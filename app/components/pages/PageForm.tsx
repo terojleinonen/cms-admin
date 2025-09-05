@@ -46,7 +46,6 @@ export default function PageForm({ page, onSave, onCancel }: PageFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showTemplateSelector, setShowTemplateSelector] = useState(false)
-  const [_previewUrl, _setPreviewUrl] = useState('')
   const [isDirty, setIsDirty] = useState(false)
 
   const isEditing = !!page
@@ -146,7 +145,6 @@ export default function PageForm({ page, onSave, onCancel }: PageFormProps) {
       }
 
       const data = await response.json()
-      setPreviewUrl(data.previewUrl)
       
       // Open preview in new tab
       window.open(data.previewUrl, '_blank')

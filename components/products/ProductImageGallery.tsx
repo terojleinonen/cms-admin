@@ -56,7 +56,15 @@ export default function ProductImageGallery({
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isModalOpen])
+  }, [isModalOpen, handleNext, handlePrevious])
+
+  const handlePrevious = useCallback(() => {
+    setSelectedIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+  }, [images.length])
+
+  const handleNext = useCallback(() => {
+    setSelectedIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+  }, [images.length])
 
   if (!images || images.length === 0) {
     return (
@@ -67,14 +75,6 @@ export default function ProductImageGallery({
   }
 
   const selectedImage = images[selectedIndex]
-
-  const handlePrevious = () => {
-    setSelectedIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
-  }
-
-  const handleNext = () => {
-    setSelectedIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
-  }
 
   const handleThumbnailClick = (index: number) => {
     setSelectedIndex(index)

@@ -20,7 +20,6 @@ import {
 import Button from '@/components/ui/Button'
 import FormField from '@/components/ui/FormField'
 import Select from '@/components/ui/Select'
-import Input from '@/components/ui/Input'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { UserPreferences, NotificationSettings, DashboardSettings } from '@/lib/types'
 import { Theme } from '@prisma/client'
@@ -83,7 +82,7 @@ const DEFAULT_VIEW_OPTIONS = [
 ]
 
 export default function AccountSettings({ userId, className = '' }: AccountSettingsProps) {
-  const { data: session } = useSession()
+  useSession()
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)

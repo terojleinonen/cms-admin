@@ -42,7 +42,8 @@ export const fileValidationSchema = z.object({
   name: z.string().min(1, 'Filename is required'),
   size: z.number().max(MAX_FILE_SIZE, `File size must be less than ${MAX_FILE_SIZE / 1024 / 1024}MB`),
   type: z.string().refine(
-    (value) => SUPPORTED_MIME_TYPES.includes(value as any),
+    (value): value is typeof SUPPORTED_MIME_TYPES[number] =>
+      SUPPORTED_MIME_TYPES.includes(value as typeof SUPPORTED_MIME_TYPES[number]),
     { message: `Unsupported file type. Supported formats: ${SUPPORTED_IMAGE_FORMATS.join(', ')}` }
   ),
 })

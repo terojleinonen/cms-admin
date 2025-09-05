@@ -3,7 +3,7 @@
  * Based on Prisma schema and application requirements
  */
 
-import { Prisma, UserRole, Theme, ProductStatus, PageStatus } from '@prisma/client'
+import { UserRole, Theme, ProductStatus, PageStatus } from '@prisma/client'
 
 export interface User {
   id: string

@@ -14,7 +14,7 @@ export interface SecurityEvent {
   ipAddress: string
   userAgent?: string
   userId?: string
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
   timestamp: Date
   resolved: boolean
 }
@@ -113,7 +113,7 @@ export class SecurityService {
     severity: 'low' | 'medium' | 'high' | 'critical',
     message: string,
     ipAddress: string,
-    metadata: Record<string, any> = {},
+    metadata: Record<string, unknown> = {},
     userId?: string,
     userAgent?: string
   ): Promise<SecurityEvent> {

@@ -35,10 +35,8 @@ export default function ProductMediaManager({
   className,
 }: ProductMediaManagerProps) {
   const [activeModal, setActiveModal] = useState<ModalType>(null)
-  const [selectedImageId, setSelectedImageId] = useState<string | null>(null)
 
-  const handleImageSelect = useCallback((image: Media) => {
-    setSelectedImageId(image.id)
+  const handleImageSelect = useCallback((_image: Media) => {
     // Could open a detailed view modal here
   }, [])
 

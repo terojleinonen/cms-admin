@@ -20,8 +20,6 @@ export async function GET(
     }
 
     const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const timeframe = searchParams.get('timeframe') as '24h' | '7d' | '30d' || '24h';
 
     // Get API key statistics
     const stats = await ApiAuthService.getApiKeyStats(id);

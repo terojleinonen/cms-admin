@@ -4,8 +4,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/db'
 import { validateTwoFactorForLogin } from '@/lib/two-factor-auth'
 import { auditLog } from '@/lib/audit-service'

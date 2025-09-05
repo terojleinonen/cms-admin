@@ -19,14 +19,6 @@ const createUserSchema = z.object({
   role: z.enum(['ADMIN', 'EDITOR', 'VIEWER']).default('EDITOR'),
 })
 
-const updateUserSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255).optional(),
-  email: z.string().email('Invalid email format').max(255).optional(),
-  password: z.string().min(8, 'Password must be at least 8 characters').optional(),
-  role: z.enum(['ADMIN', 'EDITOR', 'VIEWER']).optional(),
-  isActive: z.boolean().optional(),
-})
-
 const querySchema = z.object({
   page: z.string().transform(Number).default(() => 1),
   limit: z.string().transform(Number).default(() => 10),

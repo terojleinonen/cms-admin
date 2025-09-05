@@ -12,7 +12,6 @@ import {
   getSessionStatistics
 } from '@/lib/session-management'
 import { getPasswordResetStatistics } from '@/lib/password-reset'
-import { auditLog } from '@/lib/audit-service'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
@@ -257,6 +256,13 @@ interface SecurityEvent {
   action: string;
 }
 
+interface SuspiciousActivity {
+  type: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  details: Record<string, unknown>;
+  timestamp: string;
+}
+
 function calculateSecurityScore(factors: {
   twoFactorEnabled: boolean
   suspiciousActivityCount: number
@@ -287,7 +293,7 @@ function calculateSecurityScore(factors: {
  */
 function generateSecurityRecommendations(data: {
   user: { twoFactorEnabled: boolean }
-  suspiciousActivity: any[]
+  suspiciousActivity: SuspiciousActivity[]
   sessionStats: { activeSessions: number }
   recentSecurityEvents: SecurityEvent[]
 }): string[] {

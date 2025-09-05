@@ -10,7 +10,7 @@ import { PerformanceMonitor } from '@/lib/performance';
 import { CacheService } from '@/lib/cache';
 
 // GET /api/admin/performance/metrics - Get performance metrics
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.role !== 'ADMIN') {

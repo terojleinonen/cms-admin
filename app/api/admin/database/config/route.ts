@@ -7,7 +7,7 @@ import { prisma } from '@/lib/db'
  * Database configuration management endpoint
  * GET /api/admin/database/config
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check authentication and admin role
     const session = await getServerSession(authOptions)

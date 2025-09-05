@@ -455,7 +455,6 @@ export class CacheService {
   }
 
   getStats(): CacheStats {
-    const memoryStats = this.memoryCache.getStats()
     const totalRequests = this.stats.totalHits + this.stats.totalMisses
     const hitRate = totalRequests > 0 ? (this.stats.totalHits / totalRequests) * 100 : 0
 

@@ -127,7 +127,7 @@ function applyDefaultPreferences(response: NextResponse): NextResponse {
  * Note: This function now returns null to avoid Prisma in Edge Runtime
  * User preferences are now handled via the /api/user/preferences endpoint
  */
-async function getUserPreferences(userId: string): Promise<UserPreferencesData | null> {
+async function getUserPreferences(_userId: string): Promise<UserPreferencesData | null> {
   try {
     // Edge Runtime doesn't support Prisma, so we return null
     // User preferences are now loaded client-side via API routes
@@ -263,8 +263,8 @@ export async function createDefaultUserPreferences(userId: string): Promise<User
       theme: preferences.theme,
       timezone: preferences.timezone,
       language: preferences.language,
-      notifications: preferences.notifications as any,
-      dashboard: preferences.dashboard as any,
+      notifications: preferences.notifications,
+      dashboard: preferences.dashboard,
     }
   } catch (error) {
     console.error('Error creating default preferences:', error)

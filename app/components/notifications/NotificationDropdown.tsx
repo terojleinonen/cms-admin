@@ -49,22 +49,6 @@ export function NotificationDropdown({
     }
   }
 
-  const getNotificationColor = (type: NotificationType) => {
-    switch (type) {
-      case NotificationType.SECURITY_ALERT:
-      case NotificationType.ACCOUNT_LOCKED:
-        return 'border-l-red-500 bg-red-50'
-      case NotificationType.PASSWORD_CHANGED:
-      case NotificationType.TWO_FACTOR_ENABLED:
-        return 'border-l-blue-500 bg-blue-50'
-      case NotificationType.PROFILE_UPDATED:
-      case NotificationType.EMAIL_CHANGED:
-        return 'border-l-green-500 bg-green-50'
-      default:
-        return 'border-l-gray-500 bg-gray-50'
-    }
-  }
-
   return (
     <>
       {/* Backdrop */}

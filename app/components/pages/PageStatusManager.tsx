@@ -70,7 +70,6 @@ const STATUS_CONFIG: Record<PageStatus, StatusConfig> = {
 
 export default function PageStatusManager({
   currentStatus,
-  pageId: _pageId,
   pageTitle,
   onStatusChange,
   disabled = false,

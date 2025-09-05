@@ -18,27 +18,27 @@ export class ApiAuthService {
     }
   }
 
-  static async getApiKeys(userId: string) {
+  static async getApiKeys(_userId: string) {
     // Placeholder implementation
     return []
   }
 
-  static async getApiKey(keyId: string) {
+  static async getApiKey(_keyId: string) {
     // Placeholder implementation
     return null
   }
 
-  static async updateApiKey(keyId: string, updates: unknown) {
+  static async updateApiKey(_keyId: string, _updates: unknown) {
     // Placeholder implementation
     return null
   }
 
-  static async deleteApiKey(keyId: string) {
+  static async deleteApiKey(_keyId: string) {
     // Placeholder implementation
     return true
   }
 
-  static async getApiKeyStats(keyId: string) {
+  static async getApiKeyStats(_keyId: string) {
     // Placeholder implementation
     return {
       totalRequests: 0,
@@ -48,7 +48,7 @@ export class ApiAuthService {
     }
   }
 
-  static async validateApiKey(key: string) {
+  static async validateApiKey(_key: string) {
     // Placeholder implementation
     return null
   }

@@ -23,7 +23,7 @@ const restoreSchema = z.object({
  * GET /api/admin/audit-logs/retention
  * Get retention statistics and policies
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     

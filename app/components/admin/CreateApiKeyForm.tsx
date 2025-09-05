@@ -62,7 +62,7 @@ export default function CreateApiKeyForm() {
       } else {
         setError(data.error || 'Failed to create API key')
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)

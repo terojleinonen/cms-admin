@@ -26,12 +26,7 @@ import { Dialog, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
 import { 
   CommandLineIcon, 
-  XMarkIcon,
-  MagnifyingGlassIcon,
-  PlusIcon,
-  DocumentDuplicateIcon,
-  ArrowPathIcon,
-  Cog6ToothIcon
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 
 /**
@@ -249,7 +244,7 @@ export default function KeyboardShortcuts() {
   /**
    * Define all keyboard shortcuts
    */
-  const shortcuts: KeyboardShortcut[] = [
+  const shortcuts: KeyboardShortcut[] = useMemo(() => [
     // Global shortcuts
     {
       id: 'help',
@@ -367,7 +362,7 @@ export default function KeyboardShortcuts() {
       },
       category: 'editing'
     }
-  ]
+  ], [router, pathname])
 
   /**
    * Handle keyboard events
@@ -402,7 +397,7 @@ export default function KeyboardShortcuts() {
       event.stopPropagation()
       matchingShortcut.action()
     }
-  }, [shortcuts, router])
+  }, [shortcuts])
 
   /**
    * Set up keyboard event listeners
@@ -463,5 +458,6 @@ export function useKeyboardShortcut(
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, deps)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keys, callback, ...deps])
 }

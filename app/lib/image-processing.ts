@@ -44,9 +44,9 @@ export interface ImageMetadataExtended {
   orientation?: number
   colorSpace?: string
   channels?: number
-  exif?: Record<string, any>
+  exif?: Record<string, unknown>
   icc?: Buffer
-  iptc?: Record<string, any>
+  iptc?: Record<string, unknown>
   xmp?: string
 }
 
@@ -105,7 +105,7 @@ export class ImageProcessingService {
       const metadata = await image.metadata()
       
       // Extract EXIF data if available
-      let exifData: Record<string, any> = {}
+      let exifData: Record<string, unknown> = {}
       if (metadata.exif) {
         try {
           // Parse EXIF data from buffer
@@ -138,9 +138,9 @@ export class ImageProcessingService {
   /**
    * Parse EXIF data from buffer
    */
-  private parseExifData(exifBuffer: Buffer): Record<string, any> {
+  private parseExifData(exifBuffer: Buffer): Record<string, unknown> {
     // Basic EXIF parsing - in production, you might want to use a dedicated EXIF library
-    const exifData: Record<string, any> = {}
+    const exifData: Record<string, unknown> = {}
     
     try {
       // This is a simplified EXIF parser
@@ -273,7 +273,7 @@ export class ImageProcessingService {
         const metadata = await this.optimizeImage(inputPath, outputPath, {
           width: variant.width,
           height: variant.height,
-          format: variant.format as any,
+          format: variant.format,
           quality: variant.quality,
           fit: 'inside',
         })
@@ -409,7 +409,7 @@ export class ImageProcessingService {
     const sources = variants.map(variant => {
       const srcset = this.generateCDNUrl(imagePath, {
         width: variant.width,
-        format: variant.format as any,
+        format: variant.format,
         quality: variant.quality,
       })
       

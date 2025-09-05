@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/db'
-import { searchService, SearchOptions } from '@/lib/search'
+import { searchService } from '@/lib/search'
 import { z } from 'zod'
 
 // Validation schema for search requests
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/search/index - Rebuild search index
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session || session.user.role !== 'ADMIN') {

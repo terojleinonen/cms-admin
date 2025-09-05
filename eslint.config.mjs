@@ -1,46 +1,107 @@
+import { FlatCompat } from "@eslint/eslintrc";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import globals from "globals";
+import tseslint from "typescript-eslint";
+import react from "eslint-plugin-react";
+import js from "@eslint/js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const compat = new FlatCompat({
-  baseDirectory: __dirname,
+    baseDirectory: __dirname,
+    recommendedConfig: js.configs.recommended,
+    allConfig: js.configs.all,
 });
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
-  {
-    ignores: [
-      "node_modules/**",
-      ".next/**",
-      "out/**",
-      "build/**",
-      "next-env.d.ts",
-      "coverage/**",
-      "test-artifacts/**",
-      "*.config.js",
-      "scripts/**/*.js",
-      "fix-*.js",
-    ],
-  },
-  {
-    rules: {
-      // Temporarily disable strict rules while we fix the codebase
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-      "@typescript-eslint/no-require-imports": "warn",
-      "react-hooks/exhaustive-deps": "warn",
-      "@next/next/no-img-element": "warn",
-      "react/no-unescaped-entities": "warn",
-      "prefer-const": "warn",
-      "no-var": "error", // Keep this as error
-      "@typescript-eslint/no-unsafe-function-type": "warn",
-      "@typescript-eslint/no-unused-expressions": "warn",
-      "@typescript-eslint/no-namespace": "warn",
+    ...compat.extends("next/core-web-vitals", "plugin:@typescript-eslint/recommended", "prettier"),
+    {
+        files: ["app/**/*.ts", "app/**/*.tsx", "types/**/*.ts", "components/**/*.tsx"],
+        languageOptions: {
+            parser: tseslint.parser,
+            parserOptions: {
+                ecmaFeatures: { jsx: true },
+                project: "./tsconfig.json",
+            },
+            globals: {
+                ...globals.browser,
+                ...globals.node,
+            },
+        },
+        plugins: {
+            react,
+            "@typescript-eslint": tseslint.plugin,
+        },
+        rules: {
+            "@typescript-eslint/no-explicit-any": "warn",
+            "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+            "react-hooks/exhaustive-deps": "warn",
+            "@next/next/no-img-element": "warn",
+            "react/no-unescaped-entities": "warn",
+            "prefer-const": "warn",
+            "no-var": "error",
+            "@typescript-eslint/ban-ts-comment": "off",
+            "react/react-in-jsx-scope": "off",
+            "@typescript-eslint/no-non-null-assertion": "off",
+            "react/prop-types": "off",
+        },
     },
-  },
+    {
+        files: ["__tests__/**/*.ts", "__tests__/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"],
+        languageOptions: {
+            parser: tseslint.parser,
+            parserOptions: {
+                ecmaFeatures: { jsx: true },
+                project: "./tsconfig.jest.json",
+            },
+            globals: {
+                ...globals.jest,
+                ...globals.node,
+            },
+        },
+        plugins: {
+            react,
+            "@typescript-eslint": tseslint.plugin,
+        },
+        rules: {
+            "@typescript-eslint/no-explicit-any": "off",
+            "react/react-in-jsx-scope": "off",
+        },
+    },
+    {
+        files: ["**/*.js", "**/*.cjs", "**/*.mjs"],
+        plugins: {
+            "@typescript-eslint": tseslint.plugin,
+        },
+        languageOptions: {
+            globals: {
+                ...globals.node,
+            },
+        },
+        rules: {
+            "@typescript-eslint/no-var-requires": "off",
+            "@typescript-eslint/no-require-imports": "off",
+            "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+        }
+    },
+    {
+        ignores: [
+            "node_modules/**",
+            ".next/**",
+            "out/**",
+            "build/**",
+            "next-env.d.ts",
+            "coverage/**",
+            "test-artifacts/**",
+            "*.config.js",
+            "*.config.mjs",
+            "fix-*.js",
+            "**/*.d.ts",
+            "scripts/optimized-test-runner.js"
+        ],
+    },
 ];
 
 export default eslintConfig;

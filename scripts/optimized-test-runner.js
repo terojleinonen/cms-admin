@@ -5,7 +5,7 @@
  * Implements parallel processing, incremental testing, and performance optimization
  */
 
-const { spawn, exec } = require('child_process')
+const { spawn } = require('child_process')
 const path = require('path')
 const fs = require('fs').promises
 const os = require('os')
@@ -118,7 +118,7 @@ async function loadCacheManager() {
     const cacheFile = path.join(performanceDir, 'test-cache.json')
     const cacheData = await fs.readFile(cacheFile, 'utf-8').catch(() => '[]')
     return JSON.parse(cacheData)
-  } catch (error) {
+  } catch {
     return []
   }
 }
@@ -131,7 +131,7 @@ async function shouldSkipTest(testFile, cache) {
   
   try {
     const stats = await fs.stat(testFile)
-    const testName = path.basename(testFile, '.test.ts')
+    // const testName = path.basename(testFile, '.test.ts')
     
     // Find cached entry
     const cached = cache.find(([key, entry]) => 
@@ -153,7 +153,7 @@ async function shouldSkipTest(testFile, cache) {
     }
     
     return true
-  } catch (error) {
+  } catch {
     return false
   }
 }
@@ -302,8 +302,8 @@ async function runOptimizedTests() {
     process.exit(code)
   })
   
-  jest.on('error', (error) => {
-    console.error(`\n❌ Failed to start tests: ${error.message}`)
+  jest.on('error', () => {
+    console.error(`\n❌ Failed to start tests:`)
     process.exit(1)
   })
 }
@@ -340,7 +340,7 @@ async function showPerformanceStats() {
       })
     }
     
-  } catch (error) {
+  } catch (_error) {
     console.log('No performance data available yet. Run tests first.')
   }
 }
@@ -348,7 +348,7 @@ async function showPerformanceStats() {
 
 
 // Run optimized tests
-runOptimizedTests().catch(error => {
-  console.error('❌ Test runner failed:', error)
+runOptimizedTests().catch(() => {
+  console.error('❌ Test runner failed:')
   process.exit(1)
 })

@@ -7,7 +7,6 @@
 
 const fs = require('fs')
 const path = require('path')
-const crypto = require('crypto')
 
 // Security patterns to detect
 const SECURITY_PATTERNS = [
@@ -82,18 +81,6 @@ const SECURITY_PATTERNS = [
       return entropy > 4.5 // High entropy threshold
     }
   }
-]
-
-// File patterns to scan
-const SCAN_PATTERNS = [
-  '**/*.ts',
-  '**/*.tsx',
-  '**/*.js',
-  '**/*.jsx',
-  '**/*.json',
-  '**/*.md',
-  '**/*.yml',
-  '**/*.yaml'
 ]
 
 // Directories to exclude

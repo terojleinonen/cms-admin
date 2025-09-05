@@ -168,11 +168,11 @@ class TestRunner {
     this.ensureDirectories();
     
     // Run test suites
-    const unitResult = await this.runUnitTests();
-    const integrationResult = await this.runIntegrationTests();
-    const componentResult = await this.runComponentTests();
-    const e2eResult = await this.runE2ETests();
-    const coverageResult = await this.runCoverageTests();
+    await this.runUnitTests();
+    await this.runIntegrationTests();
+    await this.runComponentTests();
+    await this.runE2ETests();
+    await this.runCoverageTests();
     
     // Generate reports
     await this.generateReports();

@@ -119,8 +119,8 @@ class PerformanceOptimizer {
           } else {
             console.log(`  ⏭️  Index already exists: ${index.name}`)
           }
-        } catch (error) {
-          console.log(`  ⚠️  Failed to create index ${index.name}: ${error.message}`)
+        } catch (_error) {
+          console.log(`  ⚠️  Failed to create index ${index.name}: ${_error.message}`)
         }
       }
 
@@ -131,8 +131,8 @@ class PerformanceOptimizer {
       await this.updateTableStats()
 
       console.log('  ✅ Database optimization completed\n')
-    } catch (error) {
-      console.error('  ❌ Database optimization failed:', error.message)
+    } catch (_error) {
+      console.error('  ❌ Database optimization failed:', _error.message)
     }
   }
 
@@ -147,7 +147,7 @@ class PerformanceOptimizer {
         WHERE indexname = ${indexName}
       `
       return result.length > 0
-    } catch (error) {
+    } catch {
       return false
     }
   }
@@ -161,7 +161,7 @@ class PerformanceOptimizer {
     
     try {
       await prisma.$executeRawUnsafe(sql)
-    } catch (error) {
+    } catch {
       // If concurrent creation fails, try without CONCURRENTLY
       const fallbackSql = `CREATE INDEX IF NOT EXISTS ${index.name} ON "${index.table}" (${columnList})`
       await prisma.$executeRawUnsafe(fallbackSql)
@@ -195,8 +195,8 @@ class PerformanceOptimizer {
           })
         }
       }
-    } catch (error) {
-      console.log('  ⚠️  Could not analyze table statistics:', error.message)
+    } catch (_error) {
+      console.log('  ⚠️  Could not analyze table statistics:', _error.message)
     }
   }
 
@@ -212,8 +212,8 @@ class PerformanceOptimizer {
       }
       
       console.log('  ✅ Updated table statistics')
-    } catch (error) {
-      console.log('  ⚠️  Could not update table statistics:', error.message)
+    } catch (_error) {
+      console.log('  ⚠️  Could not update table statistics:', _error.message)
     }
   }
 
@@ -243,7 +243,7 @@ class PerformanceOptimizer {
               const filePath = path.join(nextDir, 'static', file)
               const stats = await fs.stat(filePath)
               pageSize += stats.size
-            } catch (error) {
+            } catch {
               // File might not exist or be accessible
             }
           }
@@ -278,13 +278,13 @@ class PerformanceOptimizer {
           this.results.frontend.optimizations.push('Bundle size is large - implement lazy loading')
         }
 
-      } catch (error) {
+      } catch {
         console.log('  ⚠️  Could not analyze bundle size - run npm run build first')
       }
 
       console.log('  ✅ Bundle analysis completed\n')
-    } catch (error) {
-      console.error('  ❌ Bundle analysis failed:', error.message)
+    } catch (_error) {
+      console.error('  ❌ Bundle analysis failed:', _error.message)
     }
   }
 
@@ -313,7 +313,7 @@ class PerformanceOptimizer {
               size: stats.size
             })
           }
-        } catch (error) {
+        } catch {
           // Skip inaccessible files
         }
       }
@@ -330,8 +330,8 @@ class PerformanceOptimizer {
       }
 
       console.log('  ✅ Image analysis completed\n')
-    } catch (error) {
-      console.error('  ❌ Image analysis failed:', error.message)
+    } catch (_error) {
+      console.error('  ❌ Image analysis failed:', _error.message)
     }
   }
 
@@ -354,7 +354,7 @@ class PerformanceOptimizer {
           files.push(fullPath)
         }
       }
-    } catch (error) {
+    } catch {
       // Directory might not exist or be accessible
     }
     

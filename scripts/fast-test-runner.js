@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const { spawn } = require('child_process');
-const path = require('path');
 
 // Test categories with optimized configurations
 const testConfigs = {

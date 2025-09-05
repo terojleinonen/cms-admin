@@ -18,7 +18,7 @@ function getTestDatabaseUrl() {
     const testDatabase = database.includes('_test') ? database : `${database}_test`
     
     return databaseUrl.replace(database, testDatabase)
-  } catch (error) {
+  } catch {
     console.error('❌ Invalid DATABASE_URL format:', databaseUrl)
     process.exit(1)
   }

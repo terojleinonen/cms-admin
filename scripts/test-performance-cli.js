@@ -86,7 +86,7 @@ async function loadPerformanceData(file) {
   try {
     const data = await fs.readFile(path.join(process.cwd(), 'tests/performance', file), 'utf-8')
     return JSON.parse(data)
-  } catch (error) {
+  } catch {
     console.log(`No ${file} found. Run tests first to generate performance data.`)
     return null
   }
@@ -220,7 +220,7 @@ async function handleCache() {
       try {
         await fs.unlink(path.join(process.cwd(), file))
         cleared++
-      } catch (error) {
+      } catch {
         // File doesn't exist, ignore
       }
     }

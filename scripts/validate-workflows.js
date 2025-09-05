@@ -100,13 +100,13 @@ function main() {
 // Install js-yaml if not available
 try {
   require('js-yaml');
-} catch (error) {
+} catch {
   console.log('📦 Installing js-yaml dependency...');
   const { execSync } = require('child_process');
   try {
     execSync('npm install js-yaml --no-save', { stdio: 'inherit' });
     console.log('✅ js-yaml installed successfully');
-  } catch (installError) {
+  } catch {
     console.error('❌ Failed to install js-yaml. Please install it manually:');
     console.error('   npm install js-yaml');
     process.exit(1);

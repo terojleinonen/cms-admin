@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { Category } from '@/lib/types'
+import Button from '@/components/ui/Button'
 
 interface CategoryFormProps {
   category?: Category | null
@@ -206,20 +207,20 @@ export default function CategoryForm({
 
           {/* Actions */}
           <div className="flex justify-end space-x-3 pt-4">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={onClose}
-              className="btn-outline"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              loading={loading}
               disabled={loading}
-              className="btn-primary disabled:opacity-50"
             >
-              {loading ? 'Saving...' : isEditing ? 'Update' : 'Create'}
-            </button>
+              {isEditing ? 'Update' : 'Create'}
+            </Button>
           </div>
         </form>
       </div>

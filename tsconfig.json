@@ -42,7 +42,7 @@
         "./types/*"
       ]
     },
-    "types": ["jest", "@testing-library/jest-dom", "node"]
+    "types": ["jest", "node"]
   },
   "include": [
     "next-env.d.ts",
@@ -56,8 +56,6 @@
     ".next",
     "coverage",
     "dist",
-    "__tests__",
-    "tests",
     "scripts"
   ]
 }

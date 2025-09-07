@@ -4,7 +4,7 @@
  * and system changes with filtering, search, and retention capabilities
  */
 
-import { PrismaClient, AuditLog, User } from '@prisma/client'
+import { PrismaClient, AuditLog, User, Prisma } from '@prisma/client'
 import { auditLogCreateSchema, auditLogFiltersSchema, sanitizeAuditLogDetails } from './user-validation-schemas'
 
 // Audit action categories
@@ -105,20 +105,12 @@ export interface AuditLogStats {
  * Audit Logging Service
  */
 export class AuditService {
-  private static instance: AuditService | null = null
-  private prisma: PrismaClient
+  private prisma: PrismaClient | Prisma.TransactionClient
   private retentionDays: number
 
-  private constructor(prisma: PrismaClient, retentionDays: number = 365) {
+  public constructor(prisma: PrismaClient | Prisma.TransactionClient, retentionDays: number = 365) {
     this.prisma = prisma
     this.retentionDays = retentionDays
-  }
-
-  static getInstance(prisma: PrismaClient, retentionDays?: number): AuditService {
-    if (!AuditService.instance) {
-      AuditService.instance = new AuditService(prisma, retentionDays)
-    }
-    return AuditService.instance
   }
 
   /**
@@ -271,7 +263,7 @@ export class AuditService {
       const validatedFilters = auditLogFiltersSchema.parse(filters)
 
       // Build where clause
-      const where: unknown = {}
+      const where: Prisma.AuditLogWhereInput = {}
 
       if (validatedFilters.userId) {
         where.userId = validatedFilters.userId
@@ -308,7 +300,7 @@ export class AuditService {
       const totalPages = Math.ceil(total / limit)
 
       // Get logs with user information
-      const logs = await this.prisma.auditLog.findMany({
+      const logs = (await this.prisma.auditLog.findMany({
         where,
         include: {
           user: {
@@ -325,7 +317,7 @@ export class AuditService {
         },
         skip,
         take: limit,
-      })
+      })) as any as AuditLogWithUser[]
 
       return {
         logs,
@@ -751,7 +743,7 @@ export class AuditService {
  * Audit logging middleware for Express/Next.js
  */
 export function createAuditMiddleware(auditService: AuditService) {
-  return async (req: unknown, res: unknown, next: unknown) => {
+  return async (req: any, res: any, next: any) => {
     // Store original end function
     const originalEnd = res.end
 
@@ -786,14 +778,8 @@ export function createAuditMiddleware(auditService: AuditService) {
   }
 }
 
-// Export singleton instance (to be initialized with Prisma client)
-let auditServiceInstance: AuditService | null = null
-
-export function getAuditService(prisma: PrismaClient): AuditService {
-  if (!auditServiceInstance) {
-    auditServiceInstance = AuditService.getInstance(prisma)
-  }
-  return auditServiceInstance
+export function getAuditService(prisma: PrismaClient | Prisma.TransactionClient): AuditService {
+  return new AuditService(prisma)
 }
 
 /**
@@ -828,7 +814,7 @@ export async function auditLog(params: {
         userId: params.userId,
         action: params.action,
         resource: params.resource,
-        details: params.details || undefined,
+        details: (params.details as Prisma.InputJsonValue) || undefined,
         ipAddress,
         userAgent
       }

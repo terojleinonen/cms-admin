@@ -3,6 +3,13 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
+export interface PostgresqlConfig {
+  value: string;
+  unit: string | null;
+  category: string;
+  description: string;
+}
+
 /**
  * Database configuration management endpoint
  * GET /api/admin/database/config
@@ -109,13 +116,6 @@ async function getDatabaseConfig() {
       ORDER BY idx_scan DESC
       LIMIT 10
     `
-
-    interface PostgresqlConfig {
-      value: string;
-      unit: string | null;
-      category: string;
-      description: string;
-    }
 
     return {
       postgresql: pgConfig.reduce((acc, row) => {

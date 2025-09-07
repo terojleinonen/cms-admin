@@ -91,7 +91,7 @@ export async function POST(
           error: { 
             code: 'INVALID_FILE', 
             message: 'Invalid file',
-            details: validation.errors
+            details: validation.error
           } 
         },
         { status: 400 }

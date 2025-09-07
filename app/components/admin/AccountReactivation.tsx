@@ -200,6 +200,7 @@ export function AccountReactivation({
           {/* Reactivation Reason */}
           <FormField
             label="Reason for Reactivation"
+            name="reason"
             required
             error={errors.reason}
           >

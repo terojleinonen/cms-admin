@@ -10,8 +10,7 @@ import {
   UserIcon,
   CogIcon
 } from '@heroicons/react/24/outline'
-import { NotificationType } from '@prisma/client'
-import { Notification } from '@/lib/types'
+import { Notification, NotificationType } from '@/lib/types'
 
 interface NotificationDropdownProps {
   notifications: Notification[]
@@ -32,18 +31,15 @@ export function NotificationDropdown({
 }: NotificationDropdownProps) {
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
-      case NotificationType.SECURITY_ALERT:
-      case NotificationType.ACCOUNT_LOCKED:
+      case 'SECURITY_ALERT':
+      case 'ACCOUNT_LOCKED':
         return <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
-      case NotificationType.PASSWORD_CHANGED:
-      case NotificationType.TWO_FACTOR_ENABLED:
-      case NotificationType.TWO_FACTOR_DISABLED:
+      case 'PASSWORD_CHANGED':
+      case 'TWO_FACTOR_ENABLED':
+      case 'TWO_FACTOR_DISABLED':
         return <ShieldCheckIcon className="h-5 w-5 text-blue-500" />
-      case NotificationType.PROFILE_UPDATED:
-      case NotificationType.EMAIL_CHANGED:
+      case 'EMAIL_CHANGED':
         return <UserIcon className="h-5 w-5 text-green-500" />
-      case NotificationType.PREFERENCES_UPDATED:
-        return <CogIcon className="h-5 w-5 text-gray-500" />
       default:
         return <CheckIcon className="h-5 w-5 text-blue-500" />
     }

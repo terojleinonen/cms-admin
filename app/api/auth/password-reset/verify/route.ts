@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const result = await verifyPasswordResetToken(token)
 
     return NextResponse.json({
-      valid: result.valid,
+      isValid: result.isValid,
       message: result.message
     })
   } catch (error) {
@@ -69,22 +69,16 @@ export async function POST(request: NextRequest) {
                      '' || null
     const userAgent = request.headers.get('user-agent') || null
 
-    const result = await completePasswordReset(
-      { token, newPassword, confirmPassword },
-      ipAddress,
-      userAgent
+    await completePasswordReset(
+      token,
+      newPassword,
+      ipAddress || '',
+      userAgent || ''
     )
-
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.message },
-        { status: 400 }
-      )
-    }
 
     return NextResponse.json({
       success: true,
-      message: result.message
+      message: 'Password has been reset successfully.'
     })
   } catch (error) {
     console.error('Password reset completion error:', error)

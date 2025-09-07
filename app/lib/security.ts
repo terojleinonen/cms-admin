@@ -3,7 +3,7 @@
  * Comprehensive security monitoring, threat detection, and incident response
  */
 
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import crypto from 'crypto'
 
 export interface SecurityEvent {
@@ -140,21 +140,25 @@ export class SecurityService {
 
     // Store in database for persistence
     try {
-      await this.prisma.auditLog.create({
-        data: {
-          userId,
-          action: `security.${type}`,
-          resource: 'security',
-          details: {
-            severity,
-            message,
-            ipAddress,
-            userAgent,
-            ...metadata
-          },
-          ipAddress
-        }
-      })
+      const details = {
+        severity,
+        message,
+        ipAddress,
+        userAgent,
+        ...metadata
+      } as Prisma.InputJsonValue;
+
+      if (userId) {
+        await this.prisma.auditLog.create({
+          data: {
+            userId,
+            action: `security.${type}`,
+            resource: 'security',
+            details,
+            ipAddress
+          }
+        });
+      }
     } catch (error) {
       console.error('Failed to store security event in database:', error)
     }
@@ -310,12 +314,13 @@ export class SecurityService {
 
     } catch (error) {
       console.error('Security scan failed:', error)
+      const message = error instanceof Error ? error.message : String(error);
       await this.logSecurityEvent(
         'security_scan',
         'medium',
-        `Security scan failed: ${error.message}`,
+        `Security scan failed: ${message}`,
         'system',
-        { error: error.message }
+        { error: message }
       )
     }
   }

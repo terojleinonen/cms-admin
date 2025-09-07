@@ -67,9 +67,10 @@ export async function POST(
     }
     
     // Validate the 2FA token
-    const validation = await validateTwoFactorForLogin(userId, token)
+    // Re-evaluating this file
+    const validation: { isValid: boolean; isBackupCode: boolean; } = await validateTwoFactorForLogin(userId, token)
     
-    if (!validation.valid) {
+    if (!validation.isValid) {
       // Log failed verification attempt
       await auditLog({
         userId: userId,

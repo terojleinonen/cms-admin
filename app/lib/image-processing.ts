@@ -10,10 +10,12 @@ import path from 'path'
 import { z } from 'zod'
 
 // Enhanced image processing types
+export type ImageFormat = 'jpeg' | 'png' | 'webp' | 'avif';
+
 export interface ImageProcessingOptions {
   width?: number
   height?: number
-  format?: 'jpeg' | 'png' | 'webp' | 'avif'
+  format?: ImageFormat
   quality?: number
   progressive?: boolean
   lossless?: boolean
@@ -29,7 +31,7 @@ export interface ImageProcessingOptions {
 export interface ResponsiveImageVariant {
   width: number
   height?: number
-  format: string
+  format: ImageFormat
   quality: number
   suffix: string
 }
@@ -46,7 +48,7 @@ export interface ImageMetadataExtended {
   channels?: number
   exif?: Record<string, unknown>
   icc?: Buffer
-  iptc?: Record<string, unknown>
+  iptc?: Buffer
   xmp?: string
 }
 
@@ -109,7 +111,7 @@ export class ImageProcessingService {
       if (metadata.exif) {
         try {
           // Parse EXIF data from buffer
-          exifData = this.parseExifData(metadata.exif)
+          exifData = this.parseExifData(metadata.exif as any)
         } catch (error) {
           console.warn('Failed to parse EXIF data:', error)
         }
@@ -198,38 +200,41 @@ export class ImageProcessingService {
 
       // Apply format-specific optimizations
       const format = options.format || this.getOptimalFormat(metadata.format || 'jpeg')
-      const formatSettings = FORMAT_SETTINGS[format as keyof typeof FORMAT_SETTINGS]
 
       switch (format) {
         case 'jpeg':
+          const jpegSettings = FORMAT_SETTINGS.jpeg;
           pipeline = pipeline.jpeg({
-            quality: options.quality || formatSettings.quality,
-            progressive: options.progressive ?? formatSettings.progressive,
-            mozjpeg: formatSettings.mozjpeg,
+            quality: options.quality || jpegSettings.quality,
+            progressive: options.progressive ?? jpegSettings.progressive,
+            mozjpeg: jpegSettings.mozjpeg,
           })
           break
 
         case 'png':
+          const pngSettings = FORMAT_SETTINGS.png;
           pipeline = pipeline.png({
-            quality: options.quality || formatSettings.quality,
-            compressionLevel: formatSettings.compressionLevel,
-            adaptiveFiltering: formatSettings.adaptiveFiltering,
+            quality: options.quality || pngSettings.quality,
+            compressionLevel: pngSettings.compressionLevel,
+            adaptiveFiltering: pngSettings.adaptiveFiltering,
           })
           break
 
         case 'webp':
+          const webpSettings = FORMAT_SETTINGS.webp;
           pipeline = pipeline.webp({
-            quality: options.quality || formatSettings.quality,
-            effort: options.effort || formatSettings.effort,
-            lossless: options.lossless || formatSettings.nearLossless,
+            quality: options.quality || webpSettings.quality,
+            effort: options.effort || webpSettings.effort,
+            lossless: options.lossless || webpSettings.nearLossless,
           })
           break
 
         case 'avif':
+          const avifSettings = FORMAT_SETTINGS.avif;
           pipeline = pipeline.avif({
-            quality: options.quality || formatSettings.quality,
-            effort: options.effort || formatSettings.effort,
-            chromaSubsampling: formatSettings.chromaSubsampling,
+            quality: options.quality || avifSettings.quality,
+            effort: options.effort || avifSettings.effort,
+            chromaSubsampling: avifSettings.chromaSubsampling,
           })
           break
       }
@@ -344,25 +349,7 @@ export class ImageProcessingService {
    * Get optimal format based on input format and browser support
    */
   private getOptimalFormat(inputFormat: string): 'jpeg' | 'png' | 'webp' | 'avif' {
-    // Prefer modern formats for better compression
-    if (inputFormat === 'png' && this.cdnConfig?.enableAVIF) {
-      return 'avif'
-    }
-    
-    if (this.cdnConfig?.enableWebP) {
-      return 'webp'
-    }
-
-    // Fallback to original format optimization
-    switch (inputFormat.toLowerCase()) {
-      case 'jpg':
-      case 'jpeg':
-        return 'jpeg'
-      case 'png':
-        return 'png'
-      default:
-        return 'jpeg'
-    }
+    return 'jpeg';
   }
 
   /**

@@ -71,7 +71,7 @@ export async function GET(
       remainingBackupCodes = await getRemainingBackupCodes(userId)
     }
     
-    const isRequired = isTwoFactorRequired(user.role)
+    const isRequired = await isTwoFactorRequired(user.role)
     
     return NextResponse.json({
       enabled: user.twoFactorEnabled,

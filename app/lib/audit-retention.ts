@@ -5,6 +5,11 @@
 
 import { PrismaClient } from '@prisma/client'
 import { promises as fs, createWriteStream, createReadStream } from 'fs'
+
+interface ArchiveData {
+  metadata: unknown;
+  logs: any[];
+}
 import path from 'path'
 import { createGzip } from 'zlib'
 import { pipeline } from 'stream/promises'
@@ -398,7 +403,7 @@ export class AuditRetentionManager {
     restoredCount: number
     archiveMetadata: unknown
   }> {
-    let archiveData: unknown
+    let archiveData: ArchiveData
 
     try {
       if (archiveFilePath.endsWith('.gz')) {
@@ -418,11 +423,11 @@ export class AuditRetentionManager {
           }
         )
         
-        archiveData = JSON.parse(decompressedData)
+        archiveData = JSON.parse(decompressedData) as ArchiveData
       } else {
         // Handle uncompressed archives
         const fileContent = await fs.readFile(archiveFilePath, 'utf8')
-        archiveData = JSON.parse(fileContent)
+        archiveData = JSON.parse(fileContent) as ArchiveData
       }
     } catch (error) {
       throw new Error(`Failed to read archive file: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -433,7 +438,7 @@ export class AuditRetentionManager {
     }
 
     // Restore logs to database
-    const logs = archiveData.logs.map((log: unknown) => ({
+    const logs = archiveData.logs.map((log: any) => ({
       id: log.id,
       userId: log.userId,
       action: log.action,

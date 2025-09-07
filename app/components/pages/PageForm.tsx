@@ -215,7 +215,7 @@ export default function PageForm({ page, onSave, onCancel }: PageFormProps) {
         <div className="bg-white shadow rounded-lg p-6">
           <TemplateSelector
             selectedTemplate={formData.template}
-            onSelect={handleTemplateChange}
+            onTemplateSelect={handleTemplateChange}
           />
         </div>
       )}

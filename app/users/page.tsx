@@ -8,23 +8,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { UserRole } from '@prisma/client'
+import { UserWithCount, UserProfile } from '../lib/types'
 import UserTable from '../components/users/UserTable'
 import UserModal from '../components/users/UserModal'
 import { PlusIcon } from '@heroicons/react/24/outline'
-
-interface User {
-  id: string
-  name: string
-  email: string
-  role: UserRole
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
-  _count: {
-    createdProducts: number
-    createdPages: number
-  }
-}
 
 interface PaginationInfo {
   page: number
@@ -35,7 +22,7 @@ interface PaginationInfo {
 
 export default function UsersPage() {
   const { data: session } = useSession()
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<UserWithCount[]>([])
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 10,
@@ -45,7 +32,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [editingUser, setEditingUser] = useState<UserWithCount | null>(null)
   const [filters, setFilters] = useState({
     search: '',
     role: '',
@@ -103,7 +90,7 @@ export default function UsersPage() {
     setIsModalOpen(true)
   }
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: UserWithCount) => {
     setEditingUser(user)
     setIsModalOpen(true)
   }

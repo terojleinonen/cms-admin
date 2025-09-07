@@ -74,11 +74,7 @@ export async function GET(
     }
     
     // Generate 2FA setup data
-    const setupData = await generateTwoFactorSetup(
-      user.id,
-      user.email,
-      'Kin Workspace CMS'
-    )
+    const setupData = await generateTwoFactorSetup(user.id)
     
     // Log the setup initiation
     await auditLog({
@@ -96,7 +92,7 @@ export async function GET(
       qrCodeUrl: setupData.qrCodeUrl,
       backupCodes: setupData.backupCodes,
       secret: setupData.secret, // Temporary - will be stored after verification
-      isRequired: isTwoFactorRequired(user.role)
+      isRequired: await isTwoFactorRequired(user.role)
     })
     
   } catch (error) {
@@ -174,26 +170,7 @@ export async function POST(
     }
     
     // Enable 2FA
-    const success = await enableTwoFactorAuth(userId, secret, token, backupCodes)
-    
-    if (!success) {
-      await auditLog({
-        userId: session.user.id,
-        action: '2FA_SETUP_FAILED',
-        resource: 'USER_SECURITY',
-        details: {
-          targetUserId: userId,
-          userEmail: user.email,
-          reason: 'Invalid token'
-        },
-        request
-      })
-      
-      return NextResponse.json(
-        { error: 'Invalid verification token' },
-        { status: 400 }
-      )
-    }
+    await enableTwoFactorAuth(userId, secret, token)
     
     // Log successful 2FA setup
     await auditLog({

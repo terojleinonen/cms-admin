@@ -53,6 +53,12 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>
 
+type UserProfileUpdateData = {
+  name: string;
+  email: string;
+  password?: string;
+};
+
 type TabId = 'profile' | 'account' | 'security' | 'sessions'
 
 interface Tab {
@@ -269,7 +275,7 @@ export default function ProfilePage() {
       }
 
       // Prepare update data
-      const updateData: unknown = {
+      const updateData: UserProfileUpdateData = {
         name: data.name,
         email: data.email,
       }

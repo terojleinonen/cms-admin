@@ -14,14 +14,14 @@ import {
   TrashIcon,
   Bars3Icon,
 } from '@heroicons/react/24/outline'
-import { Category } from '@/lib/types'
+import { CategoryWithCount } from '@/lib/types'
 import { getCategoryTreeIndentClass } from '@/utils/dynamic-styles'
 
 interface CategoryTreeProps {
-  categories: Category[]
-  onEdit: (category: Category) => void
+  categories: CategoryWithCount[]
+  onEdit: (category: CategoryWithCount) => void
   onDelete: (categoryId: string) => void
-  onCreateChild: (parent: Category) => void
+  onCreateChild: (parent: CategoryWithCount) => void
   onReorder: (updates: Array<{
     categoryId: string
     newParentId: string | null
@@ -30,16 +30,16 @@ interface CategoryTreeProps {
 }
 
 interface CategoryNodeProps {
-  category: Category
+  category: CategoryWithCount
   level: number
-  onEdit: (category: Category) => void
+  onEdit: (category: CategoryWithCount) => void
   onDelete: (categoryId: string) => void
-  onCreateChild: (parent: Category) => void
+  onCreateChild: (parent: CategoryWithCount) => void
   onToggleExpanded: (categoryId: string) => void
   isExpanded: boolean
-  onDragStart: (category: Category) => void
-  onDragOver: (e: React.DragEvent, category: Category) => void
-  onDrop: (e: React.DragEvent, category: Category) => void
+  onDragStart: (category: CategoryWithCount) => void
+  onDragOver: (e: React.DragEvent, category: CategoryWithCount) => void
+  onDrop: (e: React.DragEvent, category: CategoryWithCount) => void
   isDragOver: boolean
 }
 
@@ -181,7 +181,7 @@ export default function CategoryTree({
   onReorder,
 }: CategoryTreeProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
-  const [draggedCategory, setDraggedCategory] = useState<Category | null>(null)
+  const [draggedCategory, setDraggedCategory] = useState<CategoryWithCount | null>(null)
   const [dragOverCategory, setDragOverCategory] = useState<string | null>(null)
 
   const handleToggleExpanded = (categoryId: string) => {
@@ -194,18 +194,18 @@ export default function CategoryTree({
     setExpandedCategories(newExpanded)
   }
 
-  const handleDragStart = (category: Category) => {
+  const handleDragStart = (category: CategoryWithCount) => {
     setDraggedCategory(category)
   }
 
-  const handleDragOver = (e: React.DragEvent, category: Category) => {
+  const handleDragOver = (e: React.DragEvent, category: CategoryWithCount) => {
     e.preventDefault()
     if (draggedCategory && draggedCategory.id !== category.id) {
       setDragOverCategory(category.id)
     }
   }
 
-  const handleDrop = (e: React.DragEvent, targetCategory: Category) => {
+  const handleDrop = (e: React.DragEvent, targetCategory: CategoryWithCount) => {
     e.preventDefault()
     setDragOverCategory(null)
 
@@ -215,10 +215,10 @@ export default function CategoryTree({
     }
 
     // Prevent dropping a parent onto its own child
-    const isDescendant = (parent: Category, potentialChild: Category): boolean => {
+    const isDescendant = (parent: CategoryWithCount, potentialChild: CategoryWithCount): boolean => {
       if (!parent.children) return false
       return parent.children.some(child =>
-        child.id === potentialChild.id || isDescendant(child, potentialChild)
+        child.id === potentialChild.id || isDescendant(child as CategoryWithCount, potentialChild)
       )
     }
 

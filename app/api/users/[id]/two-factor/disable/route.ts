@@ -86,7 +86,7 @@ export async function POST(
     }
     
     // Check if 2FA is required for this user role
-    if (isTwoFactorRequired(user.role) && session.user.role !== 'ADMIN') {
+    if (await isTwoFactorRequired(user.role) && session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: '2FA is required for this user role and cannot be disabled' },
         { status: 403 }
@@ -115,7 +115,7 @@ export async function POST(
     }
     
     // Verify 2FA token
-    if (!user.twoFactorSecret || !verifyTwoFactorToken(token, user.twoFactorSecret)) {
+    if (!user.twoFactorSecret || !await verifyTwoFactorToken(userId, token)) {
       await auditLog({
         userId: session.user.id,
         action: '2FA_DISABLE_FAILED',
@@ -135,14 +135,7 @@ export async function POST(
     }
     
     // Disable 2FA
-    const success = await disableTwoFactorAuth(userId)
-    
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Failed to disable 2FA' },
-        { status: 500 }
-      )
-    }
+    await disableTwoFactorAuth(userId, token)
     
     // Log successful 2FA disable
     await auditLog({

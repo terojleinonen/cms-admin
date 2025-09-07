@@ -55,7 +55,7 @@ export async function GET(
     // Mark current session if viewing own sessions
     const sessionsWithCurrent = sessions.map(s => ({
       ...s,
-      isCurrent: userId === currentUserId && session.sessionToken && s.token === session.sessionToken
+      isCurrent: userId === currentUserId && (session as any).sessionToken && s.token === (session as any).sessionToken
     }))
 
     return NextResponse.json({
@@ -124,8 +124,7 @@ export async function POST(
             invalidatedSessions: invalidatedCount,
             initiatedBy: currentUserId
           },
-          ipAddress,
-          userAgent
+          request
         })
 
         return NextResponse.json({
@@ -154,8 +153,7 @@ export async function POST(
               sessionId,
               initiatedBy: currentUserId
             },
-            ipAddress,
-            userAgent
+            request
           })
 
           return NextResponse.json({

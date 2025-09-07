@@ -215,14 +215,14 @@ export default function DataTable<T extends Record<string, unknown>>({
                 {filter.type === 'select' && filter.options ? (
                   <Select
                     options={filter.options}
-                    value={filterValues[filter.key] || ''}
+                    value={filterValues[filter.key] as string | undefined}
                     onChange={(e) => handleFilterChange(filter.key, e.target.value)}
                     placeholder="All"
                   />
                 ) : (
                   <Input
                     type={filter.type === 'date' ? 'date' : 'text'}
-                    value={filterValues[filter.key] || ''}
+                    value={(filterValues[filter.key] as string) || ''}
                     onChange={(e) => handleFilterChange(filter.key, e.target.value)}
                     placeholder={`Filter by ${filter.label.toLowerCase()}`}
                   />

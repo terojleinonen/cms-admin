@@ -4,6 +4,7 @@
  */
 
 import { prisma } from './db'
+import { Prisma } from '@prisma/client'
 import { randomBytes, createHash } from 'crypto'
 import { headers } from 'next/headers'
 
@@ -33,7 +34,7 @@ export async function createSession(
   userId: string,
   expiresAt: Date = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours default
 ): Promise<string> {
-  const headersList = headers()
+  const headersList = await headers()
   const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null
   const userAgent = headersList.get('user-agent') || null
 
@@ -132,7 +133,7 @@ export async function logoutFromAllDevices(
   userId: string, 
   currentSessionToken?: string
 ): Promise<number> {
-  const whereClause: unknown = {
+  const whereClause: Prisma.SessionWhereInput = {
     userId,
     isActive: true
   }

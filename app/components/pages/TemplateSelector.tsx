@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { CheckIcon } from '@heroicons/react/24/solid'
 import { DocumentTextIcon, GlobeAltIcon, NewspaperIcon, ShoppingBagIcon, PhoneIcon } from '@heroicons/react/24/outline'
 

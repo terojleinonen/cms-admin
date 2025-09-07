@@ -250,7 +250,7 @@ export function formatErrorResponse(error: AppError | Error): ErrorResponse {
       code: isAppError ? error.code : 'INTERNAL_ERROR',
       message: error.message || 'An unexpected error occurred',
       timestamp: new Date().toISOString(),
-      ...(isAppError && error.details && { details: error.details })
+      ...((error instanceof ValidationError && error.details) ? { details: error.details } : {})
     },
     success: false
   }
@@ -262,9 +262,8 @@ export function createErrorResponse(error: unknown): ErrorResponse {
       error: {
         code: error.code,
         message: error.message,
-        statusCode: error.statusCode,
         timestamp: new Date().toISOString(),
-        ...(error.details && { details: error.details })
+        ...((error instanceof ValidationError && error.details) ? { details: error.details } : {})
       },
       success: false
     }
@@ -275,7 +274,6 @@ export function createErrorResponse(error: unknown): ErrorResponse {
       error: {
         code: 'INTERNAL_ERROR',
         message: error.message || 'An unexpected error occurred',
-        statusCode: 500,
         timestamp: new Date().toISOString(),
       },
       success: false
@@ -287,7 +285,6 @@ export function createErrorResponse(error: unknown): ErrorResponse {
     error: {
       code: 'INTERNAL_ERROR',
       message: 'An unexpected error occurred',
-      statusCode: 500,
       timestamp: new Date().toISOString(),
     },
     success: false
@@ -324,7 +321,7 @@ export function handleApiError(error: unknown): Response {
 /**
  * Async error wrapper for API route handlers
  */
-export function asyncHandler<T extends (...args: unknown[]) => Promise<unknown>>(fn: T) {
+export function asyncHandler<T extends (...args: any[]) => Promise<any>>(fn: T) {
   return async (...args: Parameters<T>): Promise<ReturnType<T> | Response> => {
     try {
       return await fn(...args)

@@ -14,6 +14,7 @@ import {
 import { getPasswordResetStatistics } from '@/lib/password-reset'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { auditLog } from '@/lib/audit-service'
 
 const securityActionSchema = z.object({
   action: z.enum(['lock_account', 'unlock_account', 'force_logout']),
@@ -166,7 +167,7 @@ export async function POST(
           lockDuration || 30 * 60 * 1000 // 30 minutes default
         )
 
-        await logAuditEvent({
+        await auditLog({
           userId: session.user.id,
           action: 'ADMIN_ACCOUNT_LOCKED',
           resource: 'USER_ACCOUNT',
@@ -175,8 +176,7 @@ export async function POST(
             reason,
             lockDuration
           },
-          ipAddress,
-          userAgent
+          request
         })
 
         return NextResponse.json({
@@ -191,7 +191,7 @@ export async function POST(
           data: { isActive: true }
         })
 
-        await logAuditEvent({
+        await auditLog({
           userId: session.user.id,
           action: 'ADMIN_ACCOUNT_UNLOCKED',
           resource: 'USER_ACCOUNT',
@@ -199,8 +199,7 @@ export async function POST(
             targetUserId: userId,
             reason
           },
-          ipAddress,
-          userAgent
+          request
         })
 
         return NextResponse.json({
@@ -215,7 +214,7 @@ export async function POST(
           data: { isActive: false }
         })
 
-        await logAuditEvent({
+        await auditLog({
           userId: session.user.id,
           action: 'ADMIN_FORCE_LOGOUT',
           resource: 'USER_SESSION',
@@ -224,8 +223,7 @@ export async function POST(
             invalidatedSessions: invalidatedCount.count,
             reason
           },
-          ipAddress,
-          userAgent
+          request
         })
 
         return NextResponse.json({
@@ -260,7 +258,7 @@ interface SuspiciousActivity {
   type: string;
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   details: Record<string, unknown>;
-  timestamp: string;
+  timestamp: Date;
 }
 
 function calculateSecurityScore(factors: {

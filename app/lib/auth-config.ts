@@ -58,7 +58,8 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             role: user.role,
-          }
+            profilePicture: user.profilePicture,
+          } as any
         } catch (error) {
           console.error('Authentication error:', error)
           return null
@@ -84,9 +85,10 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       // Include user role and id in session
-      if (token) {
-        session.user.id = token.id as string
-        session.user.role = token.role as UserRole
+      if (token && session.user) {
+        (session.user as any).id = token.id as string;
+        (session.user as any).role = token.role as UserRole;
+        (session.user as any).sessionToken = token.sub
       }
       return session
     },

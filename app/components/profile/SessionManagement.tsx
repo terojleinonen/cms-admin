@@ -5,7 +5,7 @@
  * Displays and manages user sessions with security features
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { 
   ComputerDesktopIcon, 
@@ -55,12 +55,6 @@ export default function SessionManagement() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetchSessionData()
-    }
-  }, [session, fetchSessionData])
-
   const fetchSessionData = useCallback(async () => {
     try {
       setLoading(true)
@@ -87,7 +81,7 @@ export default function SessionManagement() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           action: 'logout_all',
-          currentSessionToken: session?.user?.sessionToken
+          currentSessionToken: (session?.user as any)?.sessionToken
         })
       })
 
@@ -106,6 +100,12 @@ export default function SessionManagement() {
       setActionLoading(null)
     }
   }
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchSessionData()
+    }
+  }, [session?.user?.id, fetchSessionData])
 
   const handleInvalidateSession = async (sessionId: string) => {
     try {

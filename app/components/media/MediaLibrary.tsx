@@ -126,7 +126,7 @@ export default function MediaLibrary() {
                     {file.originalName || file.filename}
                   </h3>
                   <p className="text-xs text-slate-gray font-inter">
-                    {formatFileSize(file.size)}
+                    {formatFileSize(file.fileSize)}
                   </p>
                 </div>
               </div>
@@ -140,8 +140,8 @@ export default function MediaLibrary() {
               <div className="text-xs text-slate-gray font-inter">
                 <div>Type: {file.mimeType}</div>
                 <div>Uploaded: {new Date(file.createdAt).toLocaleDateString()}</div>
-                {file.uploadedBy && (
-                  <div>By: {file.uploadedBy.name}</div>
+                {file.creator && (
+                  <div>By: {file.creator.name}</div>
                 )}
               </div>
             </div>

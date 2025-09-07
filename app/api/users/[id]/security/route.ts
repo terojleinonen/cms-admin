@@ -45,7 +45,7 @@ async function requireSecurityAccess(userId: string) {
 
 // Generate TOTP secret
 function generateTOTPSecret(): string {
-  return crypto.randomBytes(20).toString('base32')
+  return crypto.randomBytes(20).toString('hex')
 }
 
 // Verify TOTP token (simplified - in production use a proper TOTP library)
@@ -242,9 +242,9 @@ async function handlePasswordChange(
   await auditService.logAuth(
     userId,
     'PASSWORD_CHANGED',
-    { changedBy: session?.user?.id },
-    request.headers.get('x-forwarded-for') || request.ip,
-    request.headers.get('user-agent')
+    { changedBy: (session as any)?.user?.id },
+    request.headers.get('x-forwarded-for') || '',
+    request.headers.get('user-agent') || undefined
   )
 
   return NextResponse.json({ message: 'Password changed successfully' })
@@ -269,7 +269,7 @@ async function handleTwoFactorSetup(
   // Return setup information
   return NextResponse.json({
     secret,
-    qrCodeUrl: `otpauth://totp/CMS%20Admin:${session?.user?.email}?secret=${secret}&issuer=CMS%20Admin`,
+    qrCodeUrl: `otpauth://totp/CMS%20Admin:${(session as any)?.user?.email}?secret=${secret}&issuer=CMS%20Admin`,
     backupCodes: generateBackupCodes(), // Generate backup codes
   })
 }
@@ -316,9 +316,9 @@ async function handleTwoFactorVerification(
   await auditService.logAuth(
     userId,
     'TWO_FACTOR_ENABLED',
-    { enabledBy: session?.user?.id },
-    request.headers.get('x-forwarded-for') || request.ip,
-    request.headers.get('user-agent')
+    { enabledBy: (session as any)?.user?.id },
+    request.headers.get('x-forwarded-for') || '',
+    request.headers.get('user-agent') || undefined
   )
 
   return NextResponse.json({ message: '2FA enabled successfully' })
@@ -331,7 +331,7 @@ async function handleTwoFactorDisable(
   request: NextRequest,
   session: unknown
 ) {
-  const { currentPassword } = data
+  const { currentPassword } = data as any
 
   if (!currentPassword) {
     return NextResponse.json(
@@ -384,9 +384,9 @@ async function handleTwoFactorDisable(
   await auditService.logAuth(
     userId,
     'TWO_FACTOR_DISABLED',
-    { disabledBy: session?.user?.id },
-    request.headers.get('x-forwarded-for') || request.ip,
-    request.headers.get('user-agent')
+    { disabledBy: (session as any)?.user?.id },
+    request.headers.get('x-forwarded-for') || '',
+    request.headers.get('user-agent') || undefined
   )
 
   return NextResponse.json({ message: '2FA disabled successfully' })
@@ -407,7 +407,7 @@ async function handleSessionTermination(
       where: {
         userId,
         isActive: true,
-        token: { not: session?.sessionToken || '' }
+        token: { not: (session as any)?.sessionToken || '' }
       },
       data: { isActive: false }
     })
@@ -429,12 +429,12 @@ async function handleSessionTermination(
     userId,
     'SESSION_TERMINATED',
     { 
-      terminatedBy: session?.user?.id,
+      terminatedBy: (session as any)?.user?.id,
       terminateAll: validatedData.terminateAll,
       sessionCount: validatedData.terminateAll ? 'all' : validatedData.sessionIds.length
     },
-    request.headers.get('x-forwarded-for') || request.ip,
-    request.headers.get('user-agent')
+    request.headers.get('x-forwarded-for') || '',
+    request.headers.get('user-agent') || undefined
   )
 
   return NextResponse.json({ message: 'Sessions terminated successfully' })

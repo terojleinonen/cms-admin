@@ -167,12 +167,12 @@ export default function ImageUpload({
       // Update file statuses
       setFiles(prev => prev.map(f => {
         if (f.status === 'uploading') {
-          const hasError = result.errors?.some((err: unknown) => err.filename === f.file.name)
+      const hasError = result.errors?.some((err: any) => err.filename === f.file.name)
           return {
             ...f,
             status: hasError ? 'error' : 'success',
             progress: 100,
-            error: hasError ? result.errors.find((err: unknown) => err.filename === f.file.name)?.error : undefined,
+        error: hasError ? result.errors.find((err: any) => err.filename === f.file.name)?.error : undefined,
           }
         }
         return f
@@ -184,11 +184,11 @@ export default function ImageUpload({
           onUploadComplete(result.uploadedFiles)
         }, 1000)
       }
-    } catch (error) {
+    } catch (err: any) {
       // Mark all uploading files as error
       setFiles(prev => prev.map(f => 
         f.status === 'uploading' 
-          ? { ...f, status: 'error', error: error instanceof Error ? error.message : 'Upload failed' }
+          ? { ...f, status: 'error', error: err instanceof Error ? err.message : 'Upload failed' }
           : f
       ))
     } finally {

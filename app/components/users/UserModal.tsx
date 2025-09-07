@@ -13,25 +13,10 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
-// Define UserRole type locally to avoid import issues
-type UserRole = 'ADMIN' | 'EDITOR' | 'VIEWER'
-
-interface User {
-  id: string
-  name: string
-  email: string
-  role: UserRole
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
-  _count: {
-    createdProducts: number
-    createdPages: number
-  }
-}
+import { UserProfile, UserRole } from '@/lib/types';
 
 interface UserModalProps {
-  user?: User | null
+  user?: UserProfile | null
   onClose: () => void
   onSuccess: () => void
 }

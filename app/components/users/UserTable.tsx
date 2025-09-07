@@ -18,22 +18,7 @@ import {
 } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
 
-// Define UserRole type locally to avoid import issues
-type UserRole = 'ADMIN' | 'EDITOR' | 'VIEWER'
-
-interface User {
-  id: string
-  name: string
-  email: string
-  role: UserRole
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
-  _count: {
-    createdProducts: number
-    createdPages: number
-  }
-}
+import { UserRole, UserWithCount } from '../../lib/types'
 
 interface PaginationInfo {
   page: number
@@ -50,13 +35,13 @@ interface Filters {
 }
 
 interface UserTableProps {
-  users: User[]
+  users: UserWithCount[]
   pagination: PaginationInfo
   loading: boolean
   filters: Filters
   onFilterChange: (filters: Partial<Filters>) => void
   onPageChange: (page: number) => void
-  onEditUser: (user: User) => void
+  onEditUser: (user: UserWithCount) => void
   onDeleteUser: (userId: string) => void
 }
 
@@ -109,8 +94,8 @@ export default function UserTable({
       : <ChevronDownIcon className="h-4 w-4" />
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (date: Date | string) => {
+    return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

@@ -276,12 +276,12 @@ export async function GET(request: NextRequest) {
 
       // Add categories if requested
       if (includeCategories === 'true' && product.categories) {
-        baseProduct.categories = product.categories.map((pc: { category: TransformedCategory }) => pc.category)
+        baseProduct.categories = (product.categories as any[]).map(pc => pc.category)
       }
 
       // Add media if requested
       if (includeMedia === 'true' && product.media) {
-        baseProduct.media = product.media.map((pm: { media: { id: string; filename: string; originalName: string; altText: string | null; width: number | null; height: number | null; mimeType: string; fileSize: number; }; sortOrder: number; isPrimary: boolean; }) => ({
+        baseProduct.media = (product.media as any[]).map(pm => ({
           id: pm.media.id,
           filename: pm.media.filename,
           originalName: pm.media.originalName,

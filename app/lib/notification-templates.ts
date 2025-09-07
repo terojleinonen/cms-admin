@@ -1,5 +1,5 @@
 import { NotificationType } from '@prisma/client'
-import { prisma } from './prisma'
+import { prisma } from './db'
 
 export interface NotificationTemplateData {
   type: NotificationType

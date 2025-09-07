@@ -44,27 +44,11 @@ export async function GET(request: NextRequest) {
     const severity = searchParams.get('severity')
     const type = searchParams.get('type')
 
-    const securitySystem = getSecurityAlertingSystem(prisma)
-    let alerts = securitySystem.getActiveAlerts()
-
-    // Filter by status
-    if (status !== 'active') {
-      // For non-active alerts, we'd need to store them in database
-      // For now, just return active alerts
-    }
-
-    // Filter by severity
-    if (severity) {
-      alerts = alerts.filter((alert: SecurityAlert) => alert.severity === severity)
-    }
-
-    // Filter by type
-    if (type) {
-      alerts = alerts.filter((alert: SecurityAlert) => alert.type === type)
-    }
+    const securitySystem = getSecurityAlertingSystem()
+    const alerts = await securitySystem.getActiveAlerts({ status, severity, type })
 
     // Get security statistics
-    const stats = securitySystem.getSecurityStats()
+    const stats = await securitySystem.getSecurityStats()
 
     return NextResponse.json({
       success: true,
@@ -108,15 +92,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { alertId, resolution, notes } = alertResolutionSchema.parse(body)
 
-    const securitySystem = getSecurityAlertingSystem(prisma)
-    const success = securitySystem.resolveAlert(alertId, resolution)
-
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Alert not found' },
-        { status: 404 }
-      )
-    }
+    const securitySystem = getSecurityAlertingSystem()
+    await securitySystem.resolveAlert(alertId)
 
     // Log the resolution action
     const auditService = await import('@/lib/audit-service')

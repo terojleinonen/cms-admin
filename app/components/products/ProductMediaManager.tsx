@@ -81,7 +81,7 @@ export default function ProductMediaManager({
 
   const handleUploadComplete = useCallback((uploadedFiles: unknown[]) => {
     // Convert uploaded files to ProductMedia format
-    const newImages: ProductMedia[] = uploadedFiles.map((file, index) => ({
+    const newImages: ProductMedia[] = uploadedFiles.map((file: any, index) => ({
       productId: productId || '',
       mediaId: file.id,
       sortOrder: images.length + index,

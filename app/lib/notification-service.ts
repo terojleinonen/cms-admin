@@ -1,5 +1,6 @@
-import { prisma } from './prisma'
-import { NotificationType, EmailStatus, NotificationSettings } from '@prisma/client'
+import { prisma } from './db'
+import { NotificationType, EmailStatus } from '@prisma/client'
+import { NotificationSettings } from '@/lib/types'
 import nodemailer from 'nodemailer'
 
 export interface NotificationData {
@@ -41,7 +42,7 @@ export class NotificationService {
       }
 
       if (emailConfig.auth.user && emailConfig.auth.pass) {
-        this.emailTransporter = nodemailer.createTransporter(emailConfig)
+        this.emailTransporter = nodemailer.createTransport(emailConfig)
       }
     } catch (error) {
       console.error('Failed to initialize email transporter:', error)
@@ -60,7 +61,7 @@ export class NotificationService {
         throw new Error('User preferences not found')
       }
 
-      const notificationSettings = userPreferences.notifications as NotificationSettings
+      const notificationSettings = userPreferences.notifications as unknown as NotificationSettings
       
       // Create in-app notification
       await this.createInAppNotification(data)
@@ -82,7 +83,7 @@ export class NotificationService {
         type: data.type,
         title: data.title,
         message: data.message,
-        data: data.data || {}
+        data: data.data as any || {}
       }
     })
   }
@@ -152,9 +153,9 @@ export class NotificationService {
     }
   }
 
-  private shouldSendEmailForType(type: NotificationType, settings: unknown): boolean {
+  private shouldSendEmailForType(type: NotificationType, settings: any): boolean {
     // Security notifications should always be sent if email is enabled
-    const securityTypes = [
+    const securityTypes: NotificationType[] = [
       NotificationType.SECURITY_ALERT,
       NotificationType.PASSWORD_CHANGED,
       NotificationType.EMAIL_CHANGED,

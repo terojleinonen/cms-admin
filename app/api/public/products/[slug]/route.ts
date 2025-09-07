@@ -211,7 +211,7 @@ export async function GET(
 
     // Add categories if requested
     if (includeCategories === 'true' && product.categories) {
-      transformedProduct.categories = product.categories.map((pc: { category: { id: string; name: string; slug: string; description: string | null; parentId: string | null; parent: { id: string; name: string; slug: string; } | null; }; }) => ({
+      transformedProduct.categories = (product.categories as any[]).map((pc) => ({
         ...pc.category,
         breadcrumb: pc.category.parent 
           ? [pc.category.parent, { id: pc.category.id, name: pc.category.name, slug: pc.category.slug }]
@@ -221,7 +221,7 @@ export async function GET(
 
     // Add media if requested
     if (includeMedia === 'true' && product.media) {
-      transformedProduct.media = product.media.map((pm: { media: { id: string; filename: string; originalName: string; altText: string | null; width: number | null; height: number | null; mimeType: string; fileSize: number; folder: string; }; sortOrder: number; isPrimary: boolean; }) => ({
+      transformedProduct.media = (product.media as any[]).map((pm) => ({
         id: pm.media.id,
         filename: pm.media.filename,
         originalName: pm.media.originalName,
@@ -246,7 +246,7 @@ export async function GET(
 
     // Add related products if requested
     if (includeRelated === 'true' && product.categories && product.categories.length > 0) {
-      const categoryIds = product.categories.map(pc => pc.categoryId)
+      const categoryIds = (product.categories as any[]).map(pc => pc.categoryId)
       
       const relatedProducts = await prisma.product.findMany({
         where: {

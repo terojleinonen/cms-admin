@@ -123,7 +123,7 @@ export default function PageList({ onEdit, onDelete, onStatusChange }: PageListP
 
   const handleSort = (field: SortField) => {
     const newOrder = filters.sortBy === field && filters.sortOrder === 'asc' ? 'desc' : 'asc'
-    const newFilters = { ...filters, sortBy: field, sortOrder: newOrder }
+    const newFilters = { ...filters, sortBy: field, sortOrder: newOrder as SortOrder }
     setFilters(newFilters)
     fetchPages(newFilters)
   }
@@ -294,9 +294,10 @@ export default function PageList({ onEdit, onDelete, onStatusChange }: PageListP
                   id="sort-filter"
                   value={`${filters.sortBy}-${filters.sortOrder}`}
                   onChange={(e) => {
-                    const [field, order] = e.target.value.split('-') as [SortField, SortOrder]
-                    setFilters(prev => ({ ...prev, sortBy: field, sortOrder: order }))
-                    fetchPages({ ...filters, sortBy: field, sortOrder: order })
+                    const [field, order] = e.target.value.split('-')
+                    const newFilters = { ...filters, sortBy: field as SortField, sortOrder: order as SortOrder }
+                    setFilters(newFilters)
+                    fetchPages(newFilters)
                   }}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >

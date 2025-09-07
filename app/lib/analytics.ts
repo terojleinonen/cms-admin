@@ -3,7 +3,7 @@
  * Handles analytics data collection and reporting
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db';
 
 interface TimeframeData {
   startDate: Date;
@@ -11,7 +11,7 @@ interface TimeframeData {
   days: number;
 }
 
-interface DashboardMetrics {
+export interface DashboardMetrics {
   totalProducts: number;
   totalPages: number;
   totalMedia: number;
@@ -22,7 +22,7 @@ interface DashboardMetrics {
   storageUsed: number;
 }
 
-interface ContentPerformanceItem {
+export interface ContentPerformanceItem {
   id: string;
   title: string;
   type: 'product' | 'page';
@@ -32,7 +32,7 @@ interface ContentPerformanceItem {
   creator: string;
 }
 
-interface InventoryAlert {
+export interface InventoryAlert {
   productId: string;
   productName: string;
   currentStock: number;
@@ -40,7 +40,7 @@ interface InventoryAlert {
   lastUpdated: Date;
 }
 
-interface ActivityItem {
+export interface ActivityItem {
   action: string;
   contentType: string;
   contentTitle: string;
@@ -60,13 +60,13 @@ interface ContentTrends {
   }>;
 }
 
-interface StorageGrowth {
+export interface StorageGrowth {
   date: Date;
   totalSize: number;
   fileCount: number;
 }
 
-interface ComprehensiveReport {
+export interface ComprehensiveReport {
   metrics: DashboardMetrics;
   contentPerformance: ContentPerformanceItem[];
   inventoryAlerts: InventoryAlert[];

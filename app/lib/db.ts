@@ -3,7 +3,7 @@
  * Provides centralized database access with connection pooling and error handling
  */
 
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 
 // Global variable to store the Prisma client instance
 declare global {
@@ -19,11 +19,11 @@ const getDatabaseConfig = () => {
   const isTest = process.env.NODE_ENV === 'test'
   
   return {
-    log: isProduction 
+    log: (isProduction
       ? ['error'] 
       : isTest 
         ? [] 
-        : ['query', 'error', 'warn'],
+        : ['query', 'error', 'warn']) as Prisma.LogLevel[],
     errorFormat: 'pretty' as const,
     datasources: {
       db: {
@@ -40,17 +40,7 @@ function createPrismaClient(): PrismaClient {
   const config = getDatabaseConfig()
   
   return new PrismaClient({
-    ...config,
-    // Connection pool configuration for better performance
-    __internal: {
-      engine: {
-        // Connection pool settings
-        connectionLimit: process.env.NODE_ENV === 'production' ? 20 : 10,
-        poolTimeout: 10000,
-        // Query timeout
-        queryTimeout: 30000,
-      }
-    }
+    ...config
   })
 }
 

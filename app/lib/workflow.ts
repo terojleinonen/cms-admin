@@ -4,7 +4,7 @@
  */
 
 import { prisma } from './db'
-import { ProductStatus, PageStatus, ContentRevision } from '@prisma/client'
+import { Prisma, ProductStatus, PageStatus, ContentRevision } from '@prisma/client'
 
 export type WorkflowStatus = 'DRAFT' | 'REVIEW' | 'PUBLISHED' | 'ARCHIVED'
 export type ContentType = 'product' | 'page' | 'category'
@@ -191,7 +191,7 @@ export class WorkflowService {
       throw new Error(`Invalid action for page: ${action.action}`)
     }
 
-    const updateData: unknown = { 
+    const updateData: Prisma.PageUpdateInput = {
       status: newStatus,
       updatedAt: new Date()
     }
@@ -235,7 +235,7 @@ export class WorkflowService {
         data: {
           contentType,
           contentId,
-          revisionData,
+          revisionData: revisionData as Prisma.InputJsonValue,
           createdBy: userId
         }
       })

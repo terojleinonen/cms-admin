@@ -39,12 +39,29 @@ interface CreatedContent {
   };
 }
 
+import { Prisma } from '@prisma/client'
+
+type PartialAuditLog = {
+  id: string;
+  action: string;
+  resource: string;
+  details: Prisma.JsonValue;
+  createdAt: Date;
+}
+
+type PartialSession = {
+  id: string;
+  expiresAt: Date;
+  isActive: boolean;
+  createdAt: Date;
+}
+
 interface ExportData {
   user: UserExport;
   exportMetadata: ExportMetadata;
   preferences?: UserPreferences | null;
-  auditLogs?: AuditLog[];
-  sessions?: Session[];
+  auditLogs?: PartialAuditLog[];
+  sessions?: PartialSession[];
   createdContent?: CreatedContent;
 }
 
@@ -278,12 +295,12 @@ export async function GET(
       
       // User data section
       csvSections.push('USER DATA')
-      csvSections.push(convertToCSV([exportData.user], Object.keys(exportData.user)))
+      csvSections.push(convertToCSV([exportData.user as any], Object.keys(exportData.user)))
       
       // Preferences section
       if (exportData.preferences) {
         csvSections.push('\nUSER PREFERENCES')
-        csvSections.push(convertToCSV([exportData.preferences], Object.keys(exportData.preferences)))
+        csvSections.push(convertToCSV([exportData.preferences as any], Object.keys(exportData.preferences)))
       }
       
       // Audit logs section

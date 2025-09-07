@@ -58,12 +58,13 @@ const roleLabels: Record<UserRole, string> = {
 }
 
 export default function UserDetailView({ userId, initialData }: UserDetailViewProps) {
-  const [user, setUser] = useState<UserWithDetails | null>(initialData)
+  const [user, setUser] = useState<UserWithDetails | null>(initialData || null)
   const [loading, setLoading] = useState(!initialData)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'security' | 'activity' | 'settings'>('overview')
   
   // Modal states
+  const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showDeactivateModal, setShowDeactivateModal] = useState(false)
 

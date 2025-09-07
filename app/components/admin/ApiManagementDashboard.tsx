@@ -37,11 +37,6 @@ export default function ApiManagementDashboard() {
   })
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchApiKeys()
-    fetchStats()
-  }, [fetchApiKeys, fetchStats])
-
   const fetchApiKeys = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/api-keys')
@@ -69,6 +64,11 @@ export default function ApiManagementDashboard() {
       setLoading(false)
     }
   }, [apiKeys])
+
+  useEffect(() => {
+    fetchApiKeys()
+    fetchStats()
+  }, [fetchApiKeys, fetchStats])
 
   const quickActions = [
     {

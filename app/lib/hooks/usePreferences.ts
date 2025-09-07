@@ -123,6 +123,35 @@ export function usePreferences() {
   }, [session?.user?.id])
 
   /**
+   * Apply preferences to DOM (theme, etc.)
+   */
+  const applyPreferencesToDOM = useCallback((preferences: UserPreferences) => {
+    // Apply theme
+    const html = document.documentElement
+    html.classList.remove('light', 'dark')
+
+    if (preferences.theme === 'DARK') {
+      html.classList.add('dark')
+    } else if (preferences.theme === 'LIGHT') {
+      html.classList.add('light')
+    } else {
+      // SYSTEM theme - detect system preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      html.classList.add(prefersDark ? 'dark' : 'light')
+    }
+
+    // Set timezone for date formatting
+    if (preferences.timezone) {
+      document.documentElement.setAttribute('data-timezone', preferences.timezone)
+    }
+
+    // Set language
+    if (preferences.language) {
+      document.documentElement.setAttribute('lang', preferences.language)
+    }
+  }, [])
+
+  /**
    * Update preferences on server
    */
   const updatePreferences = useCallback(async (
@@ -180,7 +209,7 @@ export function usePreferences() {
    * Load preferences with caching strategy
    */
   const loadPreferences = useCallback(async () => {
-    if (session?.status === 'loading') {
+    if ((session as any)?.status === 'loading') {
       return
     }
     if (!session?.user?.id) {
@@ -240,36 +269,7 @@ export function usePreferences() {
         error: error instanceof Error ? error.message : 'Failed to load preferences',
       }))
     }
-  }, [session?.user?.id, getCachedPreferences, fetchPreferences, cachePreferences, applyPreferencesToDOM, session?.status])
-
-  /**
-   * Apply preferences to DOM (theme, etc.)
-   */
-  const applyPreferencesToDOM = useCallback((preferences: UserPreferences) => {
-    // Apply theme
-    const html = document.documentElement
-    html.classList.remove('light', 'dark')
-    
-    if (preferences.theme === 'DARK') {
-      html.classList.add('dark')
-    } else if (preferences.theme === 'LIGHT') {
-      html.classList.add('light')
-    } else {
-      // SYSTEM theme - detect system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      html.classList.add(prefersDark ? 'dark' : 'light')
-    }
-
-    // Set timezone for date formatting
-    if (preferences.timezone) {
-      document.documentElement.setAttribute('data-timezone', preferences.timezone)
-    }
-
-    // Set language
-    if (preferences.language) {
-      document.documentElement.setAttribute('lang', preferences.language)
-    }
-  }, [])
+  }, [session?.user?.id, getCachedPreferences, fetchPreferences, cachePreferences, applyPreferencesToDOM, (session as any)?.status])
 
   /**
    * Debounced sync to prevent too frequent API calls

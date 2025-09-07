@@ -72,7 +72,7 @@ export async function validateAndMigrateUserPreferences(
     for (let version = schemaVersion + 1; version <= CURRENT_SCHEMA_VERSION; version++) {
       if (migrations[version]) {
         try {
-          migratedPrefs = migrations[version](migratedPrefs)
+          migratedPrefs = migrations[version](migratedPrefs) as any
           migrationApplied = true
         } catch (error) {
           result.errors.push(`Migration to v${version} failed: ${error}`)
@@ -88,8 +88,8 @@ export async function validateAndMigrateUserPreferences(
           theme: migratedPrefs.theme,
           timezone: migratedPrefs.timezone,
           language: migratedPrefs.language,
-          notifications: migratedPrefs.notifications,
-          dashboard: migratedPrefs.dashboard,
+          notifications: migratedPrefs.notifications as any,
+          dashboard: migratedPrefs.dashboard as any,
         },
       })
 
@@ -110,7 +110,7 @@ export async function validateAndMigrateUserPreferences(
 /**
  * Get schema version from preferences object
  */
-function getSchemaVersion(preferences: unknown): number {
+function getSchemaVersion(preferences: any): number {
   // For now, we assume all existing preferences are version 1
   // In future versions, we can add a schemaVersion field
   return preferences.schemaVersion || 1
@@ -119,7 +119,7 @@ function getSchemaVersion(preferences: unknown): number {
 /**
  * Migration to version 1 (current baseline)
  */
-function migrateToV1(preferences: unknown): unknown {
+function migrateToV1(preferences: any): unknown {
   const defaultPrefs = getDefaultPreferences()
 
   return {
@@ -153,7 +153,7 @@ function validatePreferencesStructure(
 /**
  * Validate theme value
  */
-function validateTheme(theme: unknown): 'LIGHT' | 'DARK' | 'SYSTEM' | null {
+function validateTheme(theme: any): 'LIGHT' | 'DARK' | 'SYSTEM' | null {
   const validThemes = ['LIGHT', 'DARK', 'SYSTEM']
   return validThemes.includes(theme) ? theme : null
 }
@@ -161,7 +161,7 @@ function validateTheme(theme: unknown): 'LIGHT' | 'DARK' | 'SYSTEM' | null {
 /**
  * Validate timezone value
  */
-function validateTimezone(timezone: unknown): string | null {
+function validateTimezone(timezone: any): string | null {
   if (typeof timezone !== 'string' || timezone.length === 0) {
     return null
   }
@@ -178,7 +178,7 @@ function validateTimezone(timezone: unknown): string | null {
 /**
  * Validate language value
  */
-function validateLanguage(language: unknown): string | null {
+function validateLanguage(language: any): string | null {
   if (typeof language !== 'string' || language.length === 0) {
     return null
   }
@@ -191,7 +191,7 @@ function validateLanguage(language: unknown): string | null {
 /**
  * Validate notifications object
  */
-function validateNotifications(notifications: unknown): {
+function validateNotifications(notifications: any): {
   email: boolean
   push: boolean
   security: boolean
@@ -222,7 +222,7 @@ function validateNotifications(notifications: unknown): {
 /**
  * Validate dashboard object
  */
-function validateDashboard(dashboard: unknown): {
+function validateDashboard(dashboard: any): {
   layout: string
   widgets: string[]
   defaultView: string
@@ -238,7 +238,7 @@ function validateDashboard(dashboard: unknown): {
       ? dashboard.layout 
       : defaultDashboard.layout,
     widgets: Array.isArray(dashboard.widgets) 
-      ? dashboard.widgets.filter(w => typeof w === 'string')
+      ? dashboard.widgets.filter((w: any) => typeof w === 'string')
       : defaultDashboard.widgets,
     defaultView: typeof dashboard.defaultView === 'string' 
       ? dashboard.defaultView 
@@ -259,18 +259,12 @@ async function createDefaultPreferencesForUser(userId: string): Promise<UserPref
         theme: defaultPrefs.theme as Theme,
         timezone: defaultPrefs.timezone,
         language: defaultPrefs.language,
-        notifications: defaultPrefs.notifications,
-        dashboard: defaultPrefs.dashboard,
+        notifications: defaultPrefs.notifications as any,
+        dashboard: defaultPrefs.dashboard as any,
       },
     })
 
-    return {
-      theme: preferences.theme,
-      timezone: preferences.timezone,
-      language: preferences.language,
-      notifications: preferences.notifications,
-      dashboard: preferences.dashboard,
-    }
+    return validatePreferencesStructure(preferences)
   } catch (error) {
     console.error('Error creating default preferences:', error)
     return defaultPrefs

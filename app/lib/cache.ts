@@ -2,7 +2,7 @@
  * Comprehensive Cache service for improved performance
  */
 
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import { Product, Category } from '@/lib/types'
 
 export interface CacheEntry<T = unknown> {
@@ -191,9 +191,9 @@ export class DatabaseCache {
     const { page = 1, limit = 10, status, categoryId, search } = params
     const skip = (page - 1) * limit
 
-    const where: unknown = {}
-    if (status) where.status = status
-    if (categoryId) where.categoryId = categoryId
+    const where: Prisma.ProductWhereInput = {}
+    if (status) where.status = status as any
+    if (categoryId) where.categories = { some: { categoryId } }
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -224,7 +224,7 @@ export class DatabaseCache {
     return result
   }
 
-  async getProduct(id: string): Promise<Product | null> {
+  async getProduct(id: string): Promise<any | null> {
     const cacheKey = `product:${id}`
     
     // Try memory cache first
@@ -237,7 +237,7 @@ export class DatabaseCache {
     const product = await this.prisma.product.findFirst({
       where: { id },
       include: {
-        category: true,
+        categories: true,
         media: true
       }
     })
@@ -250,7 +250,7 @@ export class DatabaseCache {
     return product
   }
 
-  async getCategories(params: CategoryQueryParams): Promise<Category[]> {
+  async getCategories(params: CategoryQueryParams): Promise<any[]> {
     const cacheKey = `categories:${JSON.stringify(params)}`
     
     // Try memory cache first
@@ -261,7 +261,7 @@ export class DatabaseCache {
 
     // Fetch from database
     const { includeProducts = false, isActive } = params
-    const where: unknown = {}
+    const where: Prisma.CategoryWhereInput = {}
     if (isActive !== undefined) where.isActive = isActive
 
     const categories = await this.prisma.category.findMany({

@@ -19,7 +19,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { AuditLog, User } from '@/lib/types'
 
-interface AuditLogWithUser extends AuditLog {
+type AuditLogWithUser = Omit<AuditLog, 'user'> & {
   user: Pick<User, 'id' | 'name' | 'email' | 'role'>
 }
 
@@ -168,7 +168,7 @@ export default function UserActivityMonitor({
     setFilters(prev => ({
       ...prev,
       [key]: value,
-      page: key !== 'page' ? 1 : value, // Reset page when other filters change
+      page: key !== 'page' ? 1 : value as number, // Reset page when other filters change
     }))
   }
 

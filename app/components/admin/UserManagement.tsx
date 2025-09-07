@@ -21,7 +21,7 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { PaginationInfo } from '@/lib/types'
+import { PaginationInfo, UserProfile } from '@/lib/types'
 import { UserRole } from '@prisma/client'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
@@ -38,18 +38,7 @@ const showNotification = (message: string, type: 'success' | 'error' = 'success'
   }
 }
 
-interface UserWithStats {
-  id: string
-  name: string
-  email: string
-  role: UserRole
-  isActive: boolean
-  profilePicture?: string
-  emailVerified?: Date
-  twoFactorEnabled: boolean
-  lastLoginAt?: Date
-  createdAt: Date
-  updatedAt: Date
+interface UserWithStats extends UserProfile {
   _count: {
     createdProducts: number
     createdPages: number
@@ -627,7 +616,7 @@ export default function UserManagement({
 
       {viewingUser && (
         <UserDetailModal
-          user={viewingUser as UserWithDetails}
+          user={viewingUser as UserWithStats}
           onClose={() => setViewingUser(null)}
           onEdit={(user) => {
             setViewingUser(null)

@@ -329,7 +329,11 @@ export default function ApiDocumentation() {
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-sm text-gray-600">{endpoint.requestBody.type}</span>
                           <button
-                            onClick={() => copyToClipboard(JSON.stringify(endpoint.requestBody.example, null, 2))}
+                            onClick={() => {
+                              if (endpoint.requestBody) {
+                                copyToClipboard(JSON.stringify(endpoint.requestBody.example, null, 2))
+                              }
+                            }}
                             className="text-gray-400 hover:text-gray-600"
                           >
                             <ClipboardDocumentIcon className="h-4 w-4" />

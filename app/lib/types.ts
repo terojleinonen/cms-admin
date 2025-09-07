@@ -5,6 +5,8 @@
 
 import { UserRole, Theme, ProductStatus, PageStatus } from '@prisma/client'
 
+export { UserRole, Theme, ProductStatus, PageStatus }
+
 export interface User {
   id: string
   email: string
@@ -89,6 +91,13 @@ export interface UserProfile {
   preferences?: UserPreferences
 }
 
+export interface UserWithCount extends UserProfile {
+  _count: {
+    createdProducts: number
+    createdPages: number
+  }
+}
+
 export interface UserUpdateData {
   name?: string
   email?: string
@@ -127,23 +136,23 @@ export interface Product {
   id: string
   name: string
   slug: string
-  description?: string
-  shortDescription?: string
+  description: string | null
+  shortDescription: string | null
   price: number
-  comparePrice?: number
-  sku?: string
+  comparePrice: number | null
+  sku: string | null
   inventoryQuantity: number
-  weight?: number
+  weight: number | null
   dimensions?: { length?: number; width?: number; height?: number }
   status: ProductStatus
   featured: boolean
-  seoTitle?: string
-  seoDescription?: string
+  seoTitle: string | null
+  seoDescription: string | null
   createdBy: string
   createdAt: Date
   updatedAt: Date
-  categories?: ProductCategory[]
-  media?: ProductMedia[]
+  categories: ProductCategory[] | null
+  media: ProductMedia[] | null
   creator?: User
 }
 
@@ -181,15 +190,21 @@ export interface Category {
   id: string
   name: string
   slug: string
-  description?: string
-  parentId?: string
+  description: string | null
+  parentId: string | null
   sortOrder: number
   isActive: boolean
   createdAt: Date
   updatedAt: Date
-  parent?: Category
-  children?: Category[]
-  products?: ProductCategory[]
+  parent: Category | null
+  children: Category[] | null
+  products: ProductCategory[] | null
+}
+
+export interface CategoryWithCount extends Category {
+  _count?: {
+    products: number
+  }
 }
 
 export interface ProductCategory {
@@ -326,6 +341,24 @@ export interface FilterOption {
   type: 'text' | 'select' | 'date' | 'boolean'
   options?: SelectOption[]
 }
+
+export type NotificationType =
+  | 'SECURITY_ALERT'
+  | 'PASSWORD_CHANGED'
+  | 'EMAIL_CHANGED'
+  | 'TWO_FACTOR_ENABLED'
+  | 'TWO_FACTOR_DISABLED'
+  | 'ACCOUNT_LOCKED'
+  | 'ACCOUNT_UNLOCKED'
+  | 'LOGIN_FROM_NEW_DEVICE'
+  | 'NEW_PRODUCT'
+  | 'PRODUCT_UPDATE'
+  | 'NEW_ORDER'
+  | 'ORDER_SHIPPED'
+  | 'REVIEW_REQUEST'
+  | 'SYSTEM_MAINTENANCE'
+  | 'CONTENT_APPROVED'
+  | 'CONTENT_REJECTED';
 
 export interface Notification {
   id: string

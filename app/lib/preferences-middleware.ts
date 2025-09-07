@@ -166,7 +166,7 @@ export function getDefaultPreferences(): UserPreferencesData {
  * Ensures preferences conform to current schema and migrates old data
  */
 export function validateAndMigratePreferences(
-  preferences: unknown
+  preferences: any
 ): UserPreferencesData {
   const defaultPrefs = getDefaultPreferences()
 
@@ -259,13 +259,7 @@ export async function createDefaultUserPreferences(userId: string): Promise<User
       }
     })
 
-    return {
-      theme: preferences.theme,
-      timezone: preferences.timezone,
-      language: preferences.language,
-      notifications: preferences.notifications,
-      dashboard: preferences.dashboard,
-    }
+    return validateAndMigratePreferences(preferences)
   } catch (error) {
     console.error('Error creating default preferences:', error)
     return getDefaultPreferences()

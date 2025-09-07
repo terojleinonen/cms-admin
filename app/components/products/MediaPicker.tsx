@@ -88,13 +88,6 @@ export default function MediaPicker({
     : []
 
   useEffect(() => {
-    if (isOpen) {
-      fetchMedia()
-      fetchFolders()
-    }
-  }, [isOpen, fetchMedia, fetchFolders])
-
-  useEffect(() => {
     setSelected(selectedMedia)
   }, [selectedMedia])
 
@@ -139,6 +132,13 @@ export default function MediaPicker({
       setFolders([])
     }
   }, [currentFolder])
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchMedia()
+      fetchFolders()
+    }
+  }, [isOpen, fetchMedia, fetchFolders])
 
   const handleSelect = useCallback((mediaItem: Media) => {
     if (multiple) {

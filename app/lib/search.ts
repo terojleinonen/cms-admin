@@ -3,8 +3,19 @@
  * Handles search functionality, indexing, analytics, and suggestions
  */
 
-import MiniSearch from 'minisearch'
-import { prisma } from './prisma'
+import MiniSearch, { SearchResult as MiniSearchResult } from 'minisearch'
+import { prisma } from './db'
+import type { Prisma, Product, Page, ProductStatus, PageStatus } from '@prisma/client'
+
+interface MiniSearchDocumentResult extends MiniSearchResult {
+  type: 'product' | 'page' | 'media';
+  status: string;
+  category: string;
+  url: string;
+  excerpt: string;
+  metadata: Record<string, unknown>;
+  title: string;
+}
 
 // Enhanced interfaces for comprehensive search functionality
 export interface SearchOptions {
@@ -141,7 +152,7 @@ export class SearchService {
       limit: limit + offset + 100, // Get more results for filtering
       fuzzy: 0.2,
       prefix: true
-    })
+    } as any)
 
     // Apply type filters
     if (types && types.length > 0) {
@@ -201,7 +212,7 @@ export class SearchService {
     }
 
     // Calculate facets
-    const facets = this.calculateFacets(searchResults)
+    const facets = this.calculateFacets(searchResults as MiniSearchDocumentResult[])
 
     // Apply pagination
     const paginatedResults = searchResults.slice(offset, offset + limit)
@@ -236,7 +247,7 @@ export class SearchService {
 
     const suggestions = this.searchIndex.autoSuggest(query, {
       limit: limit * 2 // Get more to filter duplicates
-    })
+    } as any)
 
     // Extract unique suggestions
     const uniqueSuggestions = Array.from(new Set(
@@ -277,7 +288,7 @@ export class SearchService {
   }
 
   // Private helper methods
-  private calculateFacets(results: SearchResult[]): Record<string, Record<string, number>> {
+  private calculateFacets(results: MiniSearchDocumentResult[]): Record<string, Record<string, number>> {
     const facets: Record<string, Record<string, number>> = {
       types: {},
       statuses: {},
@@ -289,7 +300,9 @@ export class SearchService {
       facets.types[result.type] = (facets.types[result.type] || 0) + 1
       
       // Status facets
-      facets.statuses[result.status] = (facets.statuses[result.status] || 0) + 1
+      if (result.status) {
+        facets.statuses[result.status] = (facets.statuses[result.status] || 0) + 1
+      }
       
       // Category facets
       if (result.category) {
@@ -348,7 +361,7 @@ export async function searchProducts(query: string, options: {
   status?: string
   limit?: number
   offset?: number
-} = {}): Promise<{ products: unknown[], total: number }> {
+} = {}): Promise<{ products: Product[], total: number }> {
   const {
     categoryId,
     minPrice,
@@ -358,7 +371,7 @@ export async function searchProducts(query: string, options: {
     offset = 0
   } = options
 
-  const whereConditions: unknown[] = []
+  const whereConditions: Prisma.ProductWhereInput[] = []
 
   // Add text search conditions
   if (query.trim()) {
@@ -382,7 +395,7 @@ export async function searchProducts(query: string, options: {
     whereConditions.push({ price: { lte: maxPrice } })
   }
   if (status) {
-    whereConditions.push({ status })
+    whereConditions.push({ status: status as ProductStatus })
   }
 
   const products = await prisma.product.findMany({
@@ -396,9 +409,13 @@ export async function searchProducts(query: string, options: {
     skip: offset
   })
 
+  const total = await prisma.product.count({
+    where: whereConditions.length > 0 ? { AND: whereConditions } : {},
+  })
+
   return {
     products,
-    total: products.length
+    total,
   }
 }
 
@@ -407,7 +424,7 @@ export async function searchPages(query: string, options: {
   template?: string
   limit?: number
   offset?: number
-} = {}): Promise<{ pages: unknown[], total: number }> {
+} = {}): Promise<{ pages: Page[], total: number }> {
   const {
     status,
     template,
@@ -415,7 +432,7 @@ export async function searchPages(query: string, options: {
     offset = 0
   } = options
 
-  const whereConditions: unknown[] = []
+  const whereConditions: Prisma.PageWhereInput[] = []
 
   // Add text search conditions
   if (query.trim()) {
@@ -430,7 +447,7 @@ export async function searchPages(query: string, options: {
 
   // Add filter conditions
   if (status) {
-    whereConditions.push({ status })
+    whereConditions.push({ status: status as PageStatus })
   }
   if (template) {
     whereConditions.push({ template })
@@ -443,9 +460,13 @@ export async function searchPages(query: string, options: {
     skip: offset
   })
 
+  const total = await prisma.page.count({
+    where: whereConditions.length > 0 ? { AND: whereConditions } : {},
+  })
+
   return {
     pages,
-    total: pages.length
+    total
   }
 }
 
@@ -453,23 +474,23 @@ export async function searchAll(query: string, options: {
   types?: ('product' | 'page')[]
   limit?: number
   offset?: number
-} = {}): Promise<{ results: unknown[], total: number, breakdown: { products: number, pages: number } }> {
+} = {}): Promise<{ results: (Product & { type: 'product' } | Page & { type: 'page' })[], total: number, breakdown: { products: number, pages: number } }> {
   const { types, limit = 20, offset = 0 } = options
   
-  const results: unknown[] = []
+  const results: (Product & { type: 'product' } | Page & { type: 'page' })[] = []
   const breakdown = { products: 0, pages: 0 }
 
   // Search products if included
   if (!types || types.includes('product')) {
     const { products } = await searchProducts(query, { limit: Math.ceil(limit / 2) })
-    results.push(...products.map(p => ({ ...p, type: 'product' })))
+    results.push(...products.map(p => ({ ...p, type: 'product' as const })))
     breakdown.products = products.length
   }
 
   // Search pages if included
   if (!types || types.includes('page')) {
     const { pages } = await searchPages(query, { limit: Math.ceil(limit / 2) })
-    results.push(...pages.map(p => ({ ...p, type: 'page' })))
+    results.push(...pages.map(p => ({ ...p, type: 'page' as const })))
     breakdown.pages = pages.length
   }
 
@@ -532,7 +553,7 @@ export async function trackSearchEvent(event: SearchAnalyticsEvent): Promise<voi
       query: event.query,
       resultsCount: event.resultsCount,
       userId: event.userId || null,
-      filters: event.filters || undefined,
+      filters: event.filters as Prisma.InputJsonValue || undefined,
       userAgent: event.userAgent || null,
       ipAddress: event.ipAddress || null
     }
@@ -561,9 +582,13 @@ export async function getSearchAnalytics(
       take: limit
     })
 
+    const total = await prisma.searchEvent.count({
+      where: dateFilter.gte || dateFilter.lte ? { createdAt: dateFilter } : {},
+    })
+
     return {
       events,
-      total: events.length
+      total
     }
   }
 

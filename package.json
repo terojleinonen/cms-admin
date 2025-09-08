@@ -27,7 +27,15 @@
     "db:health": "curl -s http://localhost:3001/api/health | jq '.checks[0].details'",
     "db:test-health": "npx tsx scripts/test-database-health.ts",
     "perf:analyze": "ANALYZE=true npm run build",
-    "install:ci": "npm ci --legacy-peer-deps"
+    "install:ci": "npm ci --legacy-peer-deps",
+    "test": "jest",
+    "test:unit": "jest --selectProjects unit",
+    "test:components": "jest --selectProjects components",
+    "test:e2e": "jest --selectProjects e2e",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^1.6.0",
@@ -66,6 +74,9 @@
     "zod": "^4.0.15"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.28.3",
+    "@babel/preset-react": "^7.27.1",
+    "@babel/preset-typescript": "^7.27.1",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.35.0",
     "@faker-js/faker": "^9.9.0",

@@ -120,6 +120,7 @@ export default function RegisterForm() {
                 Full Name
               </label>
               <input
+                id="name"
                 {...register('name')}
                 type="text"
                 autoComplete="name"
@@ -136,6 +137,7 @@ export default function RegisterForm() {
                 Email address
               </label>
               <input
+                id="email"
                 {...register('email')}
                 type="email"
                 autoComplete="email"
@@ -153,6 +155,7 @@ export default function RegisterForm() {
               </label>
               <div className="mt-1 relative">
                 <input
+                  id="password"
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
@@ -182,6 +185,7 @@ export default function RegisterForm() {
               </label>
               <div className="mt-1 relative">
                 <input
+                  id="confirmPassword"
                   {...register('confirmPassword')}
                   type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"

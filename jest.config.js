@@ -11,8 +11,13 @@ module.exports = {
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/app/$1',
         '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
-        '^@/components/(.*)$': '<rootDir>/app/components/$1'
+        '^@/components/(.*)$': '<rootDir>/app/components/$1',
+        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
       },
+      transformIgnorePatterns: [
+        "/node_modules/(?!next-auth|@auth/prisma-adapter)/"
+      ]
     },
     {
       displayName: 'components',
@@ -27,7 +32,8 @@ module.exports = {
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/app/$1',
         '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
-        '^@/components/(.*)$': '<rootDir>/app/components/$1'
+        '^@/components/(.*)$': '<rootDir>/app/components/$1',
+        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
       },
     }
   ],

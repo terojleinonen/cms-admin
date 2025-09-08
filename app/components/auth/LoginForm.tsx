@@ -90,6 +90,7 @@ export default function LoginForm({ callbackUrl = '/', error }: LoginFormProps) 
                 Email address
               </label>
               <input
+                id="email"
                 {...register('email')}
                 type="email"
                 autoComplete="email"
@@ -107,6 +108,7 @@ export default function LoginForm({ callbackUrl = '/', error }: LoginFormProps) 
               </label>
               <div className="mt-1 relative">
                 <input
+                  id="password"
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"

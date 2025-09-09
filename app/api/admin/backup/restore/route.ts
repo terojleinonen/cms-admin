@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { auth } from "@/auth"
 import { BackupService } from '@/lib/backup';
 import { z } from 'zod';
 
@@ -36,7 +35,7 @@ const backupService = new BackupService(backupConfig.backupDir);
 // POST /api/admin/backup/restore - Restore from backup
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

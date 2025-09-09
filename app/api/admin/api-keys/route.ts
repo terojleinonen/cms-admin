@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { auth } from "@/auth"
 import { ApiAuthService } from '@/lib/api-auth';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
@@ -22,7 +21,7 @@ const createApiKeySchema = z.object({
 // GET /api/admin/api-keys - List API keys
 export async function GET(_request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -60,7 +59,7 @@ export async function GET(_request: NextRequest) {
 // POST /api/admin/api-keys - Create new API key
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

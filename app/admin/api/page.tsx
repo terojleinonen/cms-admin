@@ -1,6 +1,5 @@
 import { Metadata } from 'next'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from "@/auth"
 import { redirect } from 'next/navigation'
 import ApiManagementDashboard from '@/components/admin/ApiManagementDashboard'
 
@@ -10,7 +9,7 @@ export const metadata: Metadata = {
 }
 
 export default async function ApiManagementPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   
   if (!session?.user || session.user.role !== 'ADMIN') {
     redirect('/login')

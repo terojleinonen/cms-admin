@@ -9,7 +9,7 @@ import { authOptions } from '@/lib/auth-config'
 import { prisma, Prisma } from '@/lib/db'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid/node'
 
 /**
  * GET /api/media

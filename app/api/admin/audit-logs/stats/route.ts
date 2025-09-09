@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from "@/auth"
 import { prisma } from '@/lib/db'
 import { getAuditService } from '@/lib/audit-service'
 import { z } from 'zod'
@@ -20,7 +19,7 @@ const statsFiltersSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user) {
       return NextResponse.json(

@@ -1,20 +1,15 @@
-/**
- * NextAuth.js configuration for CMS authentication
- * Provides secure authentication with database integration
- */
-
-import { NextAuthOptions } from 'next-auth'
-import CredentialsProvider from 'next-auth/providers/credentials'
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import { prisma } from './db'
+import NextAuth from "next-auth"
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import { PrismaClient, UserRole } from "@prisma/client"
+import Credentials from "next-auth/providers/credentials"
 import bcrypt from 'bcryptjs'
-import { UserRole } from '@prisma/client'
 
-export const authOptions: NextAuthOptions = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  adapter: PrismaAdapter(prisma) as any,
+const prisma = new PrismaClient()
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
   providers: [
-    CredentialsProvider({
+    Credentials({
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -29,7 +24,7 @@ export const authOptions: NextAuthOptions = {
           // Find user by email
           const user = await prisma.user.findUnique({
             where: {
-              email: credentials.email.toLowerCase(),
+              email: (credentials.email as string).toLowerCase(),
             },
           })
 
@@ -44,7 +39,7 @@ export const authOptions: NextAuthOptions = {
 
           // Verify password
           const isPasswordValid = await bcrypt.compare(
-            credentials.password,
+            credentials.password as string,
             user.passwordHash
           )
 
@@ -59,7 +54,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             role: user.role,
             profilePicture: user.profilePicture,
-          } as any
+          }
         } catch (error) {
           console.error('Authentication error:', error)
           return null
@@ -97,6 +92,6 @@ export const authOptions: NextAuthOptions = {
     signIn: '/auth/login',
     error: '/auth/error',
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
-}
+})

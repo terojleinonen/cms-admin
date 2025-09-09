@@ -6,8 +6,7 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from "@/auth"
 import { UserRole } from '@prisma/client'
 import UserDetailView from '@/components/admin/UserDetailView'
 import UserActivityMonitor from '@/components/admin/UserActivityMonitor'
@@ -77,7 +76,7 @@ async function fetchUserData(_userId: string) {
 
 export default async function UserManagementPage({ params }: UserManagementPageProps) {
   // Check authentication and authorization
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   
   if (!session?.user) {
     redirect('/auth/login')

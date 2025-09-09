@@ -43,6 +43,9 @@
       ],
       "@/types/*": [
         "./types/*"
+      ],
+      "@/auth": [
+        "./auth"
       ]
     },
     "types": [

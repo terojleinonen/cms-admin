@@ -6,8 +6,7 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
 import UserManagement from '@/components/admin/UserManagement'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from "@/auth"
 import { redirect } from 'next/navigation'
 import { UserRole } from '@prisma/client'
 
@@ -91,7 +90,7 @@ async function fetchInitialUsers() {
 
 export default async function UserManagementPage() {
   // Check authentication and authorization
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   
   if (!session?.user) {
     redirect('/auth/login')

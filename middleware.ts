@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { applyUserPreferences } from './app/lib/preferences-middleware'
 
-export async function middleware(request: NextRequest) {
+export async function middleware(request) {
   // Generate a simple request ID for tracing
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 

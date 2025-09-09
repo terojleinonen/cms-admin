@@ -8,6 +8,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { hasPermission } from '@/lib/has-permission'
 
 const previewSchema = z.object({
   content: z.string().optional(),
@@ -22,8 +23,8 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(session, 'preview')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -88,8 +89,8 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(session, 'preview')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     // Get the page

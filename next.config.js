@@ -4,7 +4,6 @@ const path = require('path');
 const nextConfig = {
   typedRoutes: true,
   
-  // Performance optimizations
   experimental: {
     optimizeCss: true,
     optimizePackageImports: [
@@ -23,7 +22,6 @@ const nextConfig = {
     },
   },
 
-  // Image optimization
   images: {
     remotePatterns: [
       {
@@ -37,53 +35,37 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
 
-  // Compression and caching
   compress: true,
   poweredByHeader: false,
   
-  // Bundle analyzer (only in development)
-  ...(process.env.ANALYZE === 'true' && {
-    webpack: (config, { isServer }) => {
-      if (!isServer) {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            openAnalyzer: false,
-            reportFilename: '../bundle-analyzer-report.html',
-          })
-        );
-      }
-      return config;
-    },
-  }),
-
   webpack: (config, { isServer, dev }) => {
-    // Fix for module resolution issues
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.resolve(__dirname, './app'),
-    };
-
-    // Performance optimizations
-    if (!dev) {
-      // Tree shaking optimization
-      config.optimization = {
-        ...config.optimization,
-        usedExports: true,
-        sideEffects: false,
-      };
-
-      // Minimize bundle size
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        // Use lighter alternatives where possible
-        'react-dom$': 'react-dom/profiling',
-        'scheduler/tracing': 'scheduler/tracing-profiling',
-      };
+    // Bundle analyzer (only when ANALYZE=true)
+    if (process.env.ANALYZE === 'true' && !isServer) {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          openAnalyzer: false,
+          reportFilename: '../bundle-analyzer-report.html',
+        })
+      );
     }
 
-    // Optimize chunks
+    // Fix for module resolution issues
+    config.resolve.alias['@'] = path.resolve(__dirname, './app');
+
+    // Performance optimizations for production builds
+    if (!dev) {
+      // Tree shaking optimization
+      config.optimization.usedExports = true;
+      config.optimization.sideEffects = false;
+
+      // Minimize bundle size with lighter alternatives
+      config.resolve.alias['react-dom$'] = 'react-dom/profiling';
+      config.resolve.alias['scheduler/tracing'] = 'scheduler/tracing-profiling';
+    }
+
+    // Optimize chunks for client-side
     if (!isServer) {
       config.optimization.splitChunks = {
         chunks: 'all',
@@ -114,63 +96,38 @@ const nextConfig = {
     return config;
   },
 
-  // Headers for performance
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on'
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block'
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
-          }
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
         ],
       },
       {
         source: '/api/(.*)',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate'
-          }
+          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
         ],
       },
       {
         source: '/_next/static/(.*)',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable'
-          }
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
       {
         source: '/images/(.*)',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=86400'
-          }
+          { key: 'Cache-Control', value: 'public, max-age=86400' },
         ],
-      }
+      },
     ];
   },
-}
+};
 
 module.exports = nextConfig;

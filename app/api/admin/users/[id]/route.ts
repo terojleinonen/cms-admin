@@ -142,36 +142,10 @@ export async function DELETE(
       )
     }
 
-    // Delete user and related data
-    await prisma.$transaction(async (tx) => {
-      // Delete related records first
-      await tx.session.deleteMany({
-        where: { userId }
-      })
-
-      await tx.auditLog.deleteMany({
-        where: { userId }
-      })
-
-      await tx.userPreferences.deleteMany({
-        where: { userId }
-      })
-
-      // Update products and pages to remove user reference
-      await tx.product.updateMany({
-        where: { createdBy: userId },
-        data: { createdBy: 'deleted-user' }
-      })
-
-      await tx.page.updateMany({
-        where: { createdBy: userId },
-        data: { createdBy: 'deleted-user' }
-      })
-
-      // Finally delete the user
-      await tx.user.delete({
-        where: { id: userId }
-      })
+    // The schema is now configured to handle cascading deletes and setting fields to null.
+    // We can directly delete the user.
+    await prisma.user.delete({
+      where: { id: userId },
     })
 
     // Create audit log for user deletion

@@ -3,6 +3,15 @@ const path = require('path');
 
 const nextConfig = {
   typedRoutes: true,
+
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
+  },
   
   experimental: {
     optimizeCss: true,
@@ -12,14 +21,6 @@ const nextConfig = {
       'date-fns',
       'clsx'
     ],
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
   },
 
   images: {

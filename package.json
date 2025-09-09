@@ -80,6 +80,7 @@
     "zod": "^4.0.15"
   },
   "devDependencies": {
+    "@babel/preset-flow": "^7.27.1",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.35.0",
     "@faker-js/faker": "^9.9.0",

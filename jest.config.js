@@ -26,7 +26,7 @@ module.exports = {
       setupFilesAfterEnv: ['<rootDir>/__tests__/helpers/test-helpers.ts'],
       transform: {
         '^.+\\.tsx?$': ['ts-jest', {
-          babelConfig: true,
+          tsconfig: 'tsconfig.jest.json'
         }],
       },
       moduleNameMapper: {

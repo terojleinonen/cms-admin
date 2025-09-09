@@ -100,7 +100,7 @@ interface SidebarProps {
 const navigation: NavigationItem[] = [
   {
     name: 'Dashboard',
-    href: '/',
+    href: '/admin/dashboard',
     icon: HomeIcon,
   },
   {
@@ -134,21 +134,31 @@ const navigation: NavigationItem[] = [
     requiredRole: UserRole.EDITOR,
   },
   {
-    name: 'Users',
-    href: '/users',
-    icon: UsersIcon,
-    requiredRole: UserRole.EDITOR,
-  },
-  {
     name: 'Analytics',
     href: '/admin/analytics',
     icon: ChartBarIcon,
+    requiredRole: UserRole.ADMIN,
   },
   {
     name: 'Settings',
     href: '/settings',
     icon: CogIcon,
     requiredRole: UserRole.ADMIN,
+  },
+]
+
+const userNavigation: NavigationItem[] = [
+  {
+    name: 'Profile',
+    href: '/profile',
+    icon: UsersIcon,
+    requiredRole: UserRole.VIEWER,
+  },
+  {
+    name: 'Account',
+    href: '/account',
+    icon: CogIcon,
+    requiredRole: UserRole.VIEWER,
   },
 ]
 
@@ -224,14 +234,19 @@ function hasPermission(userRole: UserRole | undefined, requiredRole?: UserRole):
   // If user has no role, deny access to protected items
   if (!userRole) return false
 
-  // Role hierarchy: ADMIN (3) > EDITOR (2) > VIEWER (1)
-  const roleHierarchy = {
-    [UserRole.VIEWER]: 1,
-    [UserRole.EDITOR]: 2,
-    [UserRole.ADMIN]: 3,
+  if (requiredRole === UserRole.ADMIN) {
+    return userRole === UserRole.ADMIN
   }
 
-  return roleHierarchy[userRole] >= roleHierarchy[requiredRole]
+  if (requiredRole === UserRole.EDITOR) {
+    return userRole === UserRole.ADMIN || userRole === UserRole.EDITOR
+  }
+
+  if (requiredRole === UserRole.VIEWER) {
+    return userRole === UserRole.ADMIN || userRole === UserRole.EDITOR || userRole === UserRole.VIEWER
+  }
+
+  return false
 }
 
 /**
@@ -253,11 +268,15 @@ function SidebarContent({ userRole }: { userRole?: UserRole }) {
     hasPermission(userRole, item.requiredRole)
   )
 
+  const filteredUserNavigation = userNavigation.filter(item =>
+    hasPermission(userRole, item.requiredRole)
+  )
+
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center h-16 px-6 bg-matte-black">
-        <div className="flex items-center">
+        <Link href="/admin" className="flex items-center">
           <div className="flex-shrink-0">
             <div className="w-8 h-8 bg-dusty-sage rounded-lg flex items-center justify-center">
               <span className="text-soft-white font-bold text-sm font-satoshi">K</span>
@@ -267,7 +286,7 @@ function SidebarContent({ userRole }: { userRole?: UserRole }) {
             <h1 className="text-soft-white font-semibold text-lg font-satoshi">Kin Workspace</h1>
             <p className="text-warm-beige text-xs font-inter">CMS</p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation */}
@@ -348,7 +367,32 @@ function SidebarContent({ userRole }: { userRole?: UserRole }) {
 
       {/* User role indicator */}
       <div className="px-4 py-4 bg-matte-black border-t border-slate-gray">
-        <div className="flex items-center">
+        {/* User Navigation */}
+        {filteredUserNavigation.map((item) => {
+          const isActive = pathname === item.href
+
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={clsx(
+                'sidebar-link',
+                isActive && 'active'
+              )}
+            >
+              <item.icon
+                className={clsx(
+                  'mr-3 h-5 w-5 flex-shrink-0',
+                  isActive
+                    ? 'text-soft-white'
+                    : 'text-warm-beige'
+                )}
+              />
+              {item.name}
+            </Link>
+          )
+        })}
+        <div className="flex items-center mt-4">
           <div className="flex-shrink-0">
             <div className={clsx(
               'w-2 h-2 rounded-full',

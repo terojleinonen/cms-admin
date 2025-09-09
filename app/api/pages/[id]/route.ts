@@ -8,6 +8,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { hasPermission } from '@/lib/has-permission'
 
 const updatePageSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255, 'Title too long').optional(),
@@ -30,8 +31,8 @@ export async function GET(
   try {
     const { id } = params
     const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(session, 'read')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     const page = await prisma.page.findUnique({
@@ -70,8 +71,8 @@ export async function PUT(
   try {
     const { id } = params
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(session, 'update')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -149,13 +150,13 @@ export async function PUT(
 // DELETE /api/pages/[id] - Delete specific page
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id:string } }
 ) {
   try {
     const { id } = params
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(session, 'delete')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     // Check if page exists

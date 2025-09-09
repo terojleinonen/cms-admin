@@ -8,6 +8,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { hasPermission } from '@/lib/has-permission'
 
 // Validation schema for page creation/update
 const pageSchema = z.object({
@@ -37,8 +38,8 @@ const querySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(session, 'read')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -122,8 +123,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(session, 'create')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     const body = await request.json()

@@ -1,439 +1,63 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
 # Dependencies
-node_modules/
+/node_modules
+/.pnp
+.pnp.js
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+/dist
+
+# Miscellaneous
+.DS_Store
+*.pem
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Next.js
-.next/
-out/
-build/
-dist/
-
-# Production builds
-*.tgz
-*.tar.gz
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-.nyc_output
-
-# Instrumentation
-lib-cov
-
-# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
-.grunt
-
-# Bower dependency directory (https://bower.io/)
-bower_components
-
-# node-waf configuration
-.lock-wscript
-
-# Compiled binary addons (https://nodejs.org/api/addons.html)
-build/Release
-
-# Dependency directories
-jspm_packages/
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Optional stylelint cache
-.stylelintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variable files
-.env
+# Local .env files
+.env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env.local
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-out
-
-# Nuxt.js build / generate output
-.nuxt
-dist
-
-# Gatsby files
-.cache/
-public
-
-# Vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless/
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
 
 # IDEs and editors
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Logs
-logs
-*.log
-
-# Database
-*.sqlite
-*.sqlite3
-*.db
+# Test results
+/coverage
+/test-results
+/playwright-report
+/test-results.xml
 
 # Prisma
-prisma/migrations/
-!prisma/migrations/.gitkeep
+/prisma/migrations
+!/prisma/migrations/.gitkeep
 
-# Uploads and media files
-public/uploads/
-uploads/
-media/
-temp/
-tmp/
+# Uploads
+/public/uploads
+/uploads
+/media
+/temp
+/tmp
 
-# Backup files
-*.backup
-*.bak
-*.tmp
-
-# Test files
-test-results/
-playwright-report/
-test-results.xml
-
-# Coverage reports
-coverage/
-.nyc_output/
-
-# Storybook build outputs
-storybook-static/
-
-# Temporary folders
-tmp/
-temp/
-
-# Editor directories and files
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Local development
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Cache
+.eslintcache
+.stylelintcache
+.tsbuildinfo
+.next/cache
 
 # Vercel
 .vercel
-
-# Sentry
-.sentryclirc
-
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
-
-# PWA files
-**/public/sw.js
-**/public/workbox-*.js
-**/public/worker-*.js
-**/public/sw.js.map
-**/public/workbox-*.js.map
-**/public/worker-*.js.map
-
-# Sitemap
-public/sitemap.xml
-public/robots.txt
-
-# Analytics
-.analytics/
-
-# Local Netlify folder
-.netlify
-
-# Docker
-Dockerfile.local
-docker-compose.override.yml
-
-# Kubernetes
-*.kubeconfig
-
-# Terraform
-*.tfstate
-*.tfstate.*
-.terraform/
-.terraform.lock.hcl
-
-# AWS
-.aws/
-
-# Google Cloud
-.gcloud/
-
-# Azure
-.azure/
-
-# Local configuration files
-config.local.js
-config.local.json
-
-# Certificate files
-*.pem
-*.key
-*.crt
-*.csr
-
-# SSH keys
-id_rsa
-id_rsa.pub
-*.ppk
-
-# GPG keys
-*.gpg
-*.asc
-
-# Backup databases
-*.sql
-*.dump
-
-# Cache directories
-.cache/
-.parcel-cache/
-.eslintcache
-.stylelintcache
-
-# Build artifacts
-build/
-dist/
-lib/
-
-# Documentation build
-docs/_build/
-site/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# Local development overrides
-docker-compose.override.yml
-.env.override
-
-# Generated files
-generated/
-auto-generated/
-
-# Temporary test files
-*.test.js.snap
-__snapshots__/
-
-# Lock files (choose one based on your package manager)
-# package-lock.json  # Uncomment if using yarn
-# yarn.lock          # Uncomment if using npm
-# pnpm-lock.yaml     # Uncomment if using yarn or npm
-
-# Sentry Config File
-.sentryclirc
-
-# Bundle analyzer
-.next/analyze/
-
-# Webpack Bundle Analyzer
-webpack-bundle-analyzer-report.html
-
-# Local development database
-dev.db
-development.db
-test.db
-
-# Redis dump
-dump.rdb
-
-# MongoDB
-*.mongodb
-
-# Elasticsearch
-elasticsearch/
-
-# Solr
-solr/
-
-# Application specific
-cms-uploads/
-user-uploads/
-product-images/
-category-images/
-backup-files/
-
-# CMS specific ignores
-public/media/
-public/thumbnails/
-storage/
-backups/
-
-# Development tools
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-
-# OS specific
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# Network drives
-.fuse_hidden*
-.directory
-.Trash-*
-.nfs*
-
-# Linux
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-.nfs*
-
-# Windows
-Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-*.stackdump
-[Dd]esktop.ini
-$RECYCLE.BIN/
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-*.lnk
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk

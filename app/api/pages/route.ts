@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { hasPermission } from '@/lib/has-permission'
@@ -37,7 +36,7 @@ const querySchema = z.object({
 // GET /api/pages - List pages with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!hasPermission(session, 'read')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
@@ -122,8 +121,8 @@ export async function GET(request: NextRequest) {
 // POST /api/pages - Create new page
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!hasPermission(session, 'create')) {
+    const session = await auth()
+    if (!hasPermission(session, 'create') || !session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 

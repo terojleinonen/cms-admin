@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
@@ -75,7 +74,7 @@ const exportQuerySchema = z.object({
 
 // Check access permissions
 async function requireUserAccess(userId: string) {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   
   if (!session?.user) {
     return NextResponse.json(
@@ -122,7 +121,7 @@ export async function GET(
     const authError = await requireUserAccess(resolvedParams.id)
     if (authError) return authError
 
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     const { searchParams } = new URL(request.url)
     
     // Parse query parameters

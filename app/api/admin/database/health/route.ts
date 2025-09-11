@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/auth'
 import { getDatabaseHealth, DatabaseConnectionManager } from '@/lib/db'
 
 /**
@@ -10,7 +9,7 @@ import { getDatabaseHealth, DatabaseConnectionManager } from '@/lib/db'
 export async function GET(_request: NextRequest) {
   try {
     // Check authentication and admin role
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

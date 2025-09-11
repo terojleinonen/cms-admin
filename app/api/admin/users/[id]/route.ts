@@ -4,14 +4,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 
 // Check if user has admin permissions
 async function requireAdminAccess() {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   
   if (!session?.user) {
     return NextResponse.json(
@@ -113,7 +112,7 @@ export async function DELETE(
     const authError = await requireAdminAccess()
     if (authError) return authError
 
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     const userId = params.id
 
     // Prevent admin from deleting themselves

@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { 
   detectSuspiciousActivity, 
   lockUserAccount,
@@ -31,7 +30,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -55,7 +54,7 @@ export async function GET(
     ] = await Promise.all([
       detectSuspiciousActivity(userId),
       getSessionStatistics(userId),
-      getPasswordResetStatistics('week'),
+      getPasswordResetStatistics(),
       prisma.auditLog.findMany({
         where: {
           userId,
@@ -137,7 +136,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }

@@ -8,7 +8,7 @@ import { auth } from "@/auth"
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
-import { DataRetentionService } from '@/lib/data-retention'
+import { AuditRetentionManager } from '@/lib/audit-retention'
 
 const retentionPolicySchema = z.object({
   auditLogRetentionDays: z.number().min(1).max(3650),
@@ -48,11 +48,51 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const policy = retentionPolicySchema.parse(body)
 
-    // Create data retention service with the provided policy
-    const retentionService = new DataRetentionService(prisma, policy)
+    // Create data retention manager with a custom policy
+    const retentionManager = new AuditRetentionManager(prisma, './data/archives', {
+      custom: {
+        name: 'Custom Policy',
+        description: 'A custom policy from the API',
+        retentionDays: policy.auditLogRetentionDays,
+        archiveAfterDays: 365, // This is not in the original policy, so I'm using a default value.
+        compressionEnabled: true,
+        archiveLocation: 'local',
+      }
+    });
 
-    // Get cleanup preview (dry run)
-    const preview = await retentionService.getCleanupPreview(policy)
+    const policyDetails = retentionManager.policies.custom;
+    const cutoffDate = new Date(Date.now() - (policyDetails.retentionDays * 24 * 60 * 60 * 1000));
+
+    const logsToDelete = await prisma.auditLog.findMany({
+      where: {
+        createdAt: {
+          lt: cutoffDate,
+        },
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        action: true,
+        resource: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    const preview = {
+      auditLogs: {
+        count: logsToDelete.length,
+        items: logsToDelete,
+      }
+    };
 
     return NextResponse.json({
       success: true,

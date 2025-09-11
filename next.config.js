@@ -12,7 +12,6 @@ const nextConfig = {
       },
     },
   },
-  
   experimental: {
     optimizeCss: true,
     optimizePackageImports: [
@@ -39,64 +38,6 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   
-  webpack: (config, { isServer, dev }) => {
-    // Bundle analyzer (only when ANALYZE=true)
-    if (process.env.ANALYZE === 'true' && !isServer) {
-      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'static',
-          openAnalyzer: false,
-          reportFilename: '../bundle-analyzer-report.html',
-        })
-      );
-    }
-
-    // Fix for module resolution issues
-    config.resolve.alias['@'] = path.resolve(__dirname, './app');
-
-    // Performance optimizations for production builds
-    if (!dev) {
-      // Tree shaking optimization
-      config.optimization.usedExports = true;
-      config.optimization.sideEffects = false;
-
-      // Minimize bundle size with lighter alternatives
-      config.resolve.alias['react-dom$'] = 'react-dom/profiling';
-      config.resolve.alias['scheduler/tracing'] = 'scheduler/tracing-profiling';
-    }
-
-    // Optimize chunks for client-side
-    if (!isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-            priority: 10,
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            priority: 5,
-            reuseExistingChunk: true,
-          },
-          ui: {
-            test: /[\\/]components[\\/]ui[\\/]/,
-            name: 'ui',
-            chunks: 'all',
-            priority: 8,
-          },
-        },
-      };
-    }
-
-    return config;
-  },
-
   async headers() {
     return [
       {

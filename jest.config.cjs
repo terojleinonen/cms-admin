@@ -6,7 +6,7 @@ module.exports = {
       testMatch: ['<rootDir>/__tests__/**/*.test.ts'],
       setupFilesAfterEnv: ['<rootDir>/__tests__/helpers/test-helpers.ts'],
       transform: {
-        '^.+\\.tsx?$': 'ts-jest',
+        '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }],
       },
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/app/$1',
@@ -15,9 +15,6 @@ module.exports = {
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
       },
-      transformIgnorePatterns: [
-        "/node_modules/(?!next-auth|@auth/prisma-adapter)/"
-      ]
     },
     {
       displayName: 'components',
@@ -25,7 +22,7 @@ module.exports = {
       testMatch: ['<rootDir>/__tests__/components/**/*.test.tsx'],
       setupFilesAfterEnv: ['<rootDir>/__tests__/helpers/test-helpers.ts'],
       transform: {
-        '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+        '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }],
       },
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/app/$1',
@@ -33,9 +30,6 @@ module.exports = {
         '^@/components/(.*)$': '<rootDir>/app/components/$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
       },
-      transformIgnorePatterns: [
-        "/node_modules/(?!next-auth|@auth/prisma-adapter)/"
-      ]
     }
   ],
   collectCoverageFrom: [

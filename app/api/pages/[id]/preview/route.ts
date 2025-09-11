@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { hasPermission } from '@/lib/has-permission'
@@ -22,7 +21,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!hasPermission(session, 'preview')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
@@ -88,7 +87,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!hasPermission(session, 'preview')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }

@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { hashPassword } from '@/lib/password-utils'
 import { UserRole } from '@prisma/client'
@@ -25,7 +24,7 @@ const updateUserSchema = z.object({
 
 // Check if user has admin permissions or is updating their own profile
 async function requireUserAccess(userId: string, requireAdmin = false) {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   
   if (!session?.user) {
     return NextResponse.json(
@@ -130,7 +129,7 @@ export async function PUT(
 ) {
   try {
     const resolvedParams = await params
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     const isOwnProfile = session?.user?.id === resolvedParams.id
     const isAdmin = session?.user?.role === UserRole.ADMIN
 
@@ -266,7 +265,7 @@ export async function DELETE(
     const authError = await requireUserAccess(resolvedParams.id, true) // Require admin
     if (authError) return authError
 
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     // Prevent self-deletion
     if (session?.user?.id === resolvedParams.id) {

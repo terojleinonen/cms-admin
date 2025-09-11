@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { auth } from '@/auth';
 import { WorkflowService, WorkflowAction, WorkflowStatus } from '@/lib/workflow';
 import { z } from 'zod';
 
@@ -30,7 +29,7 @@ const workflowQuerySchema = z.object({
 // POST /api/workflow - Execute workflow action
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -90,7 +89,7 @@ export async function POST(request: NextRequest) {
 // GET /api/workflow - Get workflow data
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -165,7 +164,7 @@ export async function GET(request: NextRequest) {
 // PUT /api/workflow - Bulk workflow actions
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

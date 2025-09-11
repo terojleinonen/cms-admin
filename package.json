@@ -2,6 +2,7 @@
   "name": "kin-workspace-cms",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
@@ -28,7 +29,7 @@
     "db:test-health": "npx tsx scripts/test-database-health.ts",
     "perf:analyze": "ANALYZE=true npm run build",
     "install:ci": "npm ci --legacy-peer-deps",
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:unit": "jest --selectProjects unit",
     "test:components": "jest --selectProjects components",
     "test:e2e": "jest --selectProjects e2e",

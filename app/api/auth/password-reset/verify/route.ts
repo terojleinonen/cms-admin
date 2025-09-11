@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const result = await verifyPasswordResetToken(token)
 
     return NextResponse.json({
-      isValid: result.isValid,
+      isValid: result.success,
       message: result.message
     })
   } catch (error) {
@@ -71,9 +71,7 @@ export async function POST(request: NextRequest) {
 
     await completePasswordReset(
       token,
-      newPassword,
-      ipAddress || '',
-      userAgent || ''
+      newPassword
     )
 
     return NextResponse.json({

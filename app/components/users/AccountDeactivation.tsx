@@ -236,6 +236,7 @@ export function AccountDeactivation({
         <form onSubmit={(e) => { e.preventDefault(); handleDeactivate(); }} className="space-y-6">
           {/* Deactivation Reason */}
           <FormField
+            name="reason"
             label="Reason for Deactivation"
             required
             error={errors.reason}
@@ -252,6 +253,7 @@ export function AccountDeactivation({
           {/* Password Confirmation for Own Account */}
           {isOwnAccount && (
             <FormField
+              name="confirmPassword"
               label="Confirm Your Password"
               required
               error={errors.confirmPassword}

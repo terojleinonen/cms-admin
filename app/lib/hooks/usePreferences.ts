@@ -52,7 +52,7 @@ export function usePreferences() {
     isUpdating: false,
   })
 
-  const syncTimeoutRef = useRef<NodeJS.Timeout>()
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastSyncRef = useRef<number>(0)
 
   /**

@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { 
   disableTwoFactorAuth, 
@@ -28,7 +27,7 @@ export async function POST(
   { params }: DisableParams
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user) {
       return NextResponse.json(
@@ -135,7 +134,7 @@ export async function POST(
     }
     
     // Disable 2FA
-    await disableTwoFactorAuth(userId, token)
+    await disableTwoFactorAuth(userId)
     
     // Log successful 2FA disable
     await auditLog({

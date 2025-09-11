@@ -4,10 +4,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
-import { getSecurityAlertingSystem, SecurityAlert } from '@/lib/security-alerting'
+import { SecurityService, SecurityEvent as SecurityAlert, SecurityEventType } from '@/lib/security'
 import { z } from 'zod'
 
 const alertResolutionSchema = z.object({
@@ -22,7 +21,7 @@ const alertResolutionSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user) {
       return NextResponse.json(
@@ -44,8 +43,8 @@ export async function GET(request: NextRequest) {
     const severity = searchParams.get('severity')
     const type = searchParams.get('type')
 
-    const securitySystem = getSecurityAlertingSystem()
-    const alerts = await securitySystem.getActiveAlerts({ status, severity, type })
+    const securitySystem = SecurityService.getInstance()
+    const alerts = await securitySystem.getSecurityEvents(50, severity || undefined, type as SecurityEventType || undefined)
 
     // Get security statistics
     const stats = await securitySystem.getSecurityStats()
@@ -72,7 +71,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user) {
       return NextResponse.json(
@@ -92,8 +91,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { alertId, resolution, notes } = alertResolutionSchema.parse(body)
 
-    const securitySystem = getSecurityAlertingSystem()
-    await securitySystem.resolveAlert(alertId)
+    const securitySystem = SecurityService.getInstance()
+    await securitySystem.resolveSecurityEvent(alertId, session.user.id as string)
 
     // Log the resolution action
     const auditService = await import('@/lib/audit-service')

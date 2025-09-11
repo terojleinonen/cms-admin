@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { hasPermission } from '@/lib/has-permission'
@@ -30,7 +29,7 @@ export async function GET(
 ) {
   try {
     const { id } = params
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!hasPermission(session, 'read')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
@@ -70,7 +69,7 @@ export async function PUT(
 ) {
   try {
     const { id } = params
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!hasPermission(session, 'update')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
@@ -154,7 +153,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = params
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!hasPermission(session, 'delete')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }

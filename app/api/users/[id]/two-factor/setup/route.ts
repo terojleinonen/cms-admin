@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { 
   generateTwoFactorSetup, 
@@ -27,7 +26,7 @@ export async function GET(
   { params }: SetupParams
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user) {
       return NextResponse.json(
@@ -74,7 +73,7 @@ export async function GET(
     }
     
     // Generate 2FA setup data
-    const setupData = await generateTwoFactorSetup(user.id)
+    const setupData = await generateTwoFactorSetup(user.id, user.email)
     
     // Log the setup initiation
     await auditLog({
@@ -89,7 +88,7 @@ export async function GET(
     })
     
     return NextResponse.json({
-      qrCodeUrl: setupData.qrCodeUrl,
+      qrCodeUrl: setupData.qrCodeDataUrl,
       backupCodes: setupData.backupCodes,
       secret: setupData.secret, // Temporary - will be stored after verification
       isRequired: await isTwoFactorRequired(user.role)
@@ -113,7 +112,7 @@ export async function POST(
   { params }: SetupParams
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user) {
       return NextResponse.json(
@@ -170,7 +169,7 @@ export async function POST(
     }
     
     // Enable 2FA
-    await enableTwoFactorAuth(userId, secret, token)
+    await enableTwoFactorAuth(userId, token)
     
     // Log successful 2FA setup
     await auditLog({

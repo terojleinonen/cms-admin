@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { auth } from '@/auth';
 import { WorkflowService } from '@/lib/workflow';
 import { prisma, Prisma } from '@/lib/db';
 import { z } from 'zod';
@@ -34,7 +33,7 @@ const createRevisionSchema = z.object({
 // GET /api/workflow/revisions - Get content revisions
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -112,7 +111,7 @@ export async function GET(request: NextRequest) {
 // POST /api/workflow/revisions - Create manual revision
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -207,7 +206,7 @@ export async function POST(request: NextRequest) {
 // DELETE /api/workflow/revisions - Delete revision
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

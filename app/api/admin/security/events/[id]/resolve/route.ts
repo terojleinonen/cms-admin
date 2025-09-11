@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { SecurityService } from '@/lib/security'
 import { prisma } from '@/lib/db'
 
@@ -15,7 +14,7 @@ export async function POST(
 ) {
   try {
     // Check authentication and admin role
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized' },

@@ -219,7 +219,7 @@ export class AnalyticsService {
         status: product.status,
         views: Math.floor(Math.random() * 1000), // Placeholder for actual view tracking
         lastModified: product.updatedAt,
-        creator: product.creator.name
+        creator: product.creator?.name || ''
       });
     });
 
@@ -232,7 +232,7 @@ export class AnalyticsService {
         status: page.status,
         views: Math.floor(Math.random() * 500), // Placeholder for actual view tracking
         lastModified: page.updatedAt,
-        creator: page.creator.name
+        creator: page.creator?.name || ''
       });
     });
 
@@ -319,7 +319,7 @@ export class AnalyticsService {
         action,
         contentType: revision.contentType,
         contentTitle,
-        userName: revision.creator.name,
+        userName: revision.creator?.name || '',
         timestamp: revision.createdAt
       });
     }

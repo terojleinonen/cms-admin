@@ -86,7 +86,7 @@ export const DEFAULT_RETENTION_POLICIES: Record<string, RetentionPolicy> = {
 export class AuditRetentionManager {
   private prisma: PrismaClient
   private archiveBasePath: string
-  private policies: Record<string, RetentionPolicy>
+  public policies: Record<string, RetentionPolicy>
 
   constructor(
     prisma: PrismaClient,

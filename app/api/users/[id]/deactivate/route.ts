@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { UserRole, Prisma } from '@prisma/client'
 import { z } from 'zod'
@@ -25,7 +24,7 @@ const reactivationSchema = z.object({
 
 // Check access permissions
 async function requireUserAccess(userId: string, requireAdmin = false) {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   
   if (!session?.user) {
     return NextResponse.json(
@@ -61,7 +60,7 @@ export async function POST(
 ) {
   try {
     const resolvedParams = await params
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     const isOwnProfile = session?.user?.id === resolvedParams.id
     const isAdmin = session?.user?.role === UserRole.ADMIN
 
@@ -206,7 +205,7 @@ export async function PUT(
     const authError = await requireUserAccess(resolvedParams.id, true) // Require admin
     if (authError) return authError
 
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     const body = await request.json()
     const data = reactivationSchema.parse(body)
 

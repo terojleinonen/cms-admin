@@ -8,7 +8,7 @@ import { auth } from "@/auth"
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
-import { DataRetentionService } from '@/lib/data-retention'
+import { AuditRetentionManager } from '@/lib/audit-retention'
 import { getAuditService } from '@/lib/audit-service'
 
 const retentionPolicySchema = z.object({
@@ -50,11 +50,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const policy = retentionPolicySchema.parse(body)
 
-    // Create data retention service with the provided policy
-    const retentionService = new DataRetentionService(prisma, policy)
+    // Create data retention manager with a custom policy
+    const retentionManager = new AuditRetentionManager(prisma, './data/archives', {
+      custom: {
+        name: 'Custom Policy',
+        description: 'A custom policy from the API',
+        retentionDays: policy.auditLogRetentionDays,
+        archiveAfterDays: 365, // This is not in the original policy, so I'm using a default value.
+        compressionEnabled: true,
+        archiveLocation: 'local',
+      }
+    });
 
     // Perform the actual cleanup
-    const result = await retentionService.performCleanup(policy, false)
+    const result = await retentionManager.cleanupLogs('custom');
 
     // Log the cleanup operation
     const auditService = getAuditService(prisma)

@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { 
@@ -18,7 +17,7 @@ import { getAuditService } from '@/lib/audit-service'
 
 // Check if user has access to avatar operations
 async function requireAvatarAccess(userId: string) {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   
   if (!session?.user) {
     return NextResponse.json(
@@ -57,7 +56,7 @@ export async function POST(
     const authError = await requireAvatarAccess(resolvedParams.id)
     if (authError) return authError
 
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -175,7 +174,7 @@ export async function DELETE(
     const authError = await requireAvatarAccess(resolvedParams.id)
     if (authError) return authError
 
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     // Check if user exists
     const user = await prisma.user.findUnique({

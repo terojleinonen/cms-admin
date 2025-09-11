@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { searchService } from '@/lib/search'
 import { z } from 'zod'
@@ -32,7 +31,7 @@ const searchSchema = z.object({
 // GET /api/search - Perform search
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -87,7 +86,7 @@ export async function GET(request: NextRequest) {
 // POST /api/search/index - Rebuild search index
 export async function POST(_request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -127,7 +126,7 @@ export async function POST(_request: NextRequest) {
         price: product.price,
         sku: product.sku,
         featured: product.featured,
-        creator: product.creator.name
+        creator: product.creator?.name
       }
     }))
 
@@ -159,7 +158,7 @@ export async function POST(_request: NextRequest) {
         seoTitle: page.seoTitle,
         seoDescription: page.seoDescription,
         publishedAt: page.publishedAt?.toISOString(),
-        creator: page.creator.name
+        creator: page.creator?.name
       }
     }))
 
@@ -193,7 +192,7 @@ export async function POST(_request: NextRequest) {
         width: mediaItem.width,
         height: mediaItem.height,
         folder: mediaItem.folder,
-        creator: mediaItem.creator.name
+        creator: mediaItem.creator?.name
       }
     }))
 

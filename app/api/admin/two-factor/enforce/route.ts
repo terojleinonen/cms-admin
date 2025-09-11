@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { isTwoFactorRequired } from '@/lib/two-factor-auth'
 import { auditLog } from '@/lib/audit-service'
@@ -16,7 +15,7 @@ import { auditLog } from '@/lib/audit-service'
  */
 export async function GET(_request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json(
@@ -115,7 +114,7 @@ export async function GET(_request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json(

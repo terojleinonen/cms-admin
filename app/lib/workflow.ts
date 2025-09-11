@@ -98,21 +98,21 @@ export class WorkflowService {
           title: product.name,
           status: product.status as WorkflowStatus,
           contentType: 'product' as ContentType,
-          createdBy: product.createdBy,
+          createdBy: product.createdBy || '',
           createdAt: product.createdAt,
           updatedAt: product.updatedAt,
-          creator: product.creator
+          creator: product.creator || { name: '', email: '' }
         })),
         ...pages.map(page => ({
           id: page.id,
           title: page.title,
           status: page.status as WorkflowStatus,
           contentType: 'page' as ContentType,
-          createdBy: page.createdBy,
+          createdBy: page.createdBy || '',
           createdAt: page.createdAt,
           updatedAt: page.updatedAt,
           publishedAt: page.publishedAt || undefined,
-          creator: page.creator
+          creator: page.creator || { name: '', email: '' }
         }))
       ]
 
@@ -392,21 +392,21 @@ export class WorkflowService {
           title: product.name,
           status: product.status as WorkflowStatus,
           contentType: 'product' as ContentType,
-          createdBy: product.createdBy,
+          createdBy: product.createdBy || '',
           createdAt: product.createdAt,
           updatedAt: product.updatedAt,
-          creator: product.creator
+          creator: product.creator || { name: '', email: '' }
         })),
         ...pages.map(page => ({
           id: page.id,
           title: page.title,
           status: page.status as WorkflowStatus,
           contentType: 'page' as ContentType,
-          createdBy: page.createdBy,
+          createdBy: page.createdBy || '',
           createdAt: page.createdAt,
           updatedAt: page.updatedAt,
           publishedAt: page.publishedAt || undefined,
-          creator: page.creator
+          creator: page.creator || { name: '', email: '' }
         }))
       ]
 

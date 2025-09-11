@@ -3,8 +3,7 @@
  * Provides helper functions for user authentication and authorization
  */
 
-import { getServerSession } from 'next-auth'
-import { authOptions } from './auth-config'
+import { auth } from '@/auth'
 import { UserRole } from '@prisma/client'
 import { hashPassword as hashPasswordUtil, verifyPassword as verifyPasswordUtil, validatePassword as validatePasswordUtil } from './password-utils'
 import { prisma } from './db'
@@ -15,7 +14,7 @@ import { prisma } from './db'
  */
 export async function getCurrentUser() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     return session?.user || null
   } catch (error) {
     console.error('Error getting current user:', error)

@@ -23,6 +23,8 @@
 
 import { Fragment, useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { Menu, Transition, Combobox } from '@headlessui/react'
 import {
@@ -131,6 +133,7 @@ function GlobalSearch() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     if (query.length > 2) {
@@ -176,6 +179,11 @@ function GlobalSearch() {
                     active ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
                   )
                 }
+                onClick={() => {
+                  setQuery('')
+                  setIsOpen(false)
+                  router.push(result.url)
+                }}
               >
                 <div className="flex items-center">
                   <div className="flex-1">
@@ -198,6 +206,7 @@ function GlobalSearch() {
  * Notifications dropdown component
  */
 function NotificationsDropdown() {
+  const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: '1',
@@ -261,14 +270,21 @@ function NotificationsDropdown() {
             <div className="max-h-64 overflow-y-auto">
               {notifications.map((notification) => (
                 <Menu.Item key={notification.id}>
-                  {({ active }) => (
-                    <div
+                  {({ active, close }) => (
+                    <button
+                      type="button"
                       className={clsx(
-                        'px-4 py-3 cursor-pointer',
+                        'w-full px-4 py-3 text-left',
                         active ? 'bg-gray-50' : '',
                         !notification.read ? 'bg-blue-50' : ''
                       )}
-                      onClick={() => markAsRead(notification.id)}
+                      onClick={() => {
+                        close()
+                        markAsRead(notification.id)
+                        if (notification.actionUrl) {
+                          router.push(notification.actionUrl)
+                        }
+                      }}
                     >
                       <div className="flex items-start">
                         <div className="flex-1">
@@ -286,7 +302,7 @@ function NotificationsDropdown() {
                           <div className="h-2 w-2 rounded-full bg-blue-500 mt-1" />
                         )}
                       </div>
-                    </div>
+                    </button>
                   )}
                 </Menu.Item>
               ))}
@@ -303,6 +319,7 @@ function NotificationsDropdown() {
  */
 export default function Header({ onMenuClick, user }: HeaderProps) {
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const router = useRouter()
 
   const handleSignOut = async () => {
     try {
@@ -310,6 +327,10 @@ export default function Header({ onMenuClick, user }: HeaderProps) {
     } catch (error) {
       console.error('Sign out error:', error)
     }
+  }
+
+  const handleNavigation = (href: string) => {
+    router.push(href)
   }
 
   const toggleTheme = () => {
@@ -360,7 +381,7 @@ export default function Header({ onMenuClick, user }: HeaderProps) {
               <button
                 key={action.id}
                 type="button"
-                onClick={() => window.location.href = action.href}
+                onClick={() => handleNavigation(action.href)}
                 className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 title={`${action.label} (${action.shortcut})`}
               >
@@ -492,27 +513,32 @@ export default function Header({ onMenuClick, user }: HeaderProps) {
                 {/* Navigation items */}
                 {userNavigation.map((item) => (
                   <Menu.Item key={item.name}>
-                    {({ active }) => (
-                      <a
-                        href={item.href}
+                    {({ active, close }) => (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          close()
+                          handleNavigation(item.href)
+                        }}
                         className={clsx(
                           active ? 'bg-warm-beige' : '',
-                          'flex items-center px-4 py-2 text-sm text-slate-gray font-inter hover:bg-warm-beige hover:text-matte-black transition-colors duration-200'
+                          'flex w-full items-center px-4 py-2 text-sm text-slate-gray font-inter hover:bg-warm-beige hover:text-matte-black transition-colors duration-200 text-left'
                         )}
                       >
                         <item.icon className="mr-3 h-4 w-4 text-slate-gray" />
                         {item.name}
-                      </a>
+                      </button>
                     )}
                   </Menu.Item>
                 ))}
 
                 {/* Keyboard shortcuts */}
                 <Menu.Item>
-                  {({ active }) => (
+                  {({ active, close }) => (
                     <button
                       type="button"
                       onClick={() => {
+                        close()
                         const event = new CustomEvent('show-shortcuts')
                         document.dispatchEvent(event)
                       }}
@@ -531,10 +557,13 @@ export default function Header({ onMenuClick, user }: HeaderProps) {
                 {/* Sign out */}
                 <div className="border-t border-warm-beige mt-2 pt-2">
                   <Menu.Item>
-                    {({ active }) => (
+                    {({ active, close }) => (
                       <button
                         type="button"
-                        onClick={handleSignOut}
+                        onClick={() => {
+                          close()
+                          handleSignOut()
+                        }}
                         className={clsx(
                           active ? 'bg-warm-beige' : '',
                           'flex w-full items-center px-4 py-2 text-sm text-slate-gray font-inter hover:bg-warm-beige hover:text-matte-black transition-colors duration-200'

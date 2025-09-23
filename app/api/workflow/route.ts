@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { WorkflowService, WorkflowAction, WorkflowStatus } from '@/lib/workflow';
 import { z } from 'zod';
 
@@ -27,20 +27,18 @@ const workflowQuerySchema = z.object({
 });
 
 // POST /api/workflow - Execute workflow action
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const body = await request.json();
     const validatedData = workflowActionSchema.parse(body);
 
     // Check user permissions for workflow actions
-    if (!session.user.role || !['ADMIN', 'EDITOR'].includes(session.user.role)) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions for workflow actions' },
+    ,
         { status: 403 }
       );
     }
@@ -84,14 +82,19 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'workflow', action: 'create', scope: 'all' }]
 }
+)
 
 // GET /api/workflow - Get workflow data
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -104,14 +107,14 @@ export async function GET(request: NextRequest) {
         const pendingContent = await WorkflowService.getContentPendingReview(
           validatedQuery.userId || undefined
         );
-        return NextResponse.json({ 
+        return createApiSuccessResponse( 
           content: pendingContent,
           total: pendingContent.length
-        });
+        );
 
       case 'stats':
         const stats = await WorkflowService.getWorkflowStats();
-        return NextResponse.json({ stats });
+        return createApiSuccessResponse( stats );
 
       case 'by-status':
         if (!validatedQuery.status) {
@@ -124,19 +127,19 @@ export async function GET(request: NextRequest) {
           validatedQuery.status as WorkflowStatus,
           validatedQuery.userId || undefined
         );
-        return NextResponse.json({ 
+        return createApiSuccessResponse( 
           content: contentByStatus,
           status: validatedQuery.status,
           total: contentByStatus.length
-        });
+        );
 
       case 'all':
         // Get all content with optional filtering
         const allContent = await WorkflowService.getContentPendingReview();
-        return NextResponse.json({ 
+        return createApiSuccessResponse( 
           content: allContent,
           total: allContent.length
-        });
+        );
 
       default:
         return NextResponse.json(
@@ -159,20 +162,23 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'workflow', action: 'read', scope: 'all' }]
 }
+)
 
 // PUT /api/workflow - Bulk workflow actions
-export async function PUT(request: NextRequest) {
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     // Check user permissions for bulk workflow actions
-    if (!session.user.role || !['ADMIN', 'EDITOR'].includes(session.user.role)) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions for bulk workflow actions' },
+    ,
         { status: 403 }
       );
     }
@@ -228,4 +234,9 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'workflow', action: 'update', scope: 'all' }]
 }
+)

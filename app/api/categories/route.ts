@@ -4,9 +4,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 
 // Validation schemas
 const createCategorySchema = z.object({
@@ -22,12 +22,9 @@ const createCategorySchema = z.object({
  * GET /api/categories
  * Retrieve categories with hierarchical structure
  */
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    try {
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
@@ -76,29 +73,35 @@ export async function GET(request: NextRequest) {
 
     const total = await prisma.category.count({ where })
 
-    return NextResponse.json({
+    return createApiSuccessResponse({
       categories,
       total,
     })
   } catch (error) {
     console.error('Error fetching categories:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch categories' },
+      { 
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Failed to fetch categories',
+          timestamp: new Date().toISOString()
+        },
+        success: false
+      },
       { status: 500 }
     )
   }
-}
+}, {
+  permissions: [{ resource: 'categories', action: 'read', scope: 'all' }]
+})
 
 /**
  * POST /api/categories
  * Create a new category
  */
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    try {
 
     const body = await request.json()
     const validatedData = createCategorySchema.parse(body)
@@ -110,7 +113,14 @@ export async function POST(request: NextRequest) {
 
     if (existingCategory) {
       return NextResponse.json(
-        { error: 'Category with this slug already exists' },
+        { 
+          error: {
+            code: 'DUPLICATE_ENTRY',
+            message: 'Category with this slug already exists',
+            timestamp: new Date().toISOString()
+          },
+          success: false
+        },
         { status: 400 }
       )
     }
@@ -123,7 +133,14 @@ export async function POST(request: NextRequest) {
 
       if (!parentCategory) {
         return NextResponse.json(
-          { error: 'Parent category not found' },
+          { 
+            error: {
+              code: 'NOT_FOUND',
+              message: 'Parent category not found',
+              timestamp: new Date().toISOString()
+            },
+            success: false
+          },
           { status: 400 }
         )
       }
@@ -156,19 +173,37 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ category }, { status: 201 })
+    return createApiSuccessResponse({ category }, 201)
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.issues },
+        { 
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Validation failed',
+            details: error.issues,
+            timestamp: new Date().toISOString()
+          },
+          success: false
+        },
         { status: 400 }
       )
     }
 
     console.error('Error creating category:', error)
     return NextResponse.json(
-      { error: 'Failed to create category' },
+      { 
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Failed to create category',
+          timestamp: new Date().toISOString()
+        },
+        success: false
+      },
       { status: 500 }
     )
   }
-}
+}, {
+  permissions: [{ resource: 'categories', action: 'create', scope: 'all' }],
+  allowedMethods: ['POST']
+})

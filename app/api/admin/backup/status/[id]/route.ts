@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from "@/auth"
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { BackupService } from '@/lib/backup';
 
 // Initialize backup service
@@ -21,14 +21,11 @@ const backupConfig = {
 const backupService = new BackupService(backupConfig.backupDir);
 
 // GET /api/admin/backup/status/[id] - Get backup status
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const backupId = params.id;
@@ -41,7 +38,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ status });
+    return createApiSuccessResponse( status );
 
   } catch (error) {
     console.error('Error getting backup status:', error);
@@ -50,4 +47,9 @@ export async function GET(
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

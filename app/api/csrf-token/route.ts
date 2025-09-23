@@ -1,34 +1,46 @@
 /**
  * CSRF Token API
- * Provides CSRF tokens for client-side requests
+ * Provides secure CSRF tokens for client-side requests
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { SecurityService } from '@/lib/security';
+import { NextRequest, NextResponse } from 'next/server'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
+import { createCSRFTokenResponse } from '@/lib/csrf-protection'
+import { withAPISecurity } from '@/lib/api-security'
 
 // GET /api/csrf-token - Get CSRF token
-export async function GET(_request: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export const GET = withAPISecurity(
+  withApiPermissions(
+    async (request: NextRequest, { user }) => {
+      try {
+        // Generate session ID (use user ID if authenticated, otherwise generate anonymous ID)
+        const sessionId = user?.id || `anonymous-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        
+        // Create CSRF token response with secure cookie
+        return createCSRFTokenResponse(sessionId, request)
+        
+      } catch (error) {
+        console.error('Error generating CSRF token:', error)
+        return NextResponse.json(
+          { 
+            error: {
+              code: 'CSRF_TOKEN_GENERATION_FAILED',
+              message: 'Failed to generate CSRF token',
+              timestamp: new Date().toISOString(),
+            },
+            success: false
+          },
+          { status: 500 }
+        )
+      }
+    },
+    {
+      permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
     }
-
-    const securityService = SecurityService.getInstance();
-    const sessionId = session.user.id; // Use user ID as session identifier
-    const csrfToken = securityService.generateCSRFToken(sessionId);
-
-    return NextResponse.json({ 
-      csrfToken,
-      sessionId 
-    });
-
-  } catch (error) {
-    console.error('Error generating CSRF token:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate CSRF token' },
-      { status: 500 }
-    );
+  ),
+  {
+    allowedMethods: ['GET'],
+    skipRateLimit: false,
+    rateLimitConfig: 'public'
   }
-}
+)

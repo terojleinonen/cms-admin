@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { getDatabaseHealth, DatabaseConnectionManager } from '@/lib/db'
 
 /**
  * Health check endpoint for monitoring system status
  * GET /api/health
  */
-export async function GET() {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const startTime = Date.now()
     
@@ -70,4 +73,9 @@ export async function GET() {
       ]
     }, { status: 503 })
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

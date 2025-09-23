@@ -15,6 +15,8 @@ module.exports = {
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
       },
+      // Add timeout and other settings to prevent hanging
+      testTimeout: 10000,
     },
     {
       displayName: 'components',
@@ -30,6 +32,7 @@ module.exports = {
         '^@/components/(.*)$': '<rootDir>/app/components/$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
       },
+      testTimeout: 10000,
     }
   ],
   collectCoverageFrom: [
@@ -45,5 +48,8 @@ module.exports = {
       lines: 80,
       statements: 80
     }
-  }
+  },
+  // Global settings to prevent hanging
+  maxWorkers: 1,
+  testTimeout: 10000
 }

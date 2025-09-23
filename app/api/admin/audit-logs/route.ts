@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from "@/auth"
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { getAuditService } from '@/lib/audit-service'
 import { z } from 'zod'
@@ -35,21 +35,17 @@ const exportFiltersSchema = z.object({
  * GET /api/admin/audit-logs
  * Get audit logs with filtering and pagination
  */
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth()
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
+  try {
+    ,
         { status: 401 }
       )
     }
 
     // Check if user has admin permissions
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
+    ,
         { status: 403 }
       )
     }
@@ -113,27 +109,28 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 /*
 *
  * POST /api/admin/audit-logs/export
  * Export audit logs in JSON or CSV format
  */
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth()
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
+  try {
+    ,
         { status: 401 }
       )
     }
 
     // Check if user has admin permissions
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
+    ,
         { status: 403 }
       )
     }
@@ -195,4 +192,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

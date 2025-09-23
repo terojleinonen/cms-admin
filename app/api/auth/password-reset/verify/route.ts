@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { verifyPasswordResetToken, completePasswordReset } from '@/lib/password-reset'
 import { z } from 'zod'
 
@@ -17,7 +18,9 @@ const passwordResetCompletionSchema = z.object({
  * GET /api/auth/password-reset/verify?token=xxx
  * Verify password reset token validity
  */
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
@@ -31,10 +34,10 @@ export async function GET(request: NextRequest) {
 
     const result = await verifyPasswordResetToken(token)
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       isValid: result.success,
       message: result.message
-    })
+    )
   } catch (error) {
     console.error('Password reset token verification error:', error)
     return NextResponse.json(
@@ -42,13 +45,20 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * POST /api/auth/password-reset/verify
  * Complete password reset with new password
  */
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const body = await request.json()
     const validation = passwordResetCompletionSchema.safeParse(body)
@@ -74,10 +84,10 @@ export async function POST(request: NextRequest) {
       newPassword
     )
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       message: 'Password has been reset successfully.'
-    })
+    )
   } catch (error) {
     console.error('Password reset completion error:', error)
     return NextResponse.json(
@@ -85,4 +95,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

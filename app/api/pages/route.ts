@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { hasPermission } from '@/lib/has-permission'
@@ -34,11 +34,11 @@ const querySchema = z.object({
 })
 
 // GET /api/pages - List pages with filtering and pagination
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!hasPermission(session, 'read')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    , { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -116,14 +116,19 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'pages', action: 'read', scope: 'all' }]
 }
+)
 
 // POST /api/pages - Create new page
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!hasPermission(session, 'create') || !session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    , { status: 403 })
     }
 
     const body = await request.json()
@@ -175,4 +180,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'pages', action: 'create', scope: 'all' }]
 }
+)

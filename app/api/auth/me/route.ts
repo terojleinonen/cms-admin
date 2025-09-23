@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { getCurrentUser, requireAuth } from '@/lib/auth-utils'
 import { prisma } from '@/lib/db'
 import jwt from 'jsonwebtoken'
@@ -57,7 +58,9 @@ async function verifyJWTToken(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     // Try JWT token authentication first
     const jwtUser = await verifyJWTToken(request)
@@ -166,7 +169,12 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * Get permissions based on user role

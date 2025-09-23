@@ -4,17 +4,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { SecurityService, SecurityEventType } from '@/lib/security'
 import { prisma } from '@/lib/db'
 
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     // Check authentication and admin role
-    const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
+    ,
         { status: 401 }
       )
     }
@@ -31,7 +30,7 @@ export async function GET(request: NextRequest) {
     // Get security events
     const events = await securityService.getSecurityEvents(limit, severity, type as SecurityEventType)
 
-    return NextResponse.json({ events })
+    return createApiSuccessResponse( events )
 
   } catch (error) {
     console.error('Security events API error:', error)
@@ -40,4 +39,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

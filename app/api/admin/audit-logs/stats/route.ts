@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from "@/auth"
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { getAuditService } from '@/lib/audit-service'
 import { z } from 'zod'
@@ -17,21 +17,17 @@ const statsFiltersSchema = z.object({
  * GET /api/admin/audit-logs/stats
  * Get audit log statistics and analytics
  */
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth()
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
+  try {
+    ,
         { status: 401 }
       )
     }
 
     // Check if user has admin permissions
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
+    ,
         { status: 403 }
       )
     }
@@ -69,4 +65,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

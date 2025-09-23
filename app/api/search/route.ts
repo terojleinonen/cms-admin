@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { searchService } from '@/lib/search'
 import { z } from 'zod'
@@ -29,11 +29,11 @@ const searchSchema = z.object({
 })
 
 // GET /api/search - Perform search
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -61,11 +61,11 @@ export async function GET(request: NextRequest) {
     // Perform search
     const searchResults = await searchService.search(validatedOptions)
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       ...searchResults,
       query: validatedOptions.query,
       options: validatedOptions
-    })
+    )
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -81,14 +81,19 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 // POST /api/search/index - Rebuild search index
-export async function POST(_request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     // Clear existing index
@@ -203,10 +208,10 @@ export async function POST(_request: NextRequest) {
     // Get index statistics
     const stats = searchService.getStats()
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       message: 'Search index rebuilt successfully',
       stats
-    })
+    )
 
   } catch (error) {
     console.error('Error rebuilding search index:', error)
@@ -215,4 +220,9 @@ export async function POST(_request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

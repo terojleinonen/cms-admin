@@ -4,16 +4,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { PerformanceMonitor } from '@/lib/performance';
 import { CacheService } from '@/lib/cache';
 
 // GET /api/admin/performance/metrics - Get performance metrics
-export async function GET(_request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const performanceMonitor = PerformanceMonitor.getInstance();
@@ -49,7 +49,7 @@ export async function GET(_request: NextRequest) {
       images: imageMetrics
     };
 
-    return NextResponse.json({ metrics });
+    return createApiSuccessResponse( metrics );
 
   } catch (error) {
     console.error('Error fetching performance metrics:', error);
@@ -58,4 +58,9 @@ export async function GET(_request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

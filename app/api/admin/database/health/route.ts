@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { getDatabaseHealth, DatabaseConnectionManager } from '@/lib/db'
 
 /**
  * Database health monitoring endpoint for admin users
  * GET /api/admin/database/health
  */
-export async function GET(_request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     // Check authentication and admin role
-    const session = await auth()
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const connectionManager = DatabaseConnectionManager.getInstance()
@@ -48,7 +48,12 @@ export async function GET(_request: NextRequest) {
       error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * Generate performance recommendations based on metrics

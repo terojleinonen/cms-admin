@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { getSuggestions, getSearchService } from '@/lib/search'
 import { z } from 'zod'
 
@@ -16,11 +16,11 @@ const suggestionsSchema = z.object({
 })
 
 // GET /api/search/suggestions - Get search suggestions
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -49,12 +49,12 @@ export async function GET(request: NextRequest) {
       responseType = 'suggestions'
     }
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       suggestions,
       query: validatedOptions.query,
       type: responseType,
       limit: validatedOptions.limit
-    })
+    )
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -70,4 +70,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

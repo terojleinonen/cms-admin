@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
@@ -20,11 +20,11 @@ const reorderBatchSchema = z.array(reorderSchema)
  * POST /api/categories/reorder
  * Reorder categories with drag-and-drop support
  */
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const body = await request.json()
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
       return updatedCategories
     })
 
-    return NextResponse.json({ categories: result })
+    return createApiSuccessResponse( categories: result )
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -122,4 +122,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'categories', action: 'create', scope: 'all' }]
 }
+)

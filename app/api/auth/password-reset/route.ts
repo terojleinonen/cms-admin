@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { initiatePasswordReset } from '@/lib/password-reset'
 import { z } from 'zod'
 
@@ -15,7 +16,9 @@ const passwordResetRequestSchema = z.object({
  * POST /api/auth/password-reset
  * Initiate password reset process
  */
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const body = await request.json()
     const validation = passwordResetRequestSchema.safeParse(body)
@@ -46,13 +49,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       message: result.message,
       // In development, return the token for testing
       ...(process.env.NODE_ENV === 'development' && result.token && { 
         resetToken: result.token 
-      })
+      )
     })
   } catch (error) {
     console.error('Password reset request error:', error)
@@ -61,4 +64,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

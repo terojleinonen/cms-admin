@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { 
@@ -41,10 +41,9 @@ async function requirePreferencesAccess(userId: string) {
 }
 
 // GET /api/users/[id]/preferences - Get user preferences
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
     const authError = await requirePreferencesAccess(resolvedParams.id)
@@ -91,7 +90,7 @@ export async function GET(
       })
     }
 
-    return NextResponse.json({ preferences })
+    return createApiSuccessResponse( preferences )
   } catch (error) {
     console.error('Error fetching user preferences:', error)
     return NextResponse.json(
@@ -99,19 +98,22 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'profile', action: 'update', scope: 'own' }]
 }
+)
 
 // PUT /api/users/[id]/preferences - Update user preferences
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
     const authError = await requirePreferencesAccess(resolvedParams.id)
     if (authError) return authError
 
-    const session = await auth()
     const body = await request.json()
     
     // Validate the request data
@@ -199,7 +201,7 @@ export async function PUT(
       request.headers.get('user-agent') || undefined
     )
 
-    return NextResponse.json({ preferences })
+    return createApiSuccessResponse( preferences )
   } catch (error) {
     console.error('Error updating user preferences:', error)
     
@@ -222,4 +224,9 @@ export async function PUT(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'profile', action: 'update', scope: 'own' }]
 }
+)

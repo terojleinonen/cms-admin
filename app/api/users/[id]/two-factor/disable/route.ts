@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { 
   disableTwoFactorAuth, 
@@ -22,16 +22,11 @@ interface DisableParams {
  * POST /api/users/[id]/two-factor/disable
  * Disable 2FA for a user (requires password and current 2FA token)
  */
-export async function POST(
-  request: NextRequest,
-  { params }: DisableParams
-) {
-  try {
-    const session = await auth()
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
+  try {
+    ,
         { status: 401 }
       )
     }
@@ -149,10 +144,10 @@ export async function POST(
       request
     })
     
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       message: '2FA has been successfully disabled'
-    })
+    )
     
   } catch (error) {
     console.error('2FA disable error:', error)
@@ -161,4 +156,9 @@ export async function POST(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

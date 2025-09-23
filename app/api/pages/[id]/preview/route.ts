@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { hasPermission } from '@/lib/has-permission'
@@ -16,14 +16,11 @@ const previewSchema = z.object({
 })
 
 // POST /api/pages/[id]/preview - Generate preview for page
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!hasPermission(session, 'preview')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    , { status: 403 })
     }
 
     const body = await request.json()
@@ -79,17 +76,19 @@ export async function POST(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'pages', action: 'create', scope: 'all' }]
 }
+)
 
 // GET /api/pages/[id]/preview - Get preview URL for page
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!hasPermission(session, 'preview')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    , { status: 403 })
     }
 
     // Get the page
@@ -115,7 +114,12 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'pages', action: 'read', scope: 'all' }]
 }
+)
 
 // Helper function to generate preview tokens
 function generatePreviewToken(): string {

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from "@/auth"
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
@@ -41,12 +41,13 @@ async function requireAdminAccess() {
 }
 
 // POST /api/admin/data-retention/cleanup - Perform data cleanup
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const authError = await requireAdminAccess()
     if (authError) return authError
 
-    const session = await auth()
     const body = await request.json()
     const policy = retentionPolicySchema.parse(body)
 
@@ -80,12 +81,12 @@ export async function POST(request: NextRequest) {
       request.headers.get('user-agent') || ''
     )
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       result,
       policy,
       message: 'Data cleanup completed successfully',
-    })
+    )
 
   } catch (error) {
     console.error('Error performing data cleanup:', error)
@@ -108,4 +109,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

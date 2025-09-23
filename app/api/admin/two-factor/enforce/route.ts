@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { isTwoFactorRequired } from '@/lib/two-factor-auth'
 import { auditLog } from '@/lib/audit-service'
@@ -13,13 +13,11 @@ import { auditLog } from '@/lib/audit-service'
  * GET /api/admin/two-factor/enforce
  * Get users who should have 2FA but don't
  */
-export async function GET(_request: NextRequest) {
-  try {
-    const session = await auth()
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
+  try {
+    ,
         { status: 403 }
       )
     }
@@ -106,19 +104,22 @@ export async function GET(_request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * POST /api/admin/two-factor/enforce
  * Send notifications to users who need to enable 2FA
  */
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth()
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
+  try {
+    ,
         { status: 403 }
       )
     }
@@ -251,13 +252,13 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       processedUsers,
       totalUsers: users.length,
       action,
       results
-    })
+    )
     
   } catch (error) {
     console.error('2FA enforcement action error:', error)
@@ -266,4 +267,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

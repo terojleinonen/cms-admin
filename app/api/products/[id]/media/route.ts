@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { ProductMedia, Media } from '@prisma/client'
@@ -31,14 +31,11 @@ const setPrimaryMediaSchema = z.object({
 })
 
 // GET /api/products/[id]/media - Get product media
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const productId = params.id
@@ -75,13 +72,13 @@ export async function GET(
       orderBy: { sortOrder: 'asc' }
     })
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       productMedia: productMedia.map((pm: ProductMediaWithMedia) => ({
         mediaId: pm.mediaId,
         sortOrder: pm.sortOrder,
         isPrimary: pm.isPrimary,
         media: pm.media
-      }))
+      ))
     })
 
   } catch (error) {
@@ -91,17 +88,19 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 // POST /api/products/[id]/media - Add media to product
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const productId = params.id
@@ -178,14 +177,14 @@ export async function POST(
       orderBy: { sortOrder: 'asc' }
     })
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       message: 'Media added to product successfully',
       productMedia: updatedProductMedia.map((pm: ProductMediaWithMedia) => ({
         mediaId: pm.mediaId,
         sortOrder: pm.sortOrder,
         isPrimary: pm.isPrimary,
         media: pm.media
-      }))
+      ))
     })
 
   } catch (error) {
@@ -202,17 +201,19 @@ export async function POST(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 // PUT /api/products/[id]/media - Update media order or set primary
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const productId = params.id
@@ -237,7 +238,7 @@ export async function PUT(
         )
       )
 
-      return NextResponse.json({ message: 'Media order updated successfully' })
+      return createApiSuccessResponse( message: 'Media order updated successfully' )
     }
 
     // Handle primary media setting
@@ -261,7 +262,7 @@ export async function PUT(
         })
       ])
 
-      return NextResponse.json({ message: 'Primary media updated successfully' })
+      return createApiSuccessResponse( message: 'Primary media updated successfully' )
     }
 
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
@@ -280,17 +281,19 @@ export async function PUT(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 // DELETE /api/products/[id]/media - Remove media from product
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const productId = params.id
@@ -309,7 +312,7 @@ export async function DELETE(
       }
     })
 
-    return NextResponse.json({ message: 'Media removed from product successfully' })
+    return createApiSuccessResponse( message: 'Media removed from product successfully' )
 
   } catch (error) {
     console.error('Error removing media from product:', error)
@@ -318,4 +321,9 @@ export async function DELETE(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

@@ -38,6 +38,10 @@ export const AUDIT_ACTIONS = {
     ACCOUNT_LOCKED: 'security.account_locked',
     ACCOUNT_UNLOCKED: 'security.account_unlocked',
     PERMISSION_DENIED: 'security.permission_denied',
+    PERMISSION_CHECK_GRANTED: 'security.permission_check_granted',
+    PERMISSION_CHECK_DENIED: 'security.permission_check_denied',
+    UNAUTHORIZED_ACCESS: 'security.unauthorized_access',
+    ROLE_ESCALATION: 'security.role_escalation',
     DATA_EXPORT: 'security.data_export',
     BULK_OPERATION: 'security.bulk_operation',
   },
@@ -247,6 +251,159 @@ export class AuditService {
       userAgent,
       severity: 'medium',
     })
+  }
+
+  /**
+   * Log permission check events
+   */
+  async logPermissionCheck(
+    userId: string,
+    permission: { resource: string; action: string; scope?: string },
+    result: boolean,
+    reason?: string,
+    ipAddress?: string,
+    userAgent?: string,
+    context?: Record<string, unknown>
+  ): Promise<AuditLog> {
+    const auditLog = await this.log({
+      userId,
+      action: result ? AUDIT_ACTIONS.SECURITY.PERMISSION_CHECK_GRANTED : AUDIT_ACTIONS.SECURITY.PERMISSION_CHECK_DENIED,
+      resource: permission.resource,
+      details: {
+        permission,
+        result,
+        reason,
+        context,
+      },
+      ipAddress,
+      userAgent,
+      severity: result ? 'low' : 'medium',
+    })
+
+    // If permission was denied, also create a security event
+    if (!result) {
+      await this.logSecurity(
+        userId,
+        'PERMISSION_DENIED',
+        {
+          permission,
+          reason,
+          context,
+        },
+        ipAddress,
+        userAgent
+      )
+    }
+
+    return auditLog
+  }
+
+  /**
+   * Log role change events
+   */
+  async logRoleChange(
+    changedBy: string,
+    targetUserId: string,
+    oldRole: string,
+    newRole: string,
+    reason?: string,
+    ipAddress?: string,
+    userAgent?: string
+  ): Promise<AuditLog> {
+    const auditLog = await this.logUser(
+      changedBy,
+      targetUserId,
+      'ROLE_CHANGED',
+      {
+        oldRole,
+        newRole,
+        reason,
+      },
+      ipAddress,
+      userAgent
+    )
+
+    // Log security event for role escalation
+    if (this.isRoleEscalation(oldRole, newRole)) {
+      await this.logSecurity(
+        changedBy,
+        'SUSPICIOUS_ACTIVITY',
+        {
+          type: 'role_escalation',
+          targetUserId,
+          oldRole,
+          newRole,
+          reason,
+        },
+        ipAddress,
+        userAgent
+      )
+    }
+
+    return auditLog
+  }
+
+  /**
+   * Log resource access events
+   */
+  async logResourceAccess(
+    userId: string,
+    action: string,
+    resource: string,
+    resourceId?: string,
+    success: boolean = true,
+    errorMessage?: string,
+    ipAddress?: string,
+    userAgent?: string,
+    details?: Record<string, unknown>
+  ): Promise<AuditLog> {
+    const auditLog = await this.log({
+      userId,
+      action: `resource.${action}`,
+      resource,
+      resourceId,
+      details: {
+        success,
+        errorMessage,
+        ...details,
+      },
+      ipAddress,
+      userAgent,
+      severity: success ? 'low' : 'high',
+    })
+
+    // Log security event for unauthorized access
+    if (!success) {
+      await this.logSecurity(
+        userId,
+        'SUSPICIOUS_ACTIVITY',
+        {
+          type: 'unauthorized_access',
+          resource,
+          action,
+          resourceId,
+          errorMessage,
+          ...details,
+        },
+        ipAddress,
+        userAgent
+      )
+    }
+
+    return auditLog
+  }
+
+  /**
+   * Check if role change is an escalation
+   */
+  private isRoleEscalation(oldRole: string, newRole: string): boolean {
+    const roleHierarchy: Record<string, number> = {
+      'VIEWER': 1,
+      'EDITOR': 2,
+      'ADMIN': 3,
+    }
+
+    return (roleHierarchy[newRole] || 0) > (roleHierarchy[oldRole] || 0)
   }
 
   /**
@@ -651,6 +808,277 @@ export class AuditService {
     } catch (error) {
       console.error('Failed to cleanup audit logs:', error)
       throw new Error(`Failed to cleanup audit logs: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  /**
+   * Get security incidents summary
+   */
+  async getSecurityIncidents(days: number = 7): Promise<{
+    totalIncidents: number
+    criticalIncidents: number
+    topThreats: Array<{ type: string; count: number }>
+    affectedUsers: Array<{ userId: string; count: number }>
+    recentIncidents: AuditLogWithUser[]
+  }> {
+    try {
+      const startDate = new Date(Date.now() - (days * 24 * 60 * 60 * 1000))
+
+      const [totalIncidents, criticalIncidents, topThreats, affectedUsers, recentIncidents] = await Promise.all([
+        this.prisma.auditLog.count({
+          where: {
+            createdAt: { gte: startDate },
+            OR: [
+              { action: { contains: 'security.' } },
+              { action: { contains: 'PERMISSION_DENIED' } },
+              { action: { contains: 'UNAUTHORIZED_ACCESS' } },
+            ],
+          },
+        }),
+        this.prisma.auditLog.count({
+          where: {
+            createdAt: { gte: startDate },
+            OR: [
+              { action: { contains: 'security.' } },
+              { action: { contains: 'PERMISSION_DENIED' } },
+            ],
+            details: {
+              path: ['severity'],
+              equals: 'critical',
+            },
+          },
+        }),
+        this.prisma.auditLog.groupBy({
+          by: ['action'],
+          _count: { action: true },
+          where: {
+            createdAt: { gte: startDate },
+            OR: [
+              { action: { contains: 'security.' } },
+              { action: { contains: 'PERMISSION_DENIED' } },
+            ],
+          },
+          orderBy: { _count: { action: 'desc' } },
+          take: 5,
+        }),
+        this.prisma.auditLog.groupBy({
+          by: ['userId'],
+          _count: { userId: true },
+          where: {
+            createdAt: { gte: startDate },
+            OR: [
+              { action: { contains: 'security.' } },
+              { action: { contains: 'PERMISSION_DENIED' } },
+            ],
+          },
+          orderBy: { _count: { userId: 'desc' } },
+          take: 10,
+        }),
+        this.prisma.auditLog.findMany({
+          where: {
+            createdAt: { gte: startDate },
+            OR: [
+              { action: { contains: 'security.' } },
+              { action: { contains: 'PERMISSION_DENIED' } },
+            ],
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 20,
+        }),
+      ])
+
+      return {
+        totalIncidents,
+        criticalIncidents,
+        topThreats: topThreats.map(threat => ({
+          type: threat.action.replace('security.', ''),
+          count: threat._count.action,
+        })),
+        affectedUsers: affectedUsers.map(user => ({
+          userId: user.userId,
+          count: user._count.userId,
+        })),
+        recentIncidents,
+      }
+    } catch (error) {
+      console.error('Failed to get security incidents:', error)
+      throw new Error(`Failed to get security incidents: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  /**
+   * Get compliance report
+   */
+  async getComplianceReport(options: {
+    startDate: Date
+    endDate: Date
+    userId?: string
+    actions?: string[]
+    resources?: string[]
+    includeFailures?: boolean
+  }): Promise<{
+    logs: AuditLogWithUser[]
+    summary: {
+      totalActions: number
+      uniqueUsers: number
+      failedActions: number
+      criticalEvents: number
+    }
+  }> {
+    try {
+      const { startDate, endDate, userId, actions, resources, includeFailures = true } = options
+
+      const where: Prisma.AuditLogWhereInput = {
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      }
+
+      if (userId) where.userId = userId
+      if (actions && actions.length > 0) {
+        where.action = { in: actions }
+      }
+      if (resources && resources.length > 0) {
+        where.resource = { in: resources }
+      }
+      if (!includeFailures) {
+        where.details = {
+          path: ['success'],
+          not: false,
+        }
+      }
+
+      const [logs, totalActions, uniqueUsers, failedActions, criticalEvents] = await Promise.all([
+        this.prisma.auditLog.findMany({
+          where,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        }),
+        this.prisma.auditLog.count({ where }),
+        this.prisma.auditLog.groupBy({
+          by: ['userId'],
+          where,
+          _count: { userId: true },
+        }).then(result => result.length),
+        this.prisma.auditLog.count({
+          where: {
+            ...where,
+            details: {
+              path: ['success'],
+              equals: false,
+            },
+          },
+        }),
+        this.prisma.auditLog.count({
+          where: {
+            ...where,
+            details: {
+              path: ['severity'],
+              equals: 'critical',
+            },
+          },
+        }),
+      ])
+
+      return {
+        logs,
+        summary: {
+          totalActions,
+          uniqueUsers,
+          failedActions,
+          criticalEvents,
+        },
+      }
+    } catch (error) {
+      console.error('Failed to get compliance report:', error)
+      throw new Error(`Failed to get compliance report: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  /**
+   * Validate audit log integrity
+   */
+  async validateIntegrity(startDate: Date, endDate: Date): Promise<{
+    isValid: boolean
+    issues: string[]
+    totalLogs: number
+    validLogs: number
+  }> {
+    try {
+      const issues: string[] = []
+      let validLogs = 0
+
+      const logs = await this.prisma.auditLog.findMany({
+        where: {
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+        include: {
+          user: true,
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      })
+
+      for (const log of logs) {
+        // Check for required fields
+        if (!log.action) {
+          issues.push(`Log ${log.id}: Missing action`)
+          continue
+        }
+
+        // Check for data consistency
+        if (log.userId && !log.user) {
+          issues.push(`Log ${log.id}: User ID references non-existent user`)
+        }
+
+        // Check for suspicious patterns
+        if (log.details && typeof log.details === 'object' && 'success' in log.details) {
+          const success = (log.details as { success?: boolean }).success
+          if (success === false && !log.details.errorMessage) {
+            issues.push(`Log ${log.id}: Failed action without error message`)
+          }
+        }
+
+        validLogs++
+      }
+
+      return {
+        isValid: issues.length === 0,
+        issues,
+        totalLogs: logs.length,
+        validLogs,
+      }
+    } catch (error) {
+      console.error('Failed to validate audit log integrity:', error)
+      throw new Error(`Failed to validate audit log integrity: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 

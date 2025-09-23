@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
@@ -112,16 +112,14 @@ function convertToCSV(data: Record<string, unknown>[], headers: string[]): strin
 }
 
 // GET /api/users/[id]/export - Export user data
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
     const authError = await requireUserAccess(resolvedParams.id)
     if (authError) return authError
 
-    const session = await auth()
     const { searchParams } = new URL(request.url)
     
     // Parse query parameters
@@ -357,4 +355,9 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'users', action: 'read', scope: 'all' }]
 }
+)

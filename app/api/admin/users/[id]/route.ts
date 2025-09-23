@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 
@@ -30,10 +30,9 @@ async function requireAdminAccess() {
 }
 
 // GET /api/admin/users/[id] - Get detailed user information
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const authError = await requireAdminAccess()
     if (authError) return authError
@@ -92,7 +91,7 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ user })
+    return createApiSuccessResponse( user )
 
   } catch (error) {
     console.error('Error fetching user details:', error)
@@ -101,18 +100,21 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 // DELETE /api/admin/users/[id] - Delete user
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const authError = await requireAdminAccess()
     if (authError) return authError
 
-    const session = await auth()
     const userId = params.id
 
     // Prevent admin from deleting themselves
@@ -167,10 +169,10 @@ export async function DELETE(
       }
     })
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       message: 'User deleted successfully',
-    })
+    )
 
   } catch (error) {
     console.error('Error deleting user:', error)
@@ -179,4 +181,9 @@ export async function DELETE(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { notificationService } from '@/lib/notification-service'
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const body = await request.json()
@@ -17,7 +14,7 @@ export async function PUT(
 
     if (action === 'markAsRead') {
       await notificationService.markNotificationAsRead(params.id, session.user.id)
-      return NextResponse.json({ success: true })
+      return createApiSuccessResponse( success: true )
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
@@ -28,20 +25,22 @@ export async function PUT(
       { status: 500 }
     )
   }
-}
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+  },
+  {
+  permissions: [{ resource: 'notifications', action: 'update', scope: 'own' }]
+}
+)
+
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     await notificationService.deleteNotification(params.id, session.user.id)
-    return NextResponse.json({ success: true })
+    return createApiSuccessResponse( success: true )
   } catch (error) {
     console.error('Error deleting notification:', error)
     return NextResponse.json(
@@ -49,4 +48,9 @@ export async function DELETE(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'notifications', action: 'delete', scope: 'own' }]
 }
+)

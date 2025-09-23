@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma, Prisma } from '@/lib/db'
 import { z } from 'zod'
 
@@ -91,10 +92,9 @@ const querySchema = z.object({
   relatedLimit: z.string().regex(/^\d+$/).default('4'),
 })
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const { slug } = params
     const { searchParams } = new URL(request.url)
@@ -336,4 +336,9 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

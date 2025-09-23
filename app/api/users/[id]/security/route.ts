@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { 
@@ -63,10 +63,9 @@ function verifyTOTPToken(secret: string, token: string): boolean {
 }
 
 // GET /api/users/[id]/security - Get security information
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
     const authError = await requireSecurityAccess(resolvedParams.id)
@@ -122,7 +121,7 @@ export async function GET(
       securityScore: calculateSecurityScore(user),
     }
 
-    return NextResponse.json({ security: securityInfo })
+    return createApiSuccessResponse( security: securityInfo )
   } catch (error) {
     console.error('Error fetching security information:', error)
     return NextResponse.json(
@@ -130,19 +129,22 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'profile', action: 'update', scope: 'own' }]
 }
+)
 
 // PUT /api/users/[id]/security - Update security settings
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
     const authError = await requireSecurityAccess(resolvedParams.id)
     if (authError) return authError
 
-    const session = await auth()
     const body = await request.json()
     const { action, ...data } = body
 
@@ -190,7 +192,12 @@ export async function PUT(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'profile', action: 'update', scope: 'own' }]
 }
+)
 
 // Handle password change
 async function handlePasswordChange(
@@ -246,7 +253,7 @@ async function handlePasswordChange(
     request.headers.get('user-agent') || undefined
   )
 
-  return NextResponse.json({ message: 'Password changed successfully' })
+  return createApiSuccessResponse( message: 'Password changed successfully' )
 }
 
 // Handle 2FA setup
@@ -320,7 +327,7 @@ async function handleTwoFactorVerification(
     request.headers.get('user-agent') || undefined
   )
 
-  return NextResponse.json({ message: '2FA enabled successfully' })
+  return createApiSuccessResponse( message: '2FA enabled successfully' )
 }
 
 // Handle 2FA disable
@@ -388,7 +395,7 @@ async function handleTwoFactorDisable(
     request.headers.get('user-agent') || undefined
   )
 
-  return NextResponse.json({ message: '2FA disabled successfully' })
+  return createApiSuccessResponse( message: '2FA disabled successfully' )
 }
 
 // Handle session termination
@@ -436,7 +443,7 @@ async function handleSessionTermination(
     request.headers.get('user-agent') || undefined
   )
 
-  return NextResponse.json({ message: 'Sessions terminated successfully' })
+  return createApiSuccessResponse( message: 'Sessions terminated successfully' )
 }
 
 interface SessionInfo {

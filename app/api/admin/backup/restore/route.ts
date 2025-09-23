@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from "@/auth"
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { BackupService } from '@/lib/backup';
 import { z } from 'zod';
 
@@ -33,11 +33,11 @@ const backupConfig = {
 const backupService = new BackupService(backupConfig.backupDir);
 
 // POST /api/admin/backup/restore - Restore from backup
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const body = await request.json();
@@ -52,9 +52,9 @@ export async function POST(request: NextRequest) {
       session.user.id
     );
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       message: 'Backup restored successfully'
-    });
+    );
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -70,4 +70,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

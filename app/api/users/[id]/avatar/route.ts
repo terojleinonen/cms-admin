@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { 
@@ -47,16 +47,13 @@ interface ImageVariant {
 }
 
 // POST /api/users/[id]/avatar - Upload profile picture
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
     const authError = await requireAvatarAccess(resolvedParams.id)
     if (authError) return authError
-
-    const session = await auth()
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -137,7 +134,7 @@ export async function POST(
       request.headers.get('user-agent') || undefined
     )
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       message: 'Profile picture uploaded successfully',
       profilePicture: {
         url: profilePictureUrl,
@@ -146,7 +143,7 @@ export async function POST(
           url: variant.url,
           width: variant.width,
           height: variant.height,
-        })),
+        )),
         metadata: {
           originalSize: formatFileSize(result.metadata.originalSize),
           processedSize: formatFileSize(result.metadata.processedSize),
@@ -162,19 +159,21 @@ export async function POST(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'profile', action: 'create', scope: 'own' }]
 }
+)
 
 // DELETE /api/users/[id]/avatar - Remove profile picture
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
     const authError = await requireAvatarAccess(resolvedParams.id)
     if (authError) return authError
-
-    const session = await auth()
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -234,13 +233,17 @@ export async function DELETE(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'profile', action: 'delete', scope: 'own' }]
 }
+)
 
 // GET /api/users/[id]/avatar - Get avatar information
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
     const authError = await requireAvatarAccess(resolvedParams.id)
@@ -296,4 +299,9 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'profile', action: 'update', scope: 'own' }]
 }
+)

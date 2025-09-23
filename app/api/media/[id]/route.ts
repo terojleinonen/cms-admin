@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
@@ -10,14 +10,11 @@ const updateMediaSchema = z.object({
   tags: z.array(z.string()).optional(),
 })
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { id } = params
@@ -34,21 +31,23 @@ export async function GET(
       return NextResponse.json({ error: 'Media not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ media })
+    return createApiSuccessResponse( media )
   } catch (error) {
     console.error('Error fetching media:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+  },
+  {
+  permissions: [{ resource: 'media', action: 'read', scope: 'all' }]
+}
+)
+
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { id } = params
@@ -73,7 +72,7 @@ export async function PUT(
       }
     })
 
-    return NextResponse.json({ media: updatedMedia })
+    return createApiSuccessResponse( media: updatedMedia )
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid data', details: error.issues }, { status: 400 })
@@ -81,16 +80,18 @@ export async function PUT(
     console.error('Error updating media:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+  },
+  {
+  permissions: [{ resource: 'media', action: 'update', scope: 'all' }]
+}
+)
+
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { id } = params
@@ -106,9 +107,14 @@ export async function DELETE(
       where: { id }
     })
 
-    return NextResponse.json({ message: 'Media deleted successfully' })
+    return createApiSuccessResponse( message: 'Media deleted successfully' )
   } catch (error) {
     console.error('Error deleting media:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+
+  },
+  {
+  permissions: [{ resource: 'media', action: 'delete', scope: 'all' }]
 }
+)

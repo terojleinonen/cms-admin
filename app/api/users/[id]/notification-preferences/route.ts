@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
@@ -11,14 +11,11 @@ const notificationPreferencesSchema = z.object({
   adminMessages: z.boolean()
 })
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     // Users can only access their own preferences, admins can access any
@@ -35,7 +32,7 @@ export async function GET(
       return NextResponse.json({ error: 'Preferences not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ preferences: preferences.notifications })
+    return createApiSuccessResponse( preferences: preferences.notifications )
   } catch (error) {
     console.error('Error fetching notification preferences:', error)
     return NextResponse.json(
@@ -43,16 +40,18 @@ export async function GET(
       { status: 500 }
     )
   }
-}
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+  },
+  {
+  permissions: [{ resource: 'profile', action: 'update', scope: 'own' }]
+}
+)
+
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     // Users can only update their own preferences, admins can update any
@@ -71,10 +70,10 @@ export async function PUT(
       select: { notifications: true }
     })
 
-    return NextResponse.json({ 
+    return createApiSuccessResponse( 
       preferences: updatedPreferences.notifications,
       message: 'Notification preferences updated successfully'
-    })
+    )
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -89,4 +88,9 @@ export async function PUT(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'profile', action: 'update', scope: 'own' }]
 }
+)

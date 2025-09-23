@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma, Prisma, ProductStatus } from '@/lib/db'
 import { CacheService } from '@/lib/cache'
 import { rateLimit, rateLimitConfigs, createRateLimitHeaders } from '@/lib/rate-limit'
@@ -54,7 +55,9 @@ const querySchema = z.object({
   includeCategories: z.enum(['true', 'false']).default('true'),
 })
 
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     // Apply rate limiting
     const rateLimitResult = await rateLimit(request, rateLimitConfigs.public)
@@ -370,4 +373,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

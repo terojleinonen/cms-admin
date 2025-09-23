@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { hashPassword } from '@/lib/password-utils'
 import { UserRole } from '@prisma/client'
@@ -54,10 +54,9 @@ async function requireUserAccess(userId: string, requireAdmin = false) {
 }
 
 // GET /api/users/[id] - Get user by ID
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
     const authError = await requireUserAccess(resolvedParams.id)
@@ -120,16 +119,19 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'users', action: 'read', scope: 'all' }]
 }
+)
 
 // PUT /api/users/[id] - Update user
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
-    const session = await auth()
     const isOwnProfile = session?.user?.id === resolvedParams.id
     const isAdmin = session?.user?.role === UserRole.ADMIN
 
@@ -253,20 +255,22 @@ export async function PUT(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'users', action: 'update', scope: 'all' }]
 }
+)
 
 // DELETE /api/users/[id] - Delete user (admin only)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
     const authError = await requireUserAccess(resolvedParams.id, true) // Require admin
     if (authError) return authError
 
-    const session = await auth()
-    
     // Prevent self-deletion
     if (session?.user?.id === resolvedParams.id) {
       return NextResponse.json(
@@ -309,7 +313,7 @@ export async function DELETE(
       request.headers.get('user-agent') || undefined
     )
 
-    return NextResponse.json({ message: 'User deleted successfully' })
+    return createApiSuccessResponse( message: 'User deleted successfully' )
   } catch (error) {
     console.error('Error deleting user:', error)
     return NextResponse.json(
@@ -317,4 +321,9 @@ export async function DELETE(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'users', action: 'delete', scope: 'all' }]
 }
+)

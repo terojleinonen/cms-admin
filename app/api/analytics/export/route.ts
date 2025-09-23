@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { AnalyticsService } from '@/lib/analytics';
 import { z } from 'zod';
 
@@ -16,16 +16,15 @@ const exportQuerySchema = z.object({
 });
 
 // GET /api/analytics/export - Export analytics data
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     // Check if user has admin role for exports
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+    , { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -90,4 +89,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'analytics', action: 'read', scope: 'all' }]
 }
+)

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { 
   getRemainingBackupCodes, 
@@ -21,16 +21,11 @@ interface BackupCodesParams {
  * GET /api/users/[id]/two-factor/backup-codes
  * Get remaining backup codes count
  */
-export async function GET(
-  request: NextRequest,
-  { params }: BackupCodesParams
-) {
-  try {
-    const session = await auth()
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
+  try {
+    ,
         { status: 401 }
       )
     }
@@ -72,10 +67,10 @@ export async function GET(
     // Get remaining backup codes count
     const remainingCodes = await getRemainingBackupCodes(userId)
     
-    return NextResponse.json({
+    return createApiSuccessResponse(
       remainingCodes,
       totalCodes: 10 // Standard number of backup codes
-    })
+    )
     
   } catch (error) {
     console.error('Backup codes get error:', error)
@@ -84,22 +79,22 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * POST /api/users/[id]/two-factor/backup-codes
  * Regenerate backup codes (requires 2FA token)
  */
-export async function POST(
-  request: NextRequest,
-  { params }: BackupCodesParams
-) {
-  try {
-    const session = await auth()
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
+  try {
+    ,
         { status: 401 }
       )
     }
@@ -186,11 +181,11 @@ export async function POST(
       request
     })
     
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       backupCodes: newBackupCodes,
       message: 'Backup codes have been regenerated'
-    })
+    )
     
   } catch (error) {
     console.error('Backup codes regenerate error:', error)
@@ -199,4 +194,9 @@ export async function POST(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

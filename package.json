@@ -36,7 +36,11 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false",
-    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
+    "test:security": "tsx scripts/run-security-tests.ts run",
+    "test:security:endpoint": "tsx scripts/run-security-tests.ts run --endpoint",
+    "test:security:discover": "tsx scripts/run-security-tests.ts discover",
+    "test:security:analyze": "tsx scripts/run-security-tests.ts analyze"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -61,6 +65,7 @@
     "critters": "^0.0.23",
     "date-fns": "^4.1.0",
     "dompurify": "^3.2.6",
+    "isomorphic-dompurify": "^2.28.0",
     "jsonwebtoken": "^9.0.2",
     "minisearch": "^7.1.2",
     "next": "^15.1.0",
@@ -99,10 +104,12 @@
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "@types/sharp": "^0.31.1",
+    "commander": "^12.1.0",
     "eslint": "^9.35.0",
     "eslint-config-next": "^15.5.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
+    "glob": "^11.0.0",
     "globals": "^16.3.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^30.0.5",

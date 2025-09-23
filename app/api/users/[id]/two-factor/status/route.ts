@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { 
   getRemainingBackupCodes,
@@ -19,16 +19,11 @@ interface StatusParams {
  * GET /api/users/[id]/two-factor/status
  * Get 2FA status and requirements for a user
  */
-export async function GET(
-  request: NextRequest,
-  { params }: StatusParams
-) {
-  try {
-    const session = await auth()
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
+  try {
+    ,
         { status: 401 }
       )
     }
@@ -92,4 +87,9 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

@@ -37,6 +37,11 @@ model User {
   createdMedia     Media[]            @relation("MediaCreator")
   createdPages     Page[]             @relation("PageCreator")
   createdProducts  Product[]          @relation("ProductCreator")
+  permissionCache  PermissionCache[]  @relation("PermissionCache")
+  securityEvents   SecurityEvent[]    @relation("SecurityEventUser")
+  resolvedSecurityEvents SecurityEvent[] @relation("SecurityEventResolver")
+  roleChanges      RoleChangeHistory[] @relation("RoleChangeUser")
+  changedRoles     RoleChangeHistory[] @relation("RoleChanger")
 
   @@map("users")
 }
@@ -414,4 +419,64 @@ enum EmailStatus {
   SENT
   FAILED
   BOUNCED
+}
+
+model PermissionCache {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  resource  String   @db.VarChar(100)
+  action    String   @db.VarChar(50)
+  scope     String?  @db.VarChar(50)
+  result    Boolean
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation("PermissionCache", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resource, action, scope])
+  @@index([userId])
+  @@index([resource, action])
+  @@index([expiresAt])
+  @@map("permission_cache")
+}
+
+model SecurityEvent {
+  id         String    @id @default(uuid()) @db.Uuid
+  type       String    @db.VarChar(50)
+  severity   String    @default("MEDIUM") @db.VarChar(20)
+  userId     String?   @map("user_id") @db.Uuid
+  resource   String?   @db.VarChar(100)
+  action     String?   @db.VarChar(50)
+  ipAddress  String?   @map("ip_address") @db.VarChar(45)
+  userAgent  String?   @map("user_agent") @db.Text
+  details    Json?
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime? @map("resolved_at")
+  resolvedBy String?   @map("resolved_by") @db.Uuid
+  createdAt  DateTime  @default(now()) @map("created_at")
+  user       User?     @relation("SecurityEventUser", fields: [userId], references: [id], onDelete: SetNull)
+  resolver   User?     @relation("SecurityEventResolver", fields: [resolvedBy], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([severity])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([resolved])
+  @@map("security_events")
+}
+
+model RoleChangeHistory {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  oldRole   String   @map("old_role") @db.VarChar(20)
+  newRole   String   @map("new_role") @db.VarChar(20)
+  changedBy String?  @map("changed_by") @db.Uuid
+  reason    String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation("RoleChangeUser", fields: [userId], references: [id], onDelete: Cascade)
+  changer   User?    @relation("RoleChanger", fields: [changedBy], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([changedBy])
+  @@index([createdAt])
+  @@map("role_change_history")
 }

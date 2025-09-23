@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { ApiAuthService } from '@/lib/api-auth';
 import { z } from 'zod';
 
@@ -13,7 +14,9 @@ const tokenRequestSchema = z.object({
 });
 
 // POST /api/auth/token - Exchange API key for JWT token
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const body = await request.json();
     const validatedData = tokenRequestSchema.parse(body);
@@ -52,4 +55,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

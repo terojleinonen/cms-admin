@@ -4,12 +4,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { registerSchema } from '@/lib/auth-schemas'
 import { createUser } from '@/lib/auth-utils'
 import { handleDatabaseError, isUniqueConstraintError } from '@/lib/db-errors'
 import { UserRole } from '@prisma/client'
 
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const body = await request.json()
 
@@ -91,4 +94,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

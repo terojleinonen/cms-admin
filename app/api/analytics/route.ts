@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { AnalyticsService } from '@/lib/analytics';
 import { z } from 'zod';
 
@@ -16,11 +16,11 @@ const analyticsQuerySchema = z.object({
 });
 
 // GET /api/analytics - Get analytics data
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -40,22 +40,22 @@ export async function GET(request: NextRequest) {
     switch (validatedQuery.type) {
       case 'metrics':
         const metrics = await AnalyticsService.getDashboardMetrics();
-        return NextResponse.json({ metrics });
+        return createApiSuccessResponse( metrics );
 
       case 'performance':
         const performance = await AnalyticsService.getContentPerformance(
           validatedQuery.limit,
           timeframeData
         );
-        return NextResponse.json({ performance });
+        return createApiSuccessResponse( performance );
 
       case 'inventory':
         const inventory = await AnalyticsService.getInventoryAlerts();
-        return NextResponse.json({ inventory });
+        return createApiSuccessResponse( inventory );
 
       case 'activity':
         const activity = await AnalyticsService.getRecentActivity(validatedQuery.limit);
-        return NextResponse.json({ activity });
+        return createApiSuccessResponse( activity );
 
       case 'trends':
         const trends = await AnalyticsService.getContentTrends(timeframeData);
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
 
       case 'report':
         const report = await AnalyticsService.generateReport(timeframeData);
-        return NextResponse.json({ report });
+        return createApiSuccessResponse( report );
 
       default:
         return NextResponse.json(
@@ -92,4 +92,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'analytics', action: 'read', scope: 'all' }]
 }
+)

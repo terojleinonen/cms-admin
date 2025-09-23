@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from "@/auth"
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
@@ -40,7 +40,9 @@ async function requireAdminAccess() {
 }
 
 // POST /api/admin/data-retention/preview - Get cleanup preview
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const authError = await requireAdminAccess()
     if (authError) return authError
@@ -94,11 +96,11 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       preview,
       policy,
-    })
+    )
 
   } catch (error) {
     console.error('Error getting cleanup preview:', error)
@@ -121,4 +123,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

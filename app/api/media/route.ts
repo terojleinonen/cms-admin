@@ -4,31 +4,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
 import { prisma, Prisma } from '@/lib/db'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { v4 as uuidv4 } from 'uuid'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 
 /**
  * GET /api/media
  * Retrieve media files with pagination and filtering
  */
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json({ 
-        error: { code: 'UNAUTHORIZED', message: 'Authentication required' } 
-      }, { status: 401 })
-    }
-
-    // Check role permissions - VIEWER role cannot access media management
-    if (session.user.role === 'VIEWER') {
-      return NextResponse.json({ 
-        error: { code: 'FORBIDDEN', message: 'Insufficient permissions' } 
-      }, { status: 403 })
-    }
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    try {
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -65,7 +53,7 @@ export async function GET(request: NextRequest) {
       prisma.media.count({ where })
     ])
 
-    return NextResponse.json({
+    return createApiSuccessResponse({
       mediaFiles: media,
       pagination: {
         page,
@@ -78,31 +66,28 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Media GET error:', error)
     return NextResponse.json(
-      { error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch media' } },
+      { 
+        error: { 
+          code: 'INTERNAL_ERROR', 
+          message: 'Failed to fetch media',
+          timestamp: new Date().toISOString()
+        },
+        success: false
+      },
       { status: 500 }
     )
   }
-}
+}, {
+  permissions: [{ resource: 'media', action: 'read', scope: 'all' }]
+})
 
 /**
  * POST /api/media
  * Upload new media files
  */
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json({ 
-        error: { code: 'UNAUTHORIZED', message: 'Authentication required' } 
-      }, { status: 401 })
-    }
-
-    // Check role permissions - VIEWER role cannot upload media
-    if (session.user.role === 'VIEWER') {
-      return NextResponse.json({ 
-        error: { code: 'FORBIDDEN', message: 'Insufficient permissions' } 
-      }, { status: 403 })
-    }
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    try {
 
     const formData = await request.formData()
     const file = formData.get('file') as File
@@ -111,7 +96,12 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ 
-        error: { code: 'VALIDATION_ERROR', message: 'No files provided' } 
+        error: { 
+          code: 'VALIDATION_ERROR', 
+          message: 'No files provided',
+          timestamp: new Date().toISOString()
+        },
+        success: false
       }, { status: 400 })
     }
 
@@ -119,7 +109,12 @@ export async function POST(request: NextRequest) {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ 
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid file type' } 
+        error: { 
+          code: 'VALIDATION_ERROR', 
+          message: 'Invalid file type',
+          timestamp: new Date().toISOString()
+        },
+        success: false
       }, { status: 400 })
     }
 
@@ -127,7 +122,12 @@ export async function POST(request: NextRequest) {
     const maxSize = 10 * 1024 * 1024
     if (file.size > maxSize) {
       return NextResponse.json({ 
-        error: { code: 'VALIDATION_ERROR', message: 'File too large' } 
+        error: { 
+          code: 'VALIDATION_ERROR', 
+          message: 'File too large',
+          timestamp: new Date().toISOString()
+        },
+        success: false
       }, { status: 400 })
     }
 
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
         fileSize: file.size,
         folder: folder,
         altText: altText,
-        createdBy: session.user.id,
+        createdBy: user!.id,
       },
       include: {
         creator: {
@@ -162,13 +162,23 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ media }, { status: 201 })
+    return createApiSuccessResponse({ media }, 201)
 
   } catch (error) {
     console.error('Media POST error:', error)
     return NextResponse.json(
-      { error: { code: 'INTERNAL_ERROR', message: 'Failed to upload media' } },
+      { 
+        error: { 
+          code: 'INTERNAL_ERROR', 
+          message: 'Failed to upload media',
+          timestamp: new Date().toISOString()
+        },
+        success: false
+      },
       { status: 500 }
     )
   }
-}
+}, {
+  permissions: [{ resource: 'media', action: 'create', scope: 'all' }],
+  allowedMethods: ['POST']
+})

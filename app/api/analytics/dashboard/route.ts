@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 
-export async function GET(_request: NextRequest) {
-  try {
-    const session = await auth()
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    , { status: 401 })
     }
 
     // Only ADMIN and EDITOR can access dashboard analytics
-    if (session.user.role !== UserRole.ADMIN && session.user.role !== UserRole.EDITOR) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    , { status: 403 })
     }
 
     // Get dashboard analytics data
@@ -66,4 +64,9 @@ export async function GET(_request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'analytics', action: 'read', scope: 'all' }]
 }
+)

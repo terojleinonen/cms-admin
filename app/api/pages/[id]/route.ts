@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { hasPermission } from '@/lib/has-permission'
@@ -23,15 +23,12 @@ const updatePageSchema = z.object({
 })
 
 // GET /api/pages/[id] - Get specific page
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const { id } = params
-    const session = await auth()
-    if (!hasPermission(session, 'read')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    , { status: 403 })
     }
 
     const page = await prisma.page.findUnique({
@@ -60,18 +57,20 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'pages', action: 'read', scope: 'all' }]
 }
+)
 
 // PUT /api/pages/[id] - Update specific page
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const { id } = params
-    const session = await auth()
-    if (!hasPermission(session, 'update')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    , { status: 403 })
     }
 
     const body = await request.json()
@@ -144,18 +143,20 @@ export async function PUT(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'pages', action: 'update', scope: 'all' }]
 }
+)
 
 // DELETE /api/pages/[id] - Delete specific page
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id:string } }
-) {
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const { id } = params
-    const session = await auth()
-    if (!hasPermission(session, 'delete')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    , { status: 403 })
     }
 
     // Check if page exists
@@ -172,7 +173,7 @@ export async function DELETE(
       where: { id }
     })
 
-    return NextResponse.json({ message: 'Page deleted successfully' })
+    return createApiSuccessResponse( message: 'Page deleted successfully' )
 
   } catch (error) {
     console.error('Error deleting page:', error)
@@ -181,4 +182,9 @@ export async function DELETE(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'pages', action: 'delete', scope: 'all' }]
 }
+)

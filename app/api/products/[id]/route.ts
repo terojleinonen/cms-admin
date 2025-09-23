@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -47,14 +47,11 @@ const updateProductSchema = z.object({
  * GET /api/products/[id]
  * Get a specific product with all relations
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { id } = params
@@ -99,7 +96,7 @@ export async function GET(
     }
 
     const transformedProduct = transformProductForResponse(product)
-    return NextResponse.json({ product: transformedProduct })
+    return createApiSuccessResponse( product: transformedProduct )
   } catch (error) {
     console.error('Error fetching product:', error)
     return NextResponse.json(
@@ -107,20 +104,22 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * PUT /api/products/[id]
  * Update a specific product
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { id } = params
@@ -271,7 +270,7 @@ export async function PUT(
     }
     const transformedProduct = transformProductForResponse(product)
 
-    return NextResponse.json({ product: transformedProduct })
+    return createApiSuccessResponse( product: transformedProduct )
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -286,20 +285,22 @@ export async function PUT(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * DELETE /api/products/[id]
  * Delete a specific product
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { id } = params
@@ -321,7 +322,7 @@ export async function DELETE(
       where: { id },
     })
 
-    return NextResponse.json({ message: 'Product deleted successfully' })
+    return createApiSuccessResponse( message: 'Product deleted successfully' )
   } catch (error) {
     console.error('Error deleting product:', error)
     return NextResponse.json(
@@ -329,4 +330,9 @@ export async function DELETE(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

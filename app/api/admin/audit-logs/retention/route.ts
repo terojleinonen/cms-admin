@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from "@/auth"
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { createRetentionManager } from '@/lib/audit-retention'
 import { z } from 'zod'
@@ -22,21 +22,17 @@ const restoreSchema = z.object({
  * GET /api/admin/audit-logs/retention
  * Get retention statistics and policies
  */
-export async function GET(_request: NextRequest) {
-  try {
-    const session = await auth()
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
+  try {
+    ,
         { status: 401 }
       )
     }
 
     // Check if user has admin permissions
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
+    ,
         { status: 403 }
       )
     }
@@ -79,27 +75,28 @@ export async function GET(_request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * POST /api/admin/audit-logs/retention
  * Execute retention actions (archive, cleanup, full cycle)
  */
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth()
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
+  try {
+    ,
         { status: 401 }
       )
     }
 
     // Check if user has admin permissions
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
+    ,
         { status: 403 }
       )
     }
@@ -169,27 +166,28 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * PUT /api/admin/audit-logs/retention/restore
  * Restore logs from archive
  */
-export async function PUT(request: NextRequest) {
-  try {
-    const session = await auth()
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
+  try {
+    ,
         { status: 401 }
       )
     }
 
     // Check if user has admin permissions
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
+    ,
         { status: 403 }
       )
     }
@@ -239,4 +237,9 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

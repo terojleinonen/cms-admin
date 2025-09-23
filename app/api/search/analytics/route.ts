@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { trackSearchEvent, getSearchAnalytics } from '@/lib/search'
 import { z } from 'zod'
 
@@ -27,11 +27,11 @@ const analyticsQuerySchema = z.object({
 })
 
 // POST /api/search/analytics - Track search events
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const body = await request.json()
@@ -54,10 +54,10 @@ export async function POST(request: NextRequest) {
       searchTime: validatedEvent.searchTime
     })
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       message: 'Search event tracked successfully'
-    })
+    )
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -73,14 +73,19 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 // GET /api/search/analytics - Get search analytics
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -143,4 +148,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

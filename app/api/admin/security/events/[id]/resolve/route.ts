@@ -4,20 +4,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { SecurityService } from '@/lib/security'
 import { prisma } from '@/lib/db'
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     // Check authentication and admin role
-    const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
+    ,
         { status: 401 }
       )
     }
@@ -37,7 +33,7 @@ export async function POST(
       )
     }
 
-    return NextResponse.json({ success: true })
+    return createApiSuccessResponse( success: true )
 
   } catch (error) {
     console.error('Resolve security event API error:', error)
@@ -46,4 +42,9 @@ export async function POST(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

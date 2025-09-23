@@ -4,300 +4,351 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
 import { prisma, Prisma } from '@/lib/db'
-import { z } from 'zod'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ProductStatus } from '@prisma/client'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
+import { withAPISecurity, validateAndSanitizeBody } from '@/lib/api-security'
+import { validationSchemas } from '@/lib/validation-schemas'
 
-function isProductStatus(status: string): status is ProductStatus {
-  return ['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(status)
-}
 
-function isSortOrder(order: string): order is Prisma.SortOrder {
-  return order === 'asc' || order === 'desc'
-}
 
-// Validation schemas
-const createProductSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long'),
-  slug: z.string().min(1, 'Slug is required').max(255, 'Slug too long'),
-  description: z.string().optional(),
-  shortDescription: z.string().optional(),
-  price: z.number().min(0, 'Price must be positive'),
-  comparePrice: z.number().min(0, 'Compare price must be positive').optional(),
-  sku: z.string().max(100, 'SKU too long').optional(),
-  inventoryQuantity: z.number().int().min(0, 'Inventory must be non-negative').default(0),
-  weight: z.number().min(0, 'Weight must be positive').optional(),
-  dimensions: z.any().optional(),
-  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('DRAFT'),
-  featured: z.boolean().default(false),
-  seoTitle: z.string().max(255, 'SEO title too long').optional(),
-  seoDescription: z.string().optional(),
-  categoryIds: z.array(z.string().uuid()).default([]),
-})
+// Use centralized validation schemas
+const { product: productSchemas } = validationSchemas
 
 /**
  * GET /api/products
  * Retrieve products with filtering, search, and pagination
  */
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const GET = withAPISecurity(
+  withApiPermissions(
+    async (request: NextRequest, { user }) => {
+      try {
+        // Validate query parameters
+        const { searchParams } = new URL(request.url)
+        const queryValidation = productSchemas.query.safeParse(Object.fromEntries(searchParams))
+        
+        if (!queryValidation.success) {
+          return NextResponse.json(
+            {
+              error: {
+                code: 'VALIDATION_ERROR',
+                message: 'Invalid query parameters',
+                details: queryValidation.error.flatten().fieldErrors,
+                timestamp: new Date().toISOString(),
+              },
+              success: false,
+            },
+            { status: 400 }
+          )
+        }
 
-    const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const search = searchParams.get('search')
-    const status = searchParams.get('status')
-    const categoryId = searchParams.get('categoryId')
-    const featured = searchParams.get('featured')
-    const minPrice = searchParams.get('minPrice')
-    const maxPrice = searchParams.get('maxPrice')
-    const sortBy = searchParams.get('sortBy') || 'createdAt'
-    const sortOrder = searchParams.get('sortOrder') || 'desc'
-    const validSortOrder = isSortOrder(sortOrder) ? sortOrder : 'desc'
+        const query = queryValidation.data
 
-    // Build where clause
-    const where: Prisma.ProductWhereInput = {}
+        // Build where clause
+        const where: Prisma.ProductWhereInput = {}
 
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { shortDescription: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } },
-      ]
-    }
+        if (query.search) {
+          where.OR = [
+            { name: { contains: query.search, mode: 'insensitive' } },
+            { description: { contains: query.search, mode: 'insensitive' } },
+            { shortDescription: { contains: query.search, mode: 'insensitive' } },
+            { sku: { contains: query.search, mode: 'insensitive' } },
+          ]
+        }
 
-    if (status && isProductStatus(status)) {
-      where.status = status
-    }
+        if (query.status) {
+          where.status = query.status
+        }
 
-    if (featured !== null && featured !== undefined) {
-      where.featured = featured === 'true'
-    }
+        if (query.featured !== undefined) {
+          where.featured = query.featured
+        }
 
-    if (minPrice || maxPrice) {
-      where.price = {}
-      if (minPrice) where.price.gte = parseFloat(minPrice)
-      if (maxPrice) where.price.lte = parseFloat(maxPrice)
-    }
+        if (query.minPrice || query.maxPrice) {
+          where.price = {}
+          if (query.minPrice) where.price.gte = query.minPrice
+          if (query.maxPrice) where.price.lte = query.maxPrice
+        }
 
-    if (categoryId) {
-      where.categories = {
-        some: {
-          categoryId: categoryId,
-        },
+        if (query.categoryId) {
+          where.categories = {
+            some: {
+              categoryId: query.categoryId,
+            },
+          }
+        }
+
+        if (query.tags && query.tags.length > 0) {
+          where.tags = {
+            hasSome: query.tags,
+          }
+        }
+
+        // Calculate pagination
+        const skip = (query.page - 1) * query.limit
+
+        // Build order by clause
+        const orderBy: Prisma.ProductOrderByWithRelationInput = {}
+        if (query.sortBy === 'price') {
+          orderBy.price = query.sortOrder
+        } else if (query.sortBy === 'name') {
+          orderBy.name = query.sortOrder
+        } else if (query.sortBy === 'inventoryQuantity') {
+          orderBy.inventoryQuantity = query.sortOrder
+        } else {
+          orderBy.createdAt = query.sortOrder
+        }
+
+        // Fetch products with relations
+        const [products, total] = await Promise.all([
+          prisma.product.findMany({
+            where,
+            include: {
+              creator: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+              categories: {
+                include: {
+                  category: true,
+                },
+              },
+              media: {
+                include: {
+                  media: true,
+                },
+                orderBy: {
+                  sortOrder: 'asc',
+                },
+              },
+              _count: {
+                select: {
+                  categories: true,
+                  media: true,
+                },
+              },
+            },
+            orderBy,
+            skip,
+            take: query.limit,
+          }),
+          prisma.product.count({ where }),
+        ])
+
+        const totalPages = Math.ceil(total / query.limit)
+
+        // Transform Decimal fields to numbers for JSON response
+        const transformedProducts = products.map(product => ({
+          ...product,
+          price: product.price.toNumber(),
+          comparePrice: product.comparePrice?.toNumber() || null,
+          weight: product.weight?.toNumber() || null,
+        }))
+
+        return createApiSuccessResponse({
+          products: transformedProducts,
+          total,
+          page: query.page,
+          limit: query.limit,
+          totalPages,
+        })
+      } catch (error) {
+        console.error('Error fetching products:', error)
+        return NextResponse.json(
+          { 
+            error: {
+              code: 'INTERNAL_ERROR',
+              message: 'Failed to fetch products',
+              timestamp: new Date().toISOString()
+            },
+            success: false
+          },
+          { status: 500 }
+        )
       }
+    },
+    {
+      permissions: [{ resource: 'products', action: 'read', scope: 'all' }]
     }
-
-    // Calculate pagination
-    const skip = (page - 1) * limit
-
-    // Build order by clause
-    const orderBy: Prisma.ProductOrderByWithRelationInput = {}
-    if (sortBy === 'price') {
-      orderBy.price = validSortOrder
-    } else if (sortBy === 'name') {
-      orderBy.name = validSortOrder
-    } else if (sortBy === 'inventoryQuantity') {
-      orderBy.inventoryQuantity = validSortOrder
-    } else {
-      orderBy.createdAt = validSortOrder
-    }
-
-    // Fetch products with relations
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        include: {
-          creator: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-          categories: {
-            include: {
-              category: true,
-            },
-          },
-          media: {
-            include: {
-              media: true,
-            },
-            orderBy: {
-              sortOrder: 'asc',
-            },
-          },
-          _count: {
-            select: {
-              categories: true,
-              media: true,
-            },
-          },
-        },
-        orderBy,
-        skip,
-        take: limit,
-      }),
-      prisma.product.count({ where }),
-    ])
-
-    const totalPages = Math.ceil(total / limit)
-
-    // Transform Decimal fields to numbers for JSON response
-    const transformedProducts = products.map(product => ({
-      ...product,
-      price: product.price.toNumber(),
-      comparePrice: product.comparePrice?.toNumber() || null,
-      weight: product.weight?.toNumber() || null,
-    }))
-
-    return NextResponse.json({
-      products: transformedProducts,
-      total,
-      page,
-      limit,
-      totalPages,
-    })
-  } catch (error) {
-    console.error('Error fetching products:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch products' },
-      { status: 500 }
-    )
+  ),
+  {
+    allowedMethods: ['GET'],
+    rateLimitConfig: 'public'
   }
-}
+)
 
 /**
  * POST /api/products
  * Create a new product
  */
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const POST = withAPISecurity(
+  withApiPermissions(
+    async (request: NextRequest, { user }) => {
+      try {
+        // Validate and sanitize request body
+        const bodyValidation = await validateAndSanitizeBody(request, productSchemas.create)
+        
+        if (!bodyValidation.success) {
+          return NextResponse.json(
+            {
+              error: {
+                code: 'VALIDATION_ERROR',
+                message: bodyValidation.error,
+                details: bodyValidation.details,
+                timestamp: new Date().toISOString(),
+              },
+              success: false,
+            },
+            { status: 400 }
+          )
+        }
 
-    const body = await request.json()
-    const validatedData = createProductSchema.parse(body)
+        const validatedData = bodyValidation.data
 
-    // Check if slug already exists
-    const existingProduct = await prisma.product.findUnique({
-      where: { slug: validatedData.slug },
-    })
+        // Check if slug already exists
+        const existingProduct = await prisma.product.findUnique({
+          where: { slug: validatedData.slug },
+        })
 
-    if (existingProduct) {
-      return NextResponse.json(
-        { error: 'Product with this slug already exists' },
-        { status: 400 }
-      )
-    }
+        if (existingProduct) {
+          return NextResponse.json(
+            { 
+              error: {
+                code: 'DUPLICATE_ENTRY',
+                message: 'Product with this slug already exists',
+                timestamp: new Date().toISOString(),
+              },
+              success: false
+            },
+            { status: 409 }
+          )
+        }
 
-    // Check if SKU already exists (if provided)
-    if (validatedData.sku) {
-      const existingSku = await prisma.product.findUnique({
-        where: { sku: validatedData.sku },
-      })
+        // Check if SKU already exists (if provided)
+        if (validatedData.sku) {
+          const existingSku = await prisma.product.findUnique({
+            where: { sku: validatedData.sku },
+          })
 
-      if (existingSku) {
+          if (existingSku) {
+            return NextResponse.json(
+              { 
+                error: {
+                  code: 'DUPLICATE_ENTRY',
+                  message: 'Product with this SKU already exists',
+                  timestamp: new Date().toISOString(),
+                },
+                success: false
+              },
+              { status: 409 }
+            )
+          }
+        }
+
+        // Verify categories exist
+        if (validatedData.categoryIds.length > 0) {
+          const categories = await prisma.category.findMany({
+            where: {
+              id: { in: validatedData.categoryIds },
+            },
+          })
+
+          if (categories.length !== validatedData.categoryIds.length) {
+            return NextResponse.json(
+              { 
+                error: {
+                  code: 'INVALID_REFERENCE',
+                  message: 'One or more categories not found',
+                  timestamp: new Date().toISOString(),
+                },
+                success: false
+              },
+              { status: 400 }
+            )
+          }
+        }
+
+        // Create product with categories
+        const { categoryIds, ...productData } = validatedData
+        
+        const product = await prisma.product.create({
+          data: {
+            ...productData,
+            price: new Decimal(productData.price),
+            comparePrice: productData.comparePrice ? new Decimal(productData.comparePrice) : null,
+            weight: productData.weight ? new Decimal(productData.weight) : null,
+            createdBy: user!.id,
+            categories: {
+              create: categoryIds.map(categoryId => ({
+                categoryId,
+              })),
+            },
+          },
+          include: {
+            creator: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+            categories: {
+              include: {
+                category: true,
+              },
+            },
+            media: {
+              include: {
+                media: true,
+              },
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
+            _count: {
+              select: {
+                categories: true,
+                media: true,
+              },
+            },
+          },
+        })
+
+        // Transform Decimal fields to numbers for JSON response
+        const transformedProduct = {
+          ...product,
+          price: product.price.toNumber(),
+          comparePrice: product.comparePrice?.toNumber() || null,
+          weight: product.weight?.toNumber() || null,
+        }
+
+        return createApiSuccessResponse({ product: transformedProduct }, 201)
+      } catch (error) {
+        console.error('Error creating product:', error)
         return NextResponse.json(
-          { error: 'Product with this SKU already exists' },
-          { status: 400 }
+          { 
+            error: {
+              code: 'INTERNAL_ERROR',
+              message: 'Failed to create product',
+              timestamp: new Date().toISOString()
+            },
+            success: false
+          },
+          { status: 500 }
         )
       }
+    },
+    {
+      permissions: [{ resource: 'products', action: 'create', scope: 'all' }]
     }
-
-    // Verify categories exist
-    if (validatedData.categoryIds.length > 0) {
-      const categories = await prisma.category.findMany({
-        where: {
-          id: { in: validatedData.categoryIds },
-        },
-      })
-
-      if (categories.length !== validatedData.categoryIds.length) {
-        return NextResponse.json(
-          { error: 'One or more categories not found' },
-          { status: 400 }
-        )
-      }
-    }
-
-    // Create product with categories
-    const { categoryIds, ...productData } = validatedData
-    
-    const product = await prisma.product.create({
-      data: {
-        ...productData,
-        price: new Decimal(productData.price),
-        comparePrice: productData.comparePrice ? new Decimal(productData.comparePrice) : null,
-        weight: productData.weight ? new Decimal(productData.weight) : null,
-        createdBy: session.user.id,
-        categories: {
-          create: categoryIds.map(categoryId => ({
-            categoryId,
-          })),
-        },
-      },
-      include: {
-        creator: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        categories: {
-          include: {
-            category: true,
-          },
-        },
-        media: {
-          include: {
-            media: true,
-          },
-          orderBy: {
-            sortOrder: 'asc',
-          },
-        },
-        _count: {
-          select: {
-            categories: true,
-            media: true,
-          },
-        },
-      },
-    })
-
-    // Transform Decimal fields to numbers for JSON response
-    const transformedProduct = {
-      ...product,
-      price: product.price.toNumber(),
-      comparePrice: product.comparePrice?.toNumber() || null,
-      weight: product.weight?.toNumber() || null,
-    }
-
-    return NextResponse.json({ product: transformedProduct }, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.issues },
-        { status: 400 }
-      )
-    }
-
-    console.error('Error creating product:', error)
-    return NextResponse.json(
-      { error: 'Failed to create product' },
-      { status: 500 }
-    )
+  ),
+  {
+    allowedMethods: ['POST'],
+    requireCSRF: true,
+    rateLimitConfig: 'sensitive'
   }
-}
+)

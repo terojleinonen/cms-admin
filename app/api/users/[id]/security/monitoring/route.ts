@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { 
   detectSuspiciousActivity, 
   lockUserAccount,
@@ -25,14 +25,11 @@ const securityActionSchema = z.object({
  * GET /api/users/[id]/security/monitoring
  * Get security monitoring data for a user
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const userId = params.id
@@ -125,20 +122,22 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * POST /api/users/[id]/security/monitoring
  * Perform security actions (admin only)
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    , { status: 403 })
     }
 
     const userId = params.id
@@ -178,10 +177,10 @@ export async function POST(
           request
         })
 
-        return NextResponse.json({
+        return createApiSuccessResponse(
           success: true,
           message: 'Account locked successfully'
-        })
+        )
       }
 
       case 'unlock_account': {
@@ -201,10 +200,10 @@ export async function POST(
           request
         })
 
-        return NextResponse.json({
+        return createApiSuccessResponse(
           success: true,
           message: 'Account unlocked successfully'
-        })
+        )
       }
 
       case 'force_logout': {
@@ -244,7 +243,12 @@ export async function POST(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * Calculate security score based on various factors

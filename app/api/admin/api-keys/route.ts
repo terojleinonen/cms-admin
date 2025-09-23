@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from "@/auth"
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { ApiAuthService } from '@/lib/api-auth';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
@@ -19,11 +19,11 @@ const createApiKeySchema = z.object({
 });
 
 // GET /api/admin/api-keys - List API keys
-export async function GET(_request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const apiKeys = await prisma.apiKey.findMany({
@@ -45,7 +45,7 @@ export async function GET(_request: NextRequest) {
       orderBy: { createdAt: 'desc' }
     });
 
-    return NextResponse.json({ apiKeys });
+    return createApiSuccessResponse( apiKeys );
 
   } catch (error) {
     console.error('Error fetching API keys:', error);
@@ -54,14 +54,19 @@ export async function GET(_request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 // POST /api/admin/api-keys - Create new API key
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const body = await request.json();
@@ -74,11 +79,11 @@ export async function POST(request: NextRequest) {
       validatedData.permissions
     );
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       id: result.id,
       apiKey: result.key,
       message: 'API key created successfully'
-    });
+    );
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -94,4 +99,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

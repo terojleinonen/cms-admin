@@ -4,16 +4,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { getDefaultPreferences, validateAndMigratePreferences } from '@/lib/preferences-middleware'
 
-export async function GET(_request: NextRequest) {
-  try {
-    const session = await auth()
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    , { status: 401 })
     }
 
     const preferences = await prisma.userPreferences.findUnique({
@@ -41,22 +40,22 @@ export async function GET(_request: NextRequest) {
         }
       })
 
-      return NextResponse.json({
+      return createApiSuccessResponse(
         theme: newPreferences.theme,
         timezone: newPreferences.timezone,
         language: newPreferences.language,
         notifications: newPreferences.notifications,
         dashboard: newPreferences.dashboard,
-      })
+      )
     }
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       theme: preferences.theme,
       timezone: preferences.timezone,
       language: preferences.language,
       notifications: preferences.notifications,
       dashboard: preferences.dashboard,
-    })
+    )
   } catch (error) {
     console.error('Error fetching user preferences:', error)
     return NextResponse.json(
@@ -64,14 +63,18 @@ export async function GET(_request: NextRequest) {
       { status: 500 }
     )
   }
-}
 
-export async function PUT(request: NextRequest) {
-  try {
-    const session = await auth()
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
+}
+)
+
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    , { status: 401 })
     }
 
     const body = await request.json()
@@ -96,13 +99,13 @@ export async function PUT(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       theme: updatedPreferences.theme,
       timezone: updatedPreferences.timezone,
       language: updatedPreferences.language,
       notifications: updatedPreferences.notifications,
       dashboard: updatedPreferences.dashboard,
-    })
+    )
   } catch (error) {
     console.error('Error updating user preferences:', error)
     return NextResponse.json(
@@ -110,4 +113,9 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

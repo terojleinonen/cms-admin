@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from "@/auth"
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { BackupService } from '@/lib/backup';
 import { z } from 'zod';
 
@@ -33,11 +33,11 @@ const backupConfig = {
 const backupService = new BackupService(backupConfig.backupDir);
 
 // POST /api/admin/backup - Create new backup
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const body = await request.json();
@@ -68,10 +68,10 @@ export async function POST(request: NextRequest) {
         throw new Error('Invalid backup type');
     }
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       backupId,
       message: 'Backup created successfully'
-    });
+    );
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -87,14 +87,19 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 // GET /api/admin/backup - List backups
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -110,7 +115,7 @@ export async function GET(request: NextRequest) {
       validatedQuery.limit
     );
 
-    return NextResponse.json({ backups });
+    return createApiSuccessResponse( backups );
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -126,23 +131,28 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 // DELETE /api/admin/backup - Cleanup old backups
-export async function DELETE(_request: NextRequest) {
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const result = await backupService.cleanupOldBackups();
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       message: 'Backup cleanup completed',
       deletedCount: result.deletedCount,
       freedSpace: result.freedSpace
-    });
+    );
 
   } catch (error) {
     console.error('Backup cleanup error:', error);
@@ -151,4 +161,9 @@ export async function DELETE(_request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 
@@ -90,10 +90,9 @@ function calculateSecurityScore(user: SecurityUser, sessions: Session[], auditLo
 }
 
 // GET /api/admin/users/[id]/security - Get user security information
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const authError = await requireAdminAccess()
     if (authError) return authError
@@ -241,7 +240,7 @@ export async function GET(
       recommendations: recommendations
     }
 
-    return NextResponse.json({ security: securityInfo })
+    return createApiSuccessResponse( security: securityInfo )
 
   } catch (error) {
     console.error('Error fetching user security info:', error)
@@ -250,4 +249,9 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { 
   getUserSessions, 
   invalidateSession, 
@@ -25,14 +25,11 @@ const sessionActionSchema = z.object({
  * GET /api/users/[id]/sessions
  * Get user's active sessions and statistics
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const userId = params.id
@@ -57,12 +54,12 @@ export async function GET(
       isCurrent: userId === currentUserId && (session as any).sessionToken && s.token === (session as any).sessionToken
     }))
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       sessions: sessionsWithCurrent,
       statistics,
       suspiciousActivity,
       hasSecurityConcerns: suspiciousActivity.length > 0
-    })
+    )
   } catch (error) {
     console.error('Error fetching user sessions:', error)
     return NextResponse.json(
@@ -70,20 +67,22 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'profile', action: 'read', scope: 'own' }]
 }
+)
 
 /**
  * POST /api/users/[id]/sessions
  * Perform session management actions
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const userId = params.id
@@ -134,9 +133,7 @@ export async function POST(
       }
 
       case 'invalidate_session': {
-        if (!sessionId) {
-          return NextResponse.json(
-            { error: 'Session ID is required for this action' },
+        ,
             { status: 400 }
           )
         }
@@ -155,10 +152,10 @@ export async function POST(
             request
           })
 
-          return NextResponse.json({
+          return createApiSuccessResponse(
             success: true,
             message: 'Session invalidated successfully'
-          })
+          )
         } else {
           return NextResponse.json(
             { error: 'Failed to invalidate session' },
@@ -180,4 +177,9 @@ export async function POST(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'profile', action: 'create', scope: 'own' }]
 }
+)

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { 
   generateTwoFactorSetup, 
@@ -21,16 +21,11 @@ interface SetupParams {
  * GET /api/users/[id]/two-factor/setup
  * Generate 2FA setup data (secret, QR code, backup codes)
  */
-export async function GET(
-  request: NextRequest,
-  { params }: SetupParams
-) {
-  try {
-    const session = await auth()
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
+  try {
+    ,
         { status: 401 }
       )
     }
@@ -87,12 +82,12 @@ export async function GET(
       request
     })
     
-    return NextResponse.json({
+    return createApiSuccessResponse(
       qrCodeUrl: setupData.qrCodeDataUrl,
       backupCodes: setupData.backupCodes,
       secret: setupData.secret, // Temporary - will be stored after verification
       isRequired: await isTwoFactorRequired(user.role)
-    })
+    )
     
   } catch (error) {
     console.error('2FA setup error:', error)
@@ -101,22 +96,22 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * POST /api/users/[id]/two-factor/setup
  * Complete 2FA setup by verifying token
  */
-export async function POST(
-  request: NextRequest,
-  { params }: SetupParams
-) {
-  try {
-    const session = await auth()
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
+  try {
+    ,
         { status: 401 }
       )
     }
@@ -183,10 +178,10 @@ export async function POST(
       request
     })
     
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       message: '2FA has been successfully enabled'
-    })
+    )
     
   } catch (error) {
     console.error('2FA setup completion error:', error)
@@ -195,4 +190,9 @@ export async function POST(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

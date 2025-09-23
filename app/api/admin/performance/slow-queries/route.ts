@@ -4,15 +4,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { PerformanceMonitor } from '@/lib/performance';
 
 // GET /api/admin/performance/slow-queries - Get slow queries
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const performanceMonitor = PerformanceMonitor.getInstance();
     const slowQueries = performanceMonitor.getSlowQueries(limit, minDuration);
 
-    return NextResponse.json({ slowQueries });
+    return createApiSuccessResponse( slowQueries );
 
   } catch (error) {
     console.error('Error fetching slow queries:', error);
@@ -31,4 +31,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

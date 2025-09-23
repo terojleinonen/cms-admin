@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 
 // Define available page templates
 const PAGE_TEMPLATES = [
@@ -93,11 +93,11 @@ const PAGE_TEMPLATES = [
 ]
 
 // GET /api/pages/templates - Get available page templates
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -111,10 +111,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(template)
     }
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       templates: PAGE_TEMPLATES,
       count: PAGE_TEMPLATES.length
-    })
+    )
 
   } catch (error) {
     console.error('Error fetching page templates:', error)
@@ -123,4 +123,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'pages', action: 'read', scope: 'all' }]
 }
+)

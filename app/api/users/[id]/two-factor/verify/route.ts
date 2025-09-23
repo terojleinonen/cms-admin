@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { validateTwoFactorForLogin } from '@/lib/two-factor-auth'
 import { auditLog } from '@/lib/audit-service'
@@ -16,10 +17,9 @@ interface VerifyParams {
  * POST /api/users/[id]/two-factor/verify
  * Verify 2FA token during login process
  */
-export async function POST(
-  request: NextRequest,
-  { params }: VerifyParams
-) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const userId = params.id
     const body = await request.json()
@@ -108,13 +108,13 @@ export async function POST(
       data: { lastLoginAt: new Date() }
     })
     
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       isBackupCode: validation.isBackupCode,
       message: validation.isBackupCode 
         ? 'Login successful using backup code' 
         : 'Login successful'
-    })
+    )
     
   } catch (error) {
     console.error('2FA verification error:', error)
@@ -123,4 +123,9 @@ export async function POST(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

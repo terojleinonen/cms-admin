@@ -4,18 +4,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from "@/auth"
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { ApiAuthService } from '@/lib/api-auth';
 
 // GET /api/admin/api-keys/[id]/stats - Get API key usage statistics
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const { id } = await params;
@@ -23,7 +20,7 @@ export async function GET(
     // Get API key statistics
     const stats = await ApiAuthService.getApiKeyStats(id);
 
-    return NextResponse.json({ stats });
+    return createApiSuccessResponse( stats );
 
   } catch (error) {
     console.error('Error fetching API key stats:', error);
@@ -32,4 +29,9 @@ export async function GET(
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

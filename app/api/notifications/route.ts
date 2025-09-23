@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { notificationService } from '@/lib/notification-service'
 import { z } from 'zod'
 
@@ -8,11 +8,11 @@ const getNotificationsSchema = z.object({
   offset: z.string().optional().transform(val => val ? parseInt(val) : 0)
 })
 
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -26,11 +26,11 @@ export async function GET(request: NextRequest) {
       notificationService.getUnreadNotificationCount(session.user.id)
     ])
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       notifications,
       unreadCount,
       hasMore: notifications.length === limit
-    })
+    )
   } catch (error) {
     console.error('Error fetching notifications:', error)
     return NextResponse.json(
@@ -38,13 +38,18 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
 
-export async function PUT(request: NextRequest) {
+  },
+  {
+  permissions: [{ resource: 'notifications', action: 'read', scope: 'own' }]
+}
+)
+
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const body = await request.json()
@@ -52,7 +57,7 @@ export async function PUT(request: NextRequest) {
 
     if (action === 'markAllAsRead') {
       await notificationService.markAllNotificationsAsRead(session.user.id)
-      return NextResponse.json({ success: true })
+      return createApiSuccessResponse( success: true )
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
@@ -63,4 +68,9 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'notifications', action: 'update', scope: 'own' }]
 }
+)

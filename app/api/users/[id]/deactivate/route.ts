@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole, Prisma } from '@prisma/client'
 import { z } from 'zod'
@@ -54,13 +54,11 @@ async function requireUserAccess(userId: string, requireAdmin = false) {
 }
 
 // POST /api/users/[id]/deactivate - Deactivate user account
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
-    const session = await auth()
     const isOwnProfile = session?.user?.id === resolvedParams.id
     const isAdmin = session?.user?.role === UserRole.ADMIN
 
@@ -166,11 +164,11 @@ export async function POST(
       return deactivatedUser
     })
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       message: 'Account deactivated successfully',
       user: result,
-    })
+    )
 
   } catch (error) {
     console.error('Error deactivating account:', error)
@@ -193,19 +191,22 @@ export async function POST(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'users', action: 'create', scope: 'all' }]
 }
+)
 
 // PUT /api/users/[id]/deactivate - Reactivate user account (admin only)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     const resolvedParams = await params
     const authError = await requireUserAccess(resolvedParams.id, true) // Require admin
     if (authError) return authError
 
-    const session = await auth()
     const body = await request.json()
     const data = reactivationSchema.parse(body)
 
@@ -275,11 +276,11 @@ export async function PUT(
     // TODO: Send notification email to user if notifyUser is true
     // This would be implemented with an email service
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       message: 'Account reactivated successfully',
       user: result,
-    })
+    )
 
   } catch (error) {
     console.error('Error reactivating account:', error)
@@ -302,4 +303,9 @@ export async function PUT(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'users', action: 'update', scope: 'all' }]
 }
+)

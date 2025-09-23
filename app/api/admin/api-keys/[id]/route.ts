@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from "@/auth"
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 
@@ -19,14 +19,11 @@ const updateApiKeySchema = z.object({
 });
 
 // GET /api/admin/api-keys/[id] - Get specific API key
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const { id } = await params;
@@ -53,7 +50,7 @@ export async function GET(
       return NextResponse.json({ error: 'API key not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ apiKey });
+    return createApiSuccessResponse( apiKey );
 
   } catch (error) {
     console.error('Error fetching API key:', error);
@@ -62,17 +59,19 @@ export async function GET(
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 // PUT /api/admin/api-keys/[id] - Update API key
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const { id } = await params;
@@ -110,10 +109,10 @@ export async function PUT(
       }
     });
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       apiKey: updatedKey,
       message: 'API key updated successfully'
-    });
+    );
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -129,17 +128,19 @@ export async function PUT(
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)
 
 // DELETE /api/admin/api-keys/[id] - Delete API key
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const { id } = await params;
@@ -157,9 +158,9 @@ export async function DELETE(
       where: { id }
     });
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       message: 'API key deleted successfully'
-    });
+    );
 
   } catch (error) {
     console.error('Error deleting API key:', error);
@@ -168,4 +169,9 @@ export async function DELETE(
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

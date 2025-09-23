@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
@@ -22,14 +22,11 @@ const updateCategorySchema = z.object({
  * GET /api/categories/[id]
  * Get a specific category with its hierarchy
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { id } = params
@@ -64,7 +61,7 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ category })
+    return createApiSuccessResponse( category )
   } catch (error) {
     console.error('Error fetching category:', error)
     return NextResponse.json(
@@ -72,20 +69,22 @@ export async function GET(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'categories', action: 'read', scope: 'all' }]
 }
+)
 
 /**
  * PUT /api/categories/[id]
  * Update a specific category
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PUT = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { id } = params
@@ -178,7 +177,7 @@ export async function PUT(
       },
     })
 
-    return NextResponse.json({ category })
+    return createApiSuccessResponse( category )
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -193,20 +192,22 @@ export async function PUT(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'categories', action: 'update', scope: 'all' }]
 }
+)
 
 /**
  * DELETE /api/categories/[id]
  * Delete a specific category
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     const { id } = params
@@ -250,7 +251,7 @@ export async function DELETE(
       where: { id },
     })
 
-    return NextResponse.json({ message: 'Category deleted successfully' })
+    return createApiSuccessResponse( message: 'Category deleted successfully' )
   } catch (error) {
     console.error('Error deleting category:', error)
     return NextResponse.json(
@@ -258,4 +259,9 @@ export async function DELETE(
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'categories', action: 'delete', scope: 'all' }]
 }
+)

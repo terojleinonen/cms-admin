@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { WorkflowService } from '@/lib/workflow';
 import { prisma, Prisma } from '@/lib/db';
 import { z } from 'zod';
@@ -31,11 +31,11 @@ const createRevisionSchema = z.object({
 });
 
 // GET /api/workflow/revisions - Get content revisions
-export async function GET(request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -85,12 +85,12 @@ export async function GET(request: NextRequest) {
     const offset = validatedQuery.offset || 0;
     const paginatedRevisions = revisions.slice(offset, offset + limit);
 
-    return NextResponse.json({ 
+    return createApiSuccessResponse( 
       revisions: paginatedRevisions,
       total: revisions.length,
       limit,
       offset
-    });
+    );
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -106,20 +106,23 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'workflow', action: 'read', scope: 'all' }]
 }
+)
 
 // POST /api/workflow/revisions - Create manual revision
-export async function POST(request: NextRequest) {
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     // Check user permissions
-    if (!session.user.role || !['ADMIN', 'EDITOR'].includes(session.user.role)) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions to create revisions' },
+    ,
         { status: 403 }
       );
     }
@@ -181,11 +184,11 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       revision,
       message: 'Manual revision created successfully'
-    });
+    );
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -201,20 +204,23 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'workflow', action: 'create', scope: 'all' }]
 }
+)
 
 // DELETE /api/workflow/revisions - Delete revision
-export async function DELETE(request: NextRequest) {
+export const DELETE = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    , { status: 401 });
     }
 
     // Only admins can delete revisions
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Only administrators can delete revisions' },
+    ,
         { status: 403 }
       );
     }
@@ -244,10 +250,10 @@ export async function DELETE(request: NextRequest) {
       where: { id: revisionId }
     });
 
-    return NextResponse.json({
+    return createApiSuccessResponse(
       success: true,
       message: 'Revision deleted successfully'
-    });
+    );
 
   } catch (error) {
     console.error('Delete revision error:', error);
@@ -256,7 +262,12 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  },
+  {
+  permissions: [{ resource: 'workflow', action: 'delete', scope: 'all' }]
 }
+)
 
 /**
  * Compare two revision data objects and return differences

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { 
   databasePerformanceAnalyzer, 
   apiPerformanceTracker,
@@ -12,17 +12,16 @@ import {
 } from '@/lib/performance'
 import { MemoryMonitor } from '@/middleware/performance'
 
-export async function GET(_request: NextRequest) {
+export const GET = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     // Check authentication
-    const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     // Check admin role
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    , { status: 403 })
     }
 
     // Collect performance metrics
@@ -101,19 +100,23 @@ export async function GET(_request: NextRequest) {
       { status: 500 }
     )
   }
-}
 
-export async function POST(request: NextRequest) {
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
+}
+)
+
+export const POST = withApiPermissions(
+  async (request: NextRequest, { user }) => {
+    
   try {
     // Check authentication
-    const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    , { status: 401 })
     }
 
     // Check admin role
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    , { status: 403 })
     }
 
     const body = await request.json()
@@ -122,22 +125,22 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'clear_metrics':
         performanceMonitor.clearMetrics()
-        return NextResponse.json({ success: true, message: 'Metrics cleared' })
+        return createApiSuccessResponse( success: true, message: 'Metrics cleared' )
 
       case 'optimize_database':
         // This would trigger database optimization tasks
         // For now, just return success
-        return NextResponse.json({ 
+        return createApiSuccessResponse( 
           success: true, 
           message: 'Database optimization initiated' 
-        })
+        )
 
       case 'clear_cache':
         // This would clear application caches
-        return NextResponse.json({ 
+        return createApiSuccessResponse( 
           success: true, 
           message: 'Cache cleared' 
-        })
+        )
 
       default:
         return NextResponse.json(
@@ -152,4 +155,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  },
+  {
+  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
+)

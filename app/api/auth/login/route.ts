@@ -150,7 +150,7 @@ export const POST = withAPISecurity(
         }
 
         // Generate JWT token
-        const jwtSecret = process.env.NEXTAUTH_SECRET
+        const jwtSecret = process.env.AUTH_SECRET
         if (!jwtSecret) {
           return NextResponse.json(
             {

@@ -1,6 +1,31 @@
 import React from 'react'
 import { render, RenderOptions } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { jest } from '@jest/globals'
+
+// Mock Next.js router
+const mockRouter = {
+  push: jest.fn(),
+  replace: jest.fn(),
+  prefetch: jest.fn(),
+  back: jest.fn(),
+  forward: jest.fn(),
+  refresh: jest.fn(),
+  pathname: '/',
+  route: '/',
+  query: {},
+  asPath: '/',
+  basePath: '',
+  isLocaleDomain: true,
+  isReady: true,
+  isPreview: false,
+}
+
+jest.mock('next/navigation', () => ({
+  useRouter: () => mockRouter,
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+}))
 
 // Custom render function with providers
 const customRender = (
@@ -23,3 +48,4 @@ const customRender = (
 
 export * from '@testing-library/react'
 export { customRender as render }
+export { mockRouter }

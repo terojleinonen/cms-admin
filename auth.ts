@@ -93,5 +93,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: '/auth/error',
   },
   secret: process.env.AUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
 })

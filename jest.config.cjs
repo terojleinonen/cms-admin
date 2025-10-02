@@ -13,6 +13,7 @@ module.exports = {
         '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
         '^@/components/(.*)$': '<rootDir>/app/components/$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        'next-auth/react': '<rootDir>/__mocks__/next-auth/react.js',
         'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
       },
       // Add timeout and other settings to prevent hanging
@@ -31,6 +32,8 @@ module.exports = {
         '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
         '^@/components/(.*)$': '<rootDir>/app/components/$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        'next-auth/react': '<rootDir>/__mocks__/next-auth/react.js',
+        'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
       },
       testTimeout: 10000,
     }

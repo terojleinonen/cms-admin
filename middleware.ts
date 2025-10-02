@@ -410,10 +410,17 @@ export async function middleware(request: NextRequest) {
   }
 
   // Apply rate limiting based on route sensitivity
-  const sensitiveRoutes = ['/api/auth/', '/api/admin/', '/api/users/', '/admin/security', '/admin/database', '/admin/backup', '/admin/users']
-  const rateLimitConfig = sensitiveRoutes.some(route => pathname.startsWith(route))
-    ? rateLimitConfigs.sensitive
-    : rateLimitConfigs.public
+  const authRoutes = ['/api/auth/']
+  const sensitiveRoutes = ['/api/admin/', '/api/users/', '/admin/security', '/admin/database', '/admin/backup', '/admin/users']
+  
+  let rateLimitConfig
+  if (authRoutes.some(route => pathname.startsWith(route))) {
+    rateLimitConfig = rateLimitConfigs.auth
+  } else if (sensitiveRoutes.some(route => pathname.startsWith(route))) {
+    rateLimitConfig = rateLimitConfigs.sensitive
+  } else {
+    rateLimitConfig = rateLimitConfigs.public
+  }
 
   const rateLimitResult = await rateLimit(request, rateLimitConfig)
   

@@ -24,9 +24,9 @@ export const rateLimitConfigs = {
   
   // Authentication endpoints (more restrictive)
   auth: {
-    limit: 5,
+    limit: 20,
     windowMs: 15 * 60 * 1000, // 15 minutes
-    skipSuccessfulRequests: false,
+    skipSuccessfulRequests: true,
   },
   
   // Admin and sensitive operations

@@ -4,6 +4,7 @@ import './globals.css'
 import SessionProvider from './components/auth/SessionProvider'
 import LayoutWrapper from './components/layout/LayoutWrapper'
 import { PreferencesProvider } from './components/providers/PreferencesProvider'
+import { PermissionProvider } from './components/providers/PermissionProvider'
 import { PreferencesApplier } from './components/preferences/PreferencesApplier'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -22,12 +23,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} bg-soft-white text-slate-gray`}>
         <SessionProvider>
-          <PreferencesProvider>
-            <PreferencesApplier />
-            <LayoutWrapper>
-              {children}
-            </LayoutWrapper>
-          </PreferencesProvider>
+          <PermissionProvider>
+            <PreferencesProvider>
+              <PreferencesApplier />
+              <LayoutWrapper>
+                {children}
+              </LayoutWrapper>
+            </PreferencesProvider>
+          </PermissionProvider>
         </SessionProvider>
       </body>
     </html>

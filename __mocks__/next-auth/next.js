@@ -1,6 +1,6 @@
-export const getServerSession = jest.fn()
+const getServerSession = jest.fn()
 
-export const createMockSession = (overrides = {}) => ({
+const createMockSession = (overrides = {}) => ({
   user: {
     id: 'user-1',
     email: 'test@example.com',
@@ -10,3 +10,8 @@ export const createMockSession = (overrides = {}) => ({
   },
   expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 })
+
+module.exports = {
+  getServerSession,
+  createMockSession,
+}

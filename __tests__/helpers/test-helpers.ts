@@ -152,3 +152,26 @@ afterAll(async () => {
   // Restore original setInterval
   global.setInterval = originalSetInterval
 })
+
+// Test helper functions
+export function createMockUser(overrides: any = {}) {
+  return {
+    id: 'test-user-id',
+    email: 'test@example.com',
+    name: 'Test User',
+    role: 'VIEWER',
+    isActive: true,
+    emailVerified: new Date(),
+    twoFactorEnabled: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides
+  }
+}
+
+export function createMockSession(user: any) {
+  return {
+    user,
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+  }
+}

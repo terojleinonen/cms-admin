@@ -118,6 +118,13 @@ jest.mock('@/lib/api-permission-middleware', () => ({
 process.env.NEXTAUTH_SECRET = 'test-secret'
 process.env.NODE_ENV = 'test'
 
+// Mock ResizeObserver for HeadlessUI components
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}))
+
 // Mock setInterval to prevent open handles in tests
 const originalSetInterval = global.setInterval
 global.setInterval = jest.fn().mockImplementation((callback, delay) => {

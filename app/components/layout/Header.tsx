@@ -21,7 +21,7 @@
 
 'use client'
 
-import { Fragment, useState, useEffect } from 'react'
+import React, { Fragment, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -42,6 +42,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { UserRole } from '@prisma/client'
 import clsx from 'clsx'
+import { usePermissions } from '../../lib/hooks/usePermissions'
 
 /**
  * Enhanced user interface with additional properties
@@ -75,6 +76,11 @@ interface SearchResult {
   type: 'product' | 'user' | 'page' | 'category'
   url: string
   description?: string
+  ownerId?: string
+  requiredPermission?: {
+    resource: string
+    action: string
+  }
 }
 
 /**
@@ -88,6 +94,11 @@ interface Notification {
   timestamp: string
   read: boolean
   actionUrl?: string
+  requiredPermission?: {
+    resource: string
+    action: string
+  }
+  targetRole?: UserRole[]
 }
 
 /**
@@ -100,22 +111,64 @@ const userNavigation = [
 ]
 
 /**
- * Quick action buttons for common tasks
+ * Quick action buttons for common tasks with permission requirements
  */
-const quickActions = [
+interface QuickAction {
+  id: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  href: string
+  shortcut: string
+  requiredPermission: {
+    resource: string
+    action: string
+  }
+}
+
+const quickActions: QuickAction[] = [
   { 
     id: 'new-product', 
     label: 'New Product', 
     icon: PlusIcon, 
     href: '/admin/products/new',
-    shortcut: 'Cmd+Shift+P'
+    shortcut: 'Cmd+Shift+P',
+    requiredPermission: {
+      resource: 'products',
+      action: 'create'
+    }
   },
   { 
     id: 'new-user', 
     label: 'New User', 
     icon: PlusIcon, 
     href: '/admin/users/new',
-    shortcut: 'Cmd+Shift+U'
+    shortcut: 'Cmd+Shift+U',
+    requiredPermission: {
+      resource: 'users',
+      action: 'create'
+    }
+  },
+  { 
+    id: 'new-page', 
+    label: 'New Page', 
+    icon: PlusIcon, 
+    href: '/admin/pages/new',
+    shortcut: 'Cmd+Shift+G',
+    requiredPermission: {
+      resource: 'pages',
+      action: 'create'
+    }
+  },
+  { 
+    id: 'new-category', 
+    label: 'New Category', 
+    icon: PlusIcon, 
+    href: '/admin/categories/new',
+    shortcut: 'Cmd+Shift+C',
+    requiredPermission: {
+      resource: 'categories',
+      action: 'create'
+    }
   },
 ]
 
@@ -124,9 +177,38 @@ const quickActions = [
  */
 // Mock search results - replace with actual search API
 const mockResults: SearchResult[] = [
-  { id: '1', title: 'Ergonomic Chair', type: 'product', url: '/admin/products/1', description: 'Office furniture' },
-  { id: '2', title: 'John Doe', type: 'user', url: '/admin/users/2', description: 'Admin user' },
-  { id: '3', title: 'About Us', type: 'page', url: '/admin/pages/3', description: 'Company information' },
+  { 
+    id: '1', 
+    title: 'Ergonomic Chair', 
+    type: 'product', 
+    url: '/admin/products/1', 
+    description: 'Office furniture',
+    requiredPermission: { resource: 'products', action: 'read' }
+  },
+  { 
+    id: '2', 
+    title: 'John Doe', 
+    type: 'user', 
+    url: '/admin/users/2', 
+    description: 'Admin user',
+    requiredPermission: { resource: 'users', action: 'read' }
+  },
+  { 
+    id: '3', 
+    title: 'About Us', 
+    type: 'page', 
+    url: '/admin/pages/3', 
+    description: 'Company information',
+    requiredPermission: { resource: 'pages', action: 'read' }
+  },
+  { 
+    id: '4', 
+    title: 'Electronics Category', 
+    type: 'category', 
+    url: '/admin/categories/4', 
+    description: 'Product category',
+    requiredPermission: { resource: 'categories', action: 'read' }
+  },
 ]
 
 function GlobalSearch() {
@@ -134,20 +216,39 @@ function GlobalSearch() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
+  const permissions = usePermissions()
 
   useEffect(() => {
     if (query.length > 2) {
       // Simulate search delay
       const timer = setTimeout(() => {
-        setResults(mockResults.filter(item => 
-          item.title.toLowerCase().includes(query.toLowerCase())
-        ))
+        try {
+          const filteredResults = mockResults
+            .filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
+            .filter(item => {
+              // Filter results based on user permissions
+              if (!item.requiredPermission) return true
+              try {
+                return permissions.canAccess(
+                  item.requiredPermission.resource, 
+                  item.requiredPermission.action
+                )
+              } catch (error) {
+                console.error('Error checking search result permission:', error)
+                return false // Hide result on permission check error
+              }
+            })
+          setResults(filteredResults)
+        } catch (error) {
+          console.error('Error filtering search results:', error)
+          setResults([]) // Clear results on error
+        }
       }, 300)
       return () => clearTimeout(timer)
     } else {
       setResults([])
     }
-  }, [query])
+  }, [query, permissions])
 
   return (
     <Combobox value="" onChange={() => {}}>
@@ -207,6 +308,7 @@ function GlobalSearch() {
  */
 function NotificationsDropdown() {
   const router = useRouter()
+  const permissions = usePermissions()
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: '1',
@@ -215,7 +317,9 @@ function NotificationsDropdown() {
       type: 'info',
       timestamp: '2 minutes ago',
       read: false,
-      actionUrl: '/orders/1234'
+      actionUrl: '/orders/1234',
+      requiredPermission: { resource: 'orders', action: 'read' },
+      targetRole: [UserRole.ADMIN, UserRole.EDITOR]
     },
     {
       id: '2',
@@ -224,11 +328,65 @@ function NotificationsDropdown() {
       type: 'warning',
       timestamp: '1 hour ago',
       read: false,
-      actionUrl: '/admin/products/chair'
+      actionUrl: '/admin/products/chair',
+      requiredPermission: { resource: 'products', action: 'read' },
+      targetRole: [UserRole.ADMIN, UserRole.EDITOR]
+    },
+    {
+      id: '3',
+      title: 'Security Alert',
+      message: 'Multiple failed login attempts detected',
+      type: 'error',
+      timestamp: '30 minutes ago',
+      read: false,
+      actionUrl: '/admin/security',
+      requiredPermission: { resource: 'security', action: 'read' },
+      targetRole: [UserRole.ADMIN]
+    },
+    {
+      id: '4',
+      title: 'User Registration',
+      message: 'New user account created',
+      type: 'info',
+      timestamp: '2 hours ago',
+      read: true,
+      actionUrl: '/admin/users',
+      requiredPermission: { resource: 'users', action: 'read' },
+      targetRole: [UserRole.ADMIN]
     }
   ])
 
-  const unreadCount = notifications.filter(n => !n.read).length
+  // Filter notifications based on user permissions and role
+  const filteredNotifications = React.useMemo(() => {
+    try {
+      return notifications.filter(notification => {
+        // Check if user has required role
+        if (notification.targetRole && !notification.targetRole.includes(permissions.user?.role as UserRole)) {
+          return false
+        }
+        
+        // Check if user has required permission
+        if (notification.requiredPermission) {
+          try {
+            return permissions.canAccess(
+              notification.requiredPermission.resource,
+              notification.requiredPermission.action
+            )
+          } catch (error) {
+            console.error('Error checking notification permission:', error)
+            return false // Hide notification on permission check error
+          }
+        }
+        
+        return true
+      })
+    } catch (error) {
+      console.error('Error filtering notifications:', error)
+      return [] // Return empty array on error
+    }
+  }, [notifications, permissions])
+
+  const unreadCount = filteredNotifications.filter(n => !n.read).length
 
   const markAsRead = (id: string) => {
     setNotifications(prev => 
@@ -262,13 +420,13 @@ function NotificationsDropdown() {
             <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
           </div>
           
-          {notifications.length === 0 ? (
+          {filteredNotifications.length === 0 ? (
             <div className="px-4 py-6 text-center text-sm text-gray-500">
               No notifications
             </div>
           ) : (
             <div className="max-h-64 overflow-y-auto">
-              {notifications.map((notification) => (
+              {filteredNotifications.map((notification) => (
                 <Menu.Item key={notification.id}>
                   {({ active, close }) => (
                     <button
@@ -320,6 +478,19 @@ function NotificationsDropdown() {
 export default function Header({ onMenuClick, user }: HeaderProps) {
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark' | 'system'>('system')
   const router = useRouter()
+  const permissions = usePermissions()
+
+  // Filter quick actions based on user permissions
+  const allowedQuickActions = React.useMemo(() => {
+    try {
+      return quickActions.filter(action => 
+        permissions.canAccess(action.requiredPermission.resource, action.requiredPermission.action)
+      )
+    } catch (error) {
+      console.error('Error filtering quick actions:', error)
+      return [] // Return empty array on error to prevent crashes
+    }
+  }, [permissions])
 
   const handleSignOut = async () => {
     try {
@@ -375,9 +546,9 @@ export default function Header({ onMenuClick, user }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-x-4 lg:gap-x-6">
-          {/* Quick actions */}
+          {/* Quick actions - filtered by permissions */}
           <div className="hidden md:flex items-center gap-x-2">
-            {quickActions.map((action) => (
+            {allowedQuickActions.map((action) => (
               <button
                 key={action.id}
                 type="button"

@@ -12,11 +12,11 @@ module.exports = {
         '^@/(.*)$': '<rootDir>/app/$1',
         '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
         '^@/components/(.*)$': '<rootDir>/app/components/$1',
+        '^@/__tests__/(.*)$': '<rootDir>/__tests__/$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         'next-auth/react': '<rootDir>/__mocks__/next-auth/react.js',
         'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
       },
-      // Add timeout and other settings to prevent hanging
       testTimeout: 10000,
     },
     {
@@ -31,11 +31,51 @@ module.exports = {
         '^@/(.*)$': '<rootDir>/app/$1',
         '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
         '^@/components/(.*)$': '<rootDir>/app/components/$1',
+        '^@/__tests__/(.*)$': '<rootDir>/__tests__/$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         'next-auth/react': '<rootDir>/__mocks__/next-auth/react.js',
         'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
       },
       testTimeout: 10000,
+    },
+    {
+      displayName: 'e2e',
+      testEnvironment: 'jsdom',
+      testMatch: ['<rootDir>/__tests__/e2e/**/*.test.{ts,tsx}'],
+      setupFilesAfterEnv: ['<rootDir>/__tests__/helpers/test-helpers.ts'],
+      transform: {
+        '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }],
+      },
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/app/$1',
+        '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
+        '^@/components/(.*)$': '<rootDir>/app/components/$1',
+        '^@/__tests__/(.*)$': '<rootDir>/__tests__/$1',
+        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        'next-auth/react': '<rootDir>/__mocks__/next-auth/react.js',
+        'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
+      },
+      testTimeout: 30000,
+    },
+    {
+      displayName: 'performance',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/__tests__/performance/**/*.test.ts'],
+      setupFilesAfterEnv: ['<rootDir>/__tests__/helpers/test-helpers.ts'],
+      transform: {
+        '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }],
+      },
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/app/$1',
+        '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
+        '^@/components/(.*)$': '<rootDir>/app/components/$1',
+        '^@/__tests__/(.*)$': '<rootDir>/__tests__/$1',
+        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        'next-auth/react': '<rootDir>/__mocks__/next-auth/react.js',
+        'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
+      },
+      testTimeout: 120000,
+      maxWorkers: 1,
     }
   ],
   collectCoverageFrom: [
@@ -52,7 +92,6 @@ module.exports = {
       statements: 80
     }
   },
-  // Global settings to prevent hanging
   maxWorkers: 1,
   testTimeout: 10000
 }

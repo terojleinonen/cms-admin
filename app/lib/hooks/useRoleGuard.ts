@@ -5,7 +5,7 @@
  * React hook for component-level role and permission protection
  */
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserRole } from '@prisma/client'
 import { usePermissions, PermissionHook } from './usePermissions'
@@ -65,123 +65,9 @@ export function useRoleGuard(options: RoleGuardOptions = {}): RoleGuardResult {
   const permissions = usePermissions()
   const [authorizationChecked, setAuthorizationChecked] = useState(false)
   const [reason, setReason] = useState<string>()
+  const lastAuthStateRef = useRef<{ authorized: boolean; reason?: string }>({ authorized: false })
 
-  // Check if user meets role requirements
-  const checkRoleRequirements = useCallback((): { authorized: boolean; reason?: string } => {
-    if (!permissions.isAuthenticated) {
-      return { authorized: false, reason: 'Not authenticated' }
-    }
 
-    // Check specific role requirement
-    if (requiredRole && !permissions.hasRole(requiredRole)) {
-      return { 
-        authorized: false, 
-        reason: `Required role: ${requiredRole}, current role: ${permissions.user?.role}` 
-      }
-    }
-
-    // Check minimum role requirement
-    if (minimumRole && !permissions.hasMinimumRole(minimumRole)) {
-      return { 
-        authorized: false, 
-        reason: `Minimum role required: ${minimumRole}, current role: ${permissions.user?.role}` 
-      }
-    }
-
-    // Check allowed roles
-    if (allowedRoles && allowedRoles.length > 0) {
-      const hasAllowedRole = allowedRoles.some(role => permissions.hasRole(role))
-      if (!hasAllowedRole) {
-        return { 
-          authorized: false, 
-          reason: `Allowed roles: ${allowedRoles.join(', ')}, current role: ${permissions.user?.role}` 
-        }
-      }
-    }
-
-    return { authorized: true }
-  }, [permissions, requiredRole, minimumRole, allowedRoles])
-
-  // Check if user meets permission requirements
-  const checkPermissionRequirements = useCallback((): { authorized: boolean; reason?: string } => {
-    if (!requiredPermissions || requiredPermissions.length === 0) {
-      return { authorized: true }
-    }
-
-    if (requireAllPermissions) {
-      // AND logic - user must have ALL permissions
-      for (const permission of requiredPermissions) {
-        if (!permissions.canAccess(permission.resource, permission.action, permission.scope)) {
-          return { 
-            authorized: false, 
-            reason: `Missing required permission: ${permission.resource}.${permission.action}${permission.scope ? `.${permission.scope}` : ''}` 
-          }
-        }
-      }
-      return { authorized: true }
-    } else {
-      // OR logic - user must have AT LEAST ONE permission
-      const hasAnyPermission = requiredPermissions.some(permission =>
-        permissions.canAccess(permission.resource, permission.action, permission.scope)
-      )
-      
-      if (!hasAnyPermission) {
-        const permissionStrings = requiredPermissions.map(p => 
-          `${p.resource}.${p.action}${p.scope ? `.${p.scope}` : ''}`
-        )
-        return { 
-          authorized: false, 
-          reason: `Missing any of required permissions: ${permissionStrings.join(', ')}` 
-        }
-      }
-      
-      return { authorized: true }
-    }
-  }, [permissions, requiredPermissions, requireAllPermissions])
-
-  // Check custom validation
-  const checkCustomValidation = useCallback((): { authorized: boolean; reason?: string } => {
-    if (!customValidator) {
-      return { authorized: true }
-    }
-
-    try {
-      const isValid = customValidator(permissions)
-      return { 
-        authorized: isValid, 
-        reason: isValid ? undefined : 'Custom validation failed' 
-      }
-    } catch (error) {
-      console.error('Custom validator error:', error)
-      return { 
-        authorized: false, 
-        reason: 'Custom validation error' 
-      }
-    }
-  }, [permissions, customValidator])
-
-  // Main authorization check
-  const checkAuthorization = useCallback((): { authorized: boolean; reason?: string } => {
-    // Check role requirements
-    const roleCheck = checkRoleRequirements()
-    if (!roleCheck.authorized) {
-      return roleCheck
-    }
-
-    // Check permission requirements
-    const permissionCheck = checkPermissionRequirements()
-    if (!permissionCheck.authorized) {
-      return permissionCheck
-    }
-
-    // Check custom validation
-    const customCheck = checkCustomValidation()
-    if (!customCheck.authorized) {
-      return customCheck
-    }
-
-    return { authorized: true }
-  }, [checkRoleRequirements, checkPermissionRequirements, checkCustomValidation])
 
   // Redirect function
   const redirect = useCallback(() => {
@@ -190,46 +76,173 @@ export function useRoleGuard(options: RoleGuardOptions = {}): RoleGuardResult {
     }
   }, [router, redirectTo])
 
-  // Main authorization effect
-  useEffect(() => {
+  // Calculate authorization state directly without complex dependencies
+  const authorizationResult = useMemo(() => {
     if (permissions.isLoading) {
+      return { authorized: false, reason: undefined, loading: true }
+    }
+
+    // Check role requirements
+    if (!permissions.isAuthenticated) {
+      return { authorized: false, reason: 'Not authenticated', loading: false }
+    }
+
+    const userRole = permissions.user?.role
+
+    // Check specific role requirement
+    if (requiredRole && userRole !== requiredRole) {
+      return { 
+        authorized: false, 
+        reason: `Required role: ${requiredRole}, current role: ${userRole}`,
+        loading: false
+      }
+    }
+
+    // Check minimum role requirement using role hierarchy
+    if (minimumRole) {
+      const roleHierarchy = {
+        [UserRole.VIEWER]: 1,
+        [UserRole.EDITOR]: 2,
+        [UserRole.ADMIN]: 3,
+      }
+      
+      const userLevel = userRole ? roleHierarchy[userRole] : 0
+      const requiredLevel = roleHierarchy[minimumRole]
+      
+      if (userLevel < requiredLevel) {
+        return { 
+          authorized: false, 
+          reason: `Minimum role required: ${minimumRole}, current role: ${userRole}`,
+          loading: false
+        }
+      }
+    }
+
+    // Check allowed roles
+    if (allowedRoles && allowedRoles.length > 0) {
+      const hasAllowedRole = allowedRoles.includes(userRole as UserRole)
+      if (!hasAllowedRole) {
+        return { 
+          authorized: false, 
+          reason: `Allowed roles: ${allowedRoles.join(', ')}, current role: ${userRole}`,
+          loading: false
+        }
+      }
+    }
+
+    // Check permission requirements
+    if (requiredPermissions && requiredPermissions.length > 0) {
+      if (requireAllPermissions) {
+        // AND logic - user must have ALL permissions
+        for (const permission of requiredPermissions) {
+          if (!permissions.canAccess(permission.resource, permission.action, permission.scope)) {
+            return { 
+              authorized: false, 
+              reason: `Missing required permission: ${permission.resource}.${permission.action}${permission.scope ? `.${permission.scope}` : ''}`,
+              loading: false
+            }
+          }
+        }
+      } else {
+        // OR logic - user must have AT LEAST ONE permission
+        const hasAnyPermission = requiredPermissions.some(permission =>
+          permissions.canAccess(permission.resource, permission.action, permission.scope)
+        )
+        
+        if (!hasAnyPermission) {
+          const permissionStrings = requiredPermissions.map(p => 
+            `${p.resource}.${p.action}${p.scope ? `.${p.scope}` : ''}`
+          )
+          return { 
+            authorized: false, 
+            reason: `Missing any of required permissions: ${permissionStrings.join(', ')}`,
+            loading: false
+          }
+        }
+      }
+    }
+
+    // Check custom validation
+    if (customValidator) {
+      try {
+        const isValid = customValidator(permissions)
+        if (!isValid) {
+          return { 
+            authorized: false, 
+            reason: 'Custom validation failed',
+            loading: false
+          }
+        }
+      } catch (error) {
+        console.error('Custom validator error:', error)
+        return { 
+          authorized: false, 
+          reason: 'Custom validation error',
+          loading: false
+        }
+      }
+    }
+
+    return { authorized: true, reason: undefined, loading: false }
+  }, [
+    permissions.isLoading,
+    permissions.isAuthenticated,
+    permissions.user?.role,
+    permissions.canAccess,
+    requiredRole,
+    minimumRole,
+    allowedRoles,
+    requiredPermissions,
+    requireAllPermissions,
+    customValidator
+  ])
+
+  // Handle side effects only when authorization state actually changes
+  useEffect(() => {
+    if (authorizationResult.loading) {
       return
     }
 
-    const { authorized, reason: authReason } = checkAuthorization()
-    
-    setReason(authReason)
-    setAuthorizationChecked(true)
+    const currentState = {
+      authorized: authorizationResult.authorized,
+      reason: authorizationResult.reason
+    }
 
-    if (authorized) {
-      onAuthorized?.()
-    } else {
-      onUnauthorized?.(authReason || 'Unauthorized')
-      
-      if (redirectOnUnauthorized) {
-        redirect()
+    // Only update state and call callbacks if the authorization state has actually changed
+    const hasChanged = 
+      lastAuthStateRef.current.authorized !== currentState.authorized ||
+      lastAuthStateRef.current.reason !== currentState.reason
+
+    if (hasChanged) {
+      setReason(currentState.reason)
+      setAuthorizationChecked(true)
+      lastAuthStateRef.current = currentState
+
+      if (currentState.authorized) {
+        onAuthorized?.()
+      } else {
+        onUnauthorized?.(currentState.reason || 'Unauthorized')
+        
+        if (redirectOnUnauthorized) {
+          redirect()
+        }
       }
+    } else if (!authorizationChecked) {
+      // First time setup
+      setAuthorizationChecked(true)
     }
   }, [
-    permissions.isLoading,
-    permissions.user,
-    permissions.isAuthenticated,
-    checkAuthorization,
-    onAuthorized,
-    onUnauthorized,
+    authorizationResult.authorized, 
+    authorizationResult.reason, 
+    authorizationResult.loading,
+    authorizationChecked,
     redirectOnUnauthorized,
-    redirect
+    redirect,
+    onAuthorized,
+    onUnauthorized
   ])
 
-  // Calculate final authorization state
-  const isAuthorized = useMemo(() => {
-    if (permissions.isLoading || !authorizationChecked) {
-      return false
-    }
-    
-    const { authorized } = checkAuthorization()
-    return authorized
-  }, [permissions.isLoading, authorizationChecked, checkAuthorization])
+  const isAuthorized = authorizationResult.authorized
 
   // Calculate loading state
   const isLoading = useMemo(() => {
@@ -237,8 +250,8 @@ export function useRoleGuard(options: RoleGuardOptions = {}): RoleGuardResult {
       return false
     }
     
-    return permissions.isLoading || !authorizationChecked
-  }, [permissions.isLoading, authorizationChecked, showLoadingState])
+    return authorizationResult.loading || !authorizationChecked
+  }, [authorizationResult.loading, authorizationChecked, showLoadingState])
 
   return {
     isAuthorized,

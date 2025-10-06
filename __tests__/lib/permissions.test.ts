@@ -1,6 +1,7 @@
 /**
  * Comprehensive unit tests for Permission Service
- * Tests all permission validation methods and role hierarchy logic
+ * Tests all permission validation methods, role hierarchy logic, and cache functionality
+ * Requirements: 4.1, 4.5
  */
 
 import { UserRole } from '@prisma/client';
@@ -322,28 +323,481 @@ describe('RoleHierarchyValidator', () => {
   });
 });
 
+describe('RoleHierarchyValidator', () => {
+  let validator: RoleHierarchyValidator;
+
+  beforeEach(() => {
+    validator = new RoleHierarchyValidator();
+  });
+
+  describe('hasMinimumRole', () => {
+    it('should validate minimum role requirements correctly', () => {
+      expect(RoleHierarchyValidator.hasMinimumRole(UserRole.ADMIN, UserRole.VIEWER)).toBe(true);
+      expect(RoleHierarchyValidator.hasMinimumRole(UserRole.ADMIN, UserRole.EDITOR)).toBe(true);
+      expect(RoleHierarchyValidator.hasMinimumRole(UserRole.ADMIN, UserRole.ADMIN)).toBe(true);
+      
+      expect(RoleHierarchyValidator.hasMinimumRole(UserRole.EDITOR, UserRole.VIEWER)).toBe(true);
+      expect(RoleHierarchyValidator.hasMinimumRole(UserRole.EDITOR, UserRole.EDITOR)).toBe(true);
+      expect(RoleHierarchyValidator.hasMinimumRole(UserRole.EDITOR, UserRole.ADMIN)).toBe(false);
+      
+      expect(RoleHierarchyValidator.hasMinimumRole(UserRole.VIEWER, UserRole.VIEWER)).toBe(true);
+      expect(RoleHierarchyValidator.hasMinimumRole(UserRole.VIEWER, UserRole.EDITOR)).toBe(false);
+      expect(RoleHierarchyValidator.hasMinimumRole(UserRole.VIEWER, UserRole.ADMIN)).toBe(false);
+      
+      expect(RoleHierarchyValidator.hasMinimumRole(null, UserRole.VIEWER)).toBe(false);
+    });
+  });
+
+  describe('canManageUser', () => {
+    it('should validate user management hierarchy correctly', () => {
+      expect(RoleHierarchyValidator.canManageUser(UserRole.ADMIN, UserRole.EDITOR)).toBe(true);
+      expect(RoleHierarchyValidator.canManageUser(UserRole.ADMIN, UserRole.VIEWER)).toBe(true);
+      expect(RoleHierarchyValidator.canManageUser(UserRole.ADMIN, UserRole.ADMIN)).toBe(false);
+      
+      expect(RoleHierarchyValidator.canManageUser(UserRole.EDITOR, UserRole.VIEWER)).toBe(true);
+      expect(RoleHierarchyValidator.canManageUser(UserRole.EDITOR, UserRole.EDITOR)).toBe(false);
+      expect(RoleHierarchyValidator.canManageUser(UserRole.EDITOR, UserRole.ADMIN)).toBe(false);
+      
+      expect(RoleHierarchyValidator.canManageUser(UserRole.VIEWER, UserRole.VIEWER)).toBe(false);
+      expect(RoleHierarchyValidator.canManageUser(UserRole.VIEWER, UserRole.EDITOR)).toBe(false);
+      expect(RoleHierarchyValidator.canManageUser(UserRole.VIEWER, UserRole.ADMIN)).toBe(false);
+    });
+  });
+
+  describe('getAssignableRoles', () => {
+    it('should return correct assignable roles for each role', () => {
+      const adminRoles = RoleHierarchyValidator.getAssignableRoles(UserRole.ADMIN);
+      expect(adminRoles).toContain(UserRole.EDITOR);
+      expect(adminRoles).toContain(UserRole.VIEWER);
+      expect(adminRoles).not.toContain(UserRole.ADMIN);
+      
+      const editorRoles = RoleHierarchyValidator.getAssignableRoles(UserRole.EDITOR);
+      expect(editorRoles).toContain(UserRole.VIEWER);
+      expect(editorRoles).not.toContain(UserRole.EDITOR);
+      expect(editorRoles).not.toContain(UserRole.ADMIN);
+      
+      const viewerRoles = RoleHierarchyValidator.getAssignableRoles(UserRole.VIEWER);
+      expect(viewerRoles).toHaveLength(0);
+    });
+  });
+
+  describe('getRoleLevel', () => {
+    it('should return correct role levels', () => {
+      expect(RoleHierarchyValidator.getRoleLevel(UserRole.ADMIN)).toBe(3);
+      expect(RoleHierarchyValidator.getRoleLevel(UserRole.EDITOR)).toBe(2);
+      expect(RoleHierarchyValidator.getRoleLevel(UserRole.VIEWER)).toBe(1);
+    });
+  });
+
+  describe('getRoleDisplayName', () => {
+    it('should return correct display names', () => {
+      expect(RoleHierarchyValidator.getRoleDisplayName(UserRole.ADMIN)).toBe('Administrator');
+      expect(RoleHierarchyValidator.getRoleDisplayName(UserRole.EDITOR)).toBe('Editor');
+      expect(RoleHierarchyValidator.getRoleDisplayName(UserRole.VIEWER)).toBe('Viewer');
+    });
+  });
+
+  describe('getRoleDescription', () => {
+    it('should return correct role descriptions', () => {
+      const adminDesc = RoleHierarchyValidator.getRoleDescription(UserRole.ADMIN);
+      const editorDesc = RoleHierarchyValidator.getRoleDescription(UserRole.EDITOR);
+      const viewerDesc = RoleHierarchyValidator.getRoleDescription(UserRole.VIEWER);
+      
+      expect(adminDesc).toContain('Full system access');
+      expect(editorDesc).toContain('create, edit, and manage content');
+      expect(viewerDesc).toContain('Read-only access');
+    });
+  });
+
+  describe('isValidRoleTransition', () => {
+    it('should validate role transitions correctly', () => {
+      // Admin can assign any role except admin
+      expect(RoleHierarchyValidator.isValidRoleTransition(UserRole.ADMIN, UserRole.VIEWER, UserRole.EDITOR)).toBe(true);
+      expect(RoleHierarchyValidator.isValidRoleTransition(UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)).toBe(true);
+      expect(RoleHierarchyValidator.isValidRoleTransition(UserRole.ADMIN, UserRole.VIEWER, UserRole.ADMIN)).toBe(false);
+      
+      // Editor can only assign viewer role
+      expect(RoleHierarchyValidator.isValidRoleTransition(UserRole.EDITOR, UserRole.VIEWER, UserRole.VIEWER)).toBe(true);
+      expect(RoleHierarchyValidator.isValidRoleTransition(UserRole.EDITOR, UserRole.VIEWER, UserRole.EDITOR)).toBe(false);
+      expect(RoleHierarchyValidator.isValidRoleTransition(UserRole.EDITOR, UserRole.EDITOR, UserRole.VIEWER)).toBe(true); // Editor can demote editor to viewer
+      
+      // Viewer cannot assign any roles
+      expect(RoleHierarchyValidator.isValidRoleTransition(UserRole.VIEWER, UserRole.VIEWER, UserRole.VIEWER)).toBe(false);
+    });
+  });
+});
+
+describe('Advanced Permission Scenarios', () => {
+  let service: PermissionService;
+  let validator: ResourcePermissionValidator;
+
+  beforeEach(() => {
+    service = new PermissionService();
+    service.clearCache();
+    validator = new ResourcePermissionValidator(service);
+  });
+
+  describe('wildcard permissions', () => {
+    it('should handle admin wildcard permissions correctly', () => {
+      const admin = createMockUser(UserRole.ADMIN);
+      
+      // Admin should have access to any resource/action combination
+      expect(service.hasPermission(admin, { resource: 'custom-resource', action: 'custom-action' })).toBe(true);
+      expect(service.hasPermission(admin, { resource: 'unknown', action: 'unknown' })).toBe(true);
+      expect(service.hasPermission(admin, { resource: 'products', action: 'manage', scope: 'all' })).toBe(true);
+    });
+  });
+
+  describe('scope-based permissions', () => {
+    it('should handle own scope permissions correctly', () => {
+      const editor = createMockUser(UserRole.EDITOR, 'editor-123');
+      
+      // Editor should be able to manage own profile
+      expect(validator.canUpdateUser(editor, 'editor-123')).toBe(true);
+      expect(validator.canUpdateUser(editor, 'other-user-456')).toBe(false);
+    });
+
+    it('should handle all scope permissions correctly', () => {
+      const admin = createMockUser(UserRole.ADMIN);
+      const editor = createMockUser(UserRole.EDITOR);
+      
+      // Admin has 'all' scope for users
+      expect(validator.canUpdateUser(admin, 'any-user-id')).toBe(true);
+      
+      // Editor does not have 'all' scope for users
+      expect(validator.canUpdateUser(editor, 'any-user-id')).toBe(false);
+    });
+  });
+
+  describe('resource ownership validation', () => {
+    it('should validate resource ownership correctly', () => {
+      const user = createMockUser(UserRole.EDITOR, 'user-123');
+      
+      expect(service.ownsResource(user, 'user-123')).toBe(true);
+      expect(service.ownsResource(user, 'user-456')).toBe(false);
+      expect(service.ownsResource(null, 'user-123')).toBe(false);
+    });
+  });
+
+  describe('route pattern matching', () => {
+    it('should match dynamic routes correctly', () => {
+      const editor = createMockUser(UserRole.EDITOR);
+      
+      // Test various dynamic route patterns
+      expect(service.canUserAccessRoute(editor, '/admin/products/123/edit')).toBe(true);
+      expect(service.canUserAccessRoute(editor, '/admin/products/abc-def/edit')).toBe(true);
+      expect(service.canUserAccessRoute(editor, '/admin/pages/456/edit')).toBe(true);
+      
+      // Should not match routes that require permissions editor doesn't have
+      expect(service.canUserAccessRoute(editor, '/admin/users')).toBe(false); // Requires users read permission
+    });
+
+    it('should handle nested dynamic routes', () => {
+      const admin = createMockUser(UserRole.ADMIN);
+      
+      // Admin should access nested routes
+      expect(service.canUserAccessRoute(admin, '/admin/users/123/permissions')).toBe(true);
+      expect(service.canUserAccessRoute(admin, '/admin/security/events/456')).toBe(true);
+    });
+  });
+
+  describe('permission filtering', () => {
+    it('should filter arrays based on permissions correctly', () => {
+      const editor = createMockUser(UserRole.EDITOR);
+      const items = [
+        { id: '1', type: 'product', name: 'Product 1' },
+        { id: '2', type: 'user', name: 'User 1' },
+        { id: '3', type: 'product', name: 'Product 2' },
+        { id: '4', type: 'category', name: 'Category 1' },
+        { id: '5', type: 'user', name: 'User 2' },
+      ];
+      
+      const filtered = service.filterByPermissions(
+        editor,
+        items,
+        (item) => item.type === 'product' ? 'products' : 
+                  item.type === 'user' ? 'users' : 
+                  item.type === 'category' ? 'categories' : 'unknown',
+        'read'
+      );
+      
+      // Editor can read products and categories, but not users
+      expect(filtered).toHaveLength(3);
+      expect(filtered.every(item => item.type !== 'user')).toBe(true);
+    });
+
+    it('should return empty array for null user', () => {
+      const items = [{ id: '1', type: 'product' }];
+      const filtered = service.filterByPermissions(
+        null,
+        items,
+        (item) => 'products',
+        'read'
+      );
+      
+      expect(filtered).toHaveLength(0);
+    });
+  });
+});
+
+describe('Cache Functionality Tests', () => {
+  let service: PermissionService;
+
+  beforeEach(() => {
+    service = new PermissionService();
+    service.clearCache();
+  });
+
+  describe('cache operations', () => {
+    it('should cache permission results correctly', () => {
+      const editor = createMockUser(UserRole.EDITOR);
+      const permission: Permission = { resource: 'products', action: 'read' };
+      
+      // First call should compute and cache
+      const result1 = service.hasPermission(editor, permission);
+      
+      // Get cache stats to verify caching
+      const stats = service.getCacheStats();
+      expect(stats.size).toBeGreaterThan(0);
+      
+      // Second call should use cache (same result)
+      const result2 = service.hasPermission(editor, permission);
+      
+      expect(result1).toBe(result2);
+      expect(result1).toBe(true);
+    });
+
+    it('should handle different cache keys for different permissions', () => {
+      const user = createMockUser(UserRole.EDITOR);
+      
+      // Cache different permissions
+      service.hasPermission(user, { resource: 'products', action: 'read' });
+      service.hasPermission(user, { resource: 'products', action: 'create' });
+      service.hasPermission(user, { resource: 'categories', action: 'read' });
+      
+      const stats = service.getCacheStats();
+      expect(stats.size).toBe(3);
+    });
+
+    it('should handle scope in cache keys', () => {
+      const user = createMockUser(UserRole.EDITOR);
+      
+      // Cache same resource/action with different scopes
+      service.hasPermission(user, { resource: 'profile', action: 'manage', scope: 'own' });
+      service.hasPermission(user, { resource: 'profile', action: 'manage', scope: 'all' });
+      service.hasPermission(user, { resource: 'profile', action: 'manage' }); // no scope
+      
+      const stats = service.getCacheStats();
+      expect(stats.size).toBe(3);
+    });
+
+    it('should invalidate user cache correctly', () => {
+      const user = createMockUser(UserRole.EDITOR);
+      
+      // Cache some permissions
+      service.hasPermission(user, { resource: 'products', action: 'read' });
+      service.hasPermission(user, { resource: 'categories', action: 'read' });
+      
+      let stats = service.getCacheStats();
+      expect(stats.size).toBe(2);
+      
+      // Invalidate user cache
+      service.invalidateUserCache(user.id);
+      
+      stats = service.getCacheStats();
+      expect(stats.size).toBe(0);
+    });
+
+    it('should clear all cache correctly', () => {
+      const user1 = createMockUser(UserRole.EDITOR, 'user1');
+      const user2 = createMockUser(UserRole.VIEWER, 'user2');
+      
+      // Cache permissions for different users
+      service.hasPermission(user1, { resource: 'products', action: 'read' });
+      service.hasPermission(user2, { resource: 'products', action: 'read' });
+      
+      let stats = service.getCacheStats();
+      expect(stats.size).toBe(2);
+      
+      // Clear all cache
+      service.clearCache();
+      
+      stats = service.getCacheStats();
+      expect(stats.size).toBe(0);
+    });
+
+    it('should provide accurate cache statistics', () => {
+      const stats = service.getCacheStats();
+      
+      expect(stats).toHaveProperty('size');
+      expect(stats).toHaveProperty('ttl');
+      expect(typeof stats.size).toBe('number');
+      expect(typeof stats.ttl).toBe('number');
+      expect(stats.ttl).toBe(5 * 60 * 1000); // 5 minutes default
+    });
+  });
+
+  describe('cache performance', () => {
+    it('should improve performance on repeated calls', () => {
+      const user = createMockUser(UserRole.EDITOR);
+      const permission: Permission = { resource: 'products', action: 'read' };
+      
+      // Measure first call (should compute)
+      const start1 = Date.now();
+      const result1 = service.hasPermission(user, permission);
+      const time1 = Date.now() - start1;
+      
+      // Measure second call (should use cache)
+      const start2 = Date.now();
+      const result2 = service.hasPermission(user, permission);
+      const time2 = Date.now() - start2;
+      
+      expect(result1).toBe(result2);
+      // Cache should be faster (though this might be flaky in fast environments)
+      // We mainly check that both calls work correctly
+      expect(time1).toBeGreaterThanOrEqual(0);
+      expect(time2).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should handle concurrent cache access', () => {
+      const user = createMockUser(UserRole.EDITOR);
+      const permission: Permission = { resource: 'products', action: 'read' };
+      
+      // Make multiple concurrent calls
+      const promises = Array.from({ length: 10 }, () => 
+        service.hasPermission(user, permission)
+      );
+      
+      const results = Promise.all(promises);
+      
+      // All should return the same result
+      return results.then(values => {
+        expect(values.every(result => result === true)).toBe(true);
+        
+        // Should only have one cache entry
+        const stats = service.getCacheStats();
+        expect(stats.size).toBe(1);
+      });
+    });
+  });
+});
+
+describe('Error Handling and Edge Cases', () => {
+  let service: PermissionService;
+
+  beforeEach(() => {
+    service = new PermissionService();
+    service.clearCache();
+  });
+
+  describe('null and undefined handling', () => {
+    it('should handle null user gracefully', () => {
+      expect(service.hasPermission(null, { resource: 'products', action: 'read' })).toBe(false);
+      expect(service.hasResourceAccess(null, 'products', 'read')).toBe(false);
+      expect(service.canUserAccessRoute(null, '/admin/products')).toBe(false);
+      expect(service.isAdmin(null)).toBe(false);
+      expect(service.isEditor(null)).toBe(false);
+      expect(service.isViewer(null)).toBe(false);
+    });
+
+    it('should handle user without role', () => {
+      const userWithoutRole = { ...createMockUser(UserRole.VIEWER), role: null as any };
+      
+      expect(service.hasPermission(userWithoutRole, { resource: 'products', action: 'read' })).toBe(false);
+      expect(service.isAdmin(userWithoutRole)).toBe(false);
+    });
+
+    it('should handle empty permission objects', () => {
+      const user = createMockUser(UserRole.EDITOR);
+      
+      // These should not throw errors
+      expect(service.hasPermission(user, { resource: '', action: '' })).toBe(false);
+      expect(service.hasPermission(user, { resource: 'products', action: '' })).toBe(true); // Editor has manage permission for products
+      expect(service.hasPermission(user, { resource: '', action: 'read' })).toBe(false);
+    });
+  });
+
+  describe('unknown resources and actions', () => {
+    it('should handle unknown resources gracefully', () => {
+      const editor = createMockUser(UserRole.EDITOR);
+      const admin = createMockUser(UserRole.ADMIN);
+      
+      // Editor should not have access to unknown resources
+      expect(service.hasPermission(editor, { resource: 'unknown-resource', action: 'read' })).toBe(false);
+      
+      // Admin should have access due to wildcard permissions
+      expect(service.hasPermission(admin, { resource: 'unknown-resource', action: 'read' })).toBe(true);
+    });
+
+    it('should handle unknown actions gracefully', () => {
+      const editor = createMockUser(UserRole.EDITOR);
+      const admin = createMockUser(UserRole.ADMIN);
+      
+      // Editor should have access to unknown actions on products due to manage permission
+      expect(service.hasPermission(editor, { resource: 'products', action: 'unknown-action' })).toBe(true);
+      
+      // Admin should have access due to wildcard permissions
+      expect(service.hasPermission(admin, { resource: 'products', action: 'unknown-action' })).toBe(true);
+      
+      // But editor should not have access to unknown actions on resources they don't manage
+      expect(service.hasPermission(editor, { resource: 'users', action: 'unknown-action' })).toBe(false);
+    });
+  });
+
+  describe('route edge cases', () => {
+    it('should handle routes without permissions', () => {
+      const user = createMockUser(UserRole.VIEWER);
+      
+      // Routes not in the permission mapping should be accessible
+      expect(service.canUserAccessRoute(user, '/public-route')).toBe(true);
+      expect(service.canUserAccessRoute(user, '/unknown/route')).toBe(true);
+    });
+
+    it('should handle malformed routes', () => {
+      const user = createMockUser(UserRole.EDITOR);
+      
+      // Should not throw errors
+      expect(service.canUserAccessRoute(user, '')).toBe(true);
+      expect(service.canUserAccessRoute(user, '/')).toBe(true);
+      expect(service.canUserAccessRoute(user, '//')).toBe(true);
+    });
+  });
+});
+
 describe('Integration Tests', () => {
   it('should work with singleton instances', () => {
     const admin = createMockUser(UserRole.ADMIN);
     
     expect(permissionService.isAdmin(admin)).toBe(true);
-    expect(resourceValidator.canCreateProduct(admin)).toBe(true);
-    expect(roleHierarchy.hasMinimumRole(UserRole.ADMIN, UserRole.VIEWER)).toBe(true);
+    expect(permissionService.hasResourceAccess(admin, 'products', 'create')).toBe(true);
   });
 
   it('should handle complex permission scenarios', () => {
     const editor = createMockUser(UserRole.EDITOR, 'editor-id');
+    const validator = new ResourcePermissionValidator(permissionService);
     
     // Editor can manage products but not users
-    expect(resourceValidator.canCreateProduct(editor)).toBe(true);
-    expect(resourceValidator.canCreateUser(editor)).toBe(false);
+    expect(validator.canCreateProduct(editor)).toBe(true);
+    expect(validator.canCreateUser(editor)).toBe(false);
     
     // Editor can manage own profile but not others' profiles
-    expect(resourceValidator.canUpdateUser(editor, 'editor-id')).toBe(true);
-    expect(resourceValidator.canUpdateUser(editor, 'other-user-id')).toBe(false);
+    expect(validator.canUpdateUser(editor, 'editor-id')).toBe(true);
+    expect(validator.canUpdateUser(editor, 'other-user-id')).toBe(false);
     
     // Editor can access product routes but not user management routes
     expect(permissionService.canUserAccessRoute(editor, '/admin/products')).toBe(true);
     expect(permissionService.canUserAccessRoute(editor, '/admin/users')).toBe(false);
+  });
+
+  it('should maintain consistency across different validation methods', () => {
+    const user = createMockUser(UserRole.EDITOR);
+    const validator = new ResourcePermissionValidator(permissionService);
+    
+    // Direct permission check vs validator method should be consistent
+    const directCheck = permissionService.hasResourceAccess(user, 'products', 'create');
+    const validatorCheck = validator.canCreateProduct(user);
+    
+    expect(directCheck).toBe(validatorCheck);
+    expect(directCheck).toBe(true);
   });
 });

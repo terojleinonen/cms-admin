@@ -1,0 +1,175 @@
+name: Performance Regression Detection
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run performance tests daily at 4 AM UTC
+    - cron: '0 4 * * *'
+
+jobs:
+  performance-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Setup test environment
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        REDIS_URL: redis://localhost:6379
+      run: |
+        cp .env.test .env
+        npx prisma migrate deploy
+        npx prisma db seed
+    
+    - name: Run permission system performance tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        REDIS_URL: redis://localhost:6379
+      run: npm run test -- --testPathPattern="performance.*permission" --run
+    
+    - name: Run cache performance tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        REDIS_URL: redis://localhost:6379
+      run: npm run test -- --testPathPattern="cache.*performance" --run
+    
+    - name: Run concurrent user tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        REDIS_URL: redis://localhost:6379
+      run: npm run test -- --testPathPattern="concurrent.*user" --run
+    
+    - name: Run load testing
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        REDIS_URL: redis://localhost:6379
+      run: npm run test -- --testPathPattern="load.*test" --run
+    
+    - name: Generate performance report
+      run: |
+        node scripts/generate-performance-report.js
+    
+    - name: Store performance baseline
+      if: github.ref == 'refs/heads/main'
+      run: |
+        mkdir -p performance-baselines
+        cp performance-results.json performance-baselines/baseline-$(date +%Y%m%d).json
+    
+    - name: Compare with baseline
+      if: github.event_name == 'pull_request'
+      run: |
+        node scripts/compare-performance.js
+    
+    - name: Upload performance results
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-results
+        path: |
+          performance-results.json
+          performance-report.html
+    
+    - name: Comment PR with performance results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          if (fs.existsSync('performance-comparison.json')) {
+            const comparison = JSON.parse(fs.readFileSync('performance-comparison.json'));
+            let comment = '## Performance Regression Analysis\n\n';
+            
+            if (comparison.regressions.length > 0) {
+              comment += '⚠️ **Performance Regressions Detected:**\n\n';
+              comparison.regressions.forEach(regression => {
+                comment += `- ${regression.test}: ${regression.change}% slower\n`;
+              });
+            } else {
+              comment += '✅ **No Performance Regressions Detected**\n\n';
+            }
+            
+            comment += '\n**Performance Summary:**\n';
+            comment += `- Permission checks: ${comparison.summary.permissionChecks}ms avg\n`;
+            comment += `- Cache operations: ${comparison.summary.cacheOperations}ms avg\n`;
+            comment += `- Database queries: ${comparison.summary.databaseQueries}ms avg\n`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          }
+
+  lighthouse-performance:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Start application
+      run: |
+        npm start &
+        sleep 30
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    
+    - name: Run Lighthouse CI
+      run: |
+        npm install -g @lhci/cli
+        lhci autorun
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+    
+    - name: Upload Lighthouse results
+      uses: actions/upload-artifact@v4
+      with:
+        name: lighthouse-results
+        path: .lighthouseci/

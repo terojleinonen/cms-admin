@@ -96,31 +96,36 @@ export function usePermissions(): PermissionHook {
     [UserRole.ADMIN]: 3,
   }), [])
 
-  // Basic permission checks
+  // Basic permission checks - memoized to prevent infinite re-renders
   const canAccess = useCallback((resource: string, action: string, scope?: string): boolean => {
     if (!user) return false
     return permissionService.hasPermission(user, { resource, action, scope })
   }, [user])
 
   const canManage = useCallback((resource: string): boolean => {
-    return canAccess(resource, 'manage')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource, action: 'manage' })
+  }, [user])
 
   const canCreate = useCallback((resource: string): boolean => {
-    return canAccess(resource, 'create')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource, action: 'create' })
+  }, [user])
 
   const canRead = useCallback((resource: string, scope?: string): boolean => {
-    return canAccess(resource, 'read', scope)
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource, action: 'read', scope })
+  }, [user])
 
   const canUpdate = useCallback((resource: string, scope?: string): boolean => {
-    return canAccess(resource, 'update', scope)
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource, action: 'update', scope })
+  }, [user])
 
   const canDelete = useCallback((resource: string, scope?: string): boolean => {
-    return canAccess(resource, 'delete', scope)
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource, action: 'delete', scope })
+  }, [user])
 
   // Role checks
   const isAdmin = useCallback((): boolean => {
@@ -128,12 +133,12 @@ export function usePermissions(): PermissionHook {
   }, [user])
 
   const isEditor = useCallback((): boolean => {
-    return user?.role === UserRole.EDITOR || isAdmin()
-  }, [user, isAdmin])
+    return user?.role === UserRole.EDITOR || user?.role === UserRole.ADMIN
+  }, [user])
 
   const isViewer = useCallback((): boolean => {
-    return user?.role === UserRole.VIEWER || isEditor()
-  }, [user, isEditor])
+    return user?.role === UserRole.VIEWER || user?.role === UserRole.EDITOR || user?.role === UserRole.ADMIN
+  }, [user])
 
   const hasRole = useCallback((role: UserRole): boolean => {
     return user?.role === role
@@ -160,171 +165,199 @@ export function usePermissions(): PermissionHook {
 
   // Resource-specific permissions
   const canCreateProduct = useCallback((): boolean => {
-    return canAccess('products', 'create')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'products', action: 'create' })
+  }, [user])
 
   const canReadProduct = useCallback((ownerId?: string): boolean => {
-    if (canAccess('products', 'read', 'all')) return true
-    if (ownerId && user?.id === ownerId) {
-      return canAccess('products', 'read', 'own')
+    if (!user) return false
+    if (permissionService.hasPermission(user, { resource: 'products', action: 'read', scope: 'all' })) return true
+    if (ownerId && user.id === ownerId) {
+      return permissionService.hasPermission(user, { resource: 'products', action: 'read', scope: 'own' })
     }
-    return canAccess('products', 'read')
-  }, [canAccess, user])
+    return permissionService.hasPermission(user, { resource: 'products', action: 'read' })
+  }, [user])
 
   const canUpdateProduct = useCallback((ownerId?: string): boolean => {
-    if (canAccess('products', 'update', 'all')) return true
-    if (ownerId && user?.id === ownerId) {
-      return canAccess('products', 'update', 'own')
+    if (!user) return false
+    if (permissionService.hasPermission(user, { resource: 'products', action: 'update', scope: 'all' })) return true
+    if (ownerId && user.id === ownerId) {
+      return permissionService.hasPermission(user, { resource: 'products', action: 'update', scope: 'own' })
     }
     return false
-  }, [canAccess, user])
+  }, [user])
 
   const canDeleteProduct = useCallback((ownerId?: string): boolean => {
-    if (canAccess('products', 'delete', 'all')) return true
-    if (ownerId && user?.id === ownerId) {
-      return canAccess('products', 'delete', 'own')
+    if (!user) return false
+    if (permissionService.hasPermission(user, { resource: 'products', action: 'delete', scope: 'all' })) return true
+    if (ownerId && user.id === ownerId) {
+      return permissionService.hasPermission(user, { resource: 'products', action: 'delete', scope: 'own' })
     }
     return false
-  }, [canAccess, user])
+  }, [user])
 
   // Category permissions
   const canCreateCategory = useCallback((): boolean => {
-    return canAccess('categories', 'create')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'categories', action: 'create' })
+  }, [user])
 
   const canReadCategory = useCallback((): boolean => {
-    return canAccess('categories', 'read')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'categories', action: 'read' })
+  }, [user])
 
   const canUpdateCategory = useCallback((): boolean => {
-    return canAccess('categories', 'update')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'categories', action: 'update' })
+  }, [user])
 
   const canDeleteCategory = useCallback((): boolean => {
-    return canAccess('categories', 'delete')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'categories', action: 'delete' })
+  }, [user])
 
   // Page permissions
   const canCreatePage = useCallback((): boolean => {
-    return canAccess('pages', 'create')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'pages', action: 'create' })
+  }, [user])
 
   const canReadPage = useCallback((ownerId?: string): boolean => {
-    if (canAccess('pages', 'read', 'all')) return true
-    if (ownerId && user?.id === ownerId) {
-      return canAccess('pages', 'read', 'own')
+    if (!user) return false
+    if (permissionService.hasPermission(user, { resource: 'pages', action: 'read', scope: 'all' })) return true
+    if (ownerId && user.id === ownerId) {
+      return permissionService.hasPermission(user, { resource: 'pages', action: 'read', scope: 'own' })
     }
     return false
-  }, [canAccess, user])
+  }, [user])
 
   const canUpdatePage = useCallback((ownerId?: string): boolean => {
-    if (canAccess('pages', 'update', 'all')) return true
-    if (ownerId && user?.id === ownerId) {
-      return canAccess('pages', 'update', 'own')
+    if (!user) return false
+    if (permissionService.hasPermission(user, { resource: 'pages', action: 'update', scope: 'all' })) return true
+    if (ownerId && user.id === ownerId) {
+      return permissionService.hasPermission(user, { resource: 'pages', action: 'update', scope: 'own' })
     }
     return false
-  }, [canAccess, user])
+  }, [user])
 
   const canDeletePage = useCallback((ownerId?: string): boolean => {
-    if (canAccess('pages', 'delete', 'all')) return true
-    if (ownerId && user?.id === ownerId) {
-      return canAccess('pages', 'delete', 'own')
+    if (!user) return false
+    if (permissionService.hasPermission(user, { resource: 'pages', action: 'delete', scope: 'all' })) return true
+    if (ownerId && user.id === ownerId) {
+      return permissionService.hasPermission(user, { resource: 'pages', action: 'delete', scope: 'own' })
     }
     return false
-  }, [canAccess, user])
+  }, [user])
 
   // Media permissions
   const canCreateMedia = useCallback((): boolean => {
-    return canAccess('media', 'create')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'media', action: 'create' })
+  }, [user])
 
   const canReadMedia = useCallback((ownerId?: string): boolean => {
-    if (canAccess('media', 'read', 'all')) return true
-    if (ownerId && user?.id === ownerId) {
-      return canAccess('media', 'read', 'own')
+    if (!user) return false
+    if (permissionService.hasPermission(user, { resource: 'media', action: 'read', scope: 'all' })) return true
+    if (ownerId && user.id === ownerId) {
+      return permissionService.hasPermission(user, { resource: 'media', action: 'read', scope: 'own' })
     }
     return false
-  }, [canAccess, user])
+  }, [user])
 
   const canUpdateMedia = useCallback((ownerId?: string): boolean => {
-    if (canAccess('media', 'update', 'all')) return true
-    if (ownerId && user?.id === ownerId) {
-      return canAccess('media', 'update', 'own')
+    if (!user) return false
+    if (permissionService.hasPermission(user, { resource: 'media', action: 'update', scope: 'all' })) return true
+    if (ownerId && user.id === ownerId) {
+      return permissionService.hasPermission(user, { resource: 'media', action: 'update', scope: 'own' })
     }
     return false
-  }, [canAccess, user])
+  }, [user])
 
   const canDeleteMedia = useCallback((ownerId?: string): boolean => {
-    if (canAccess('media', 'delete', 'all')) return true
-    if (ownerId && user?.id === ownerId) {
-      return canAccess('media', 'delete', 'own')
+    if (!user) return false
+    if (permissionService.hasPermission(user, { resource: 'media', action: 'delete', scope: 'all' })) return true
+    if (ownerId && user.id === ownerId) {
+      return permissionService.hasPermission(user, { resource: 'media', action: 'delete', scope: 'own' })
     }
     return false
-  }, [canAccess, user])
+  }, [user])
 
   // User management permissions
   const canCreateUser = useCallback((): boolean => {
-    return canAccess('users', 'create')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'users', action: 'create' })
+  }, [user])
 
   const canReadUser = useCallback((targetUserId?: string): boolean => {
-    if (canAccess('users', 'read', 'all')) return true
-    if (targetUserId && user?.id === targetUserId) {
-      return canAccess('users', 'read', 'own')
+    if (!user) return false
+    if (permissionService.hasPermission(user, { resource: 'users', action: 'read', scope: 'all' })) return true
+    if (targetUserId && user.id === targetUserId) {
+      return permissionService.hasPermission(user, { resource: 'users', action: 'read', scope: 'own' })
     }
     return false
-  }, [canAccess, user])
+  }, [user])
 
   const canUpdateUser = useCallback((targetUserId?: string): boolean => {
-    if (canAccess('users', 'update', 'all')) return true
-    if (targetUserId && user?.id === targetUserId) {
-      return canAccess('profile', 'manage', 'own')
+    if (!user) return false
+    if (permissionService.hasPermission(user, { resource: 'users', action: 'update', scope: 'all' })) return true
+    if (targetUserId && user.id === targetUserId) {
+      return permissionService.hasPermission(user, { resource: 'profile', action: 'manage', scope: 'own' })
     }
     return false
-  }, [canAccess, user])
+  }, [user])
 
   const canDeleteUser = useCallback((targetUserId?: string): boolean => {
+    if (!user) return false
     // Only admins can delete users, and they can't delete themselves
-    if (!isAdmin()) return false
-    if (user?.id === targetUserId) return false
-    return canAccess('users', 'delete', 'all')
-  }, [canAccess, user, isAdmin])
+    if (user.role !== UserRole.ADMIN) return false
+    if (user.id === targetUserId) return false
+    return permissionService.hasPermission(user, { resource: 'users', action: 'delete', scope: 'all' })
+  }, [user])
 
   // Order permissions
   const canReadOrder = useCallback((): boolean => {
-    return canAccess('orders', 'read')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'orders', action: 'read' })
+  }, [user])
 
   const canUpdateOrder = useCallback((): boolean => {
-    return canAccess('orders', 'update')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'orders', action: 'update' })
+  }, [user])
 
   // Analytics permissions
   const canReadAnalytics = useCallback((): boolean => {
-    return canAccess('analytics', 'read')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'analytics', action: 'read' })
+  }, [user])
 
   // Security permissions
   const canReadSecurityLogs = useCallback((): boolean => {
-    return canAccess('security', 'read')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'security', action: 'read' })
+  }, [user])
 
   const canManageSecurity = useCallback((): boolean => {
-    return canAccess('security', 'manage')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'security', action: 'manage' })
+  }, [user])
 
   // Settings permissions
   const canReadSettings = useCallback((): boolean => {
-    return canAccess('settings', 'read')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'settings', action: 'read' })
+  }, [user])
 
   const canUpdateSettings = useCallback((): boolean => {
-    return canAccess('settings', 'update')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'settings', action: 'update' })
+  }, [user])
 
   const canManageSettings = useCallback((): boolean => {
-    return canAccess('settings', 'manage')
-  }, [canAccess])
+    if (!user) return false
+    return permissionService.hasPermission(user, { resource: 'settings', action: 'manage' })
+  }, [user])
 
   return {
     // Basic permission checks

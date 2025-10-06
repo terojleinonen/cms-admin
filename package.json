@@ -33,6 +33,9 @@
     "test:unit": "jest --selectProjects unit",
     "test:components": "jest --selectProjects components",
     "test:e2e": "jest --selectProjects e2e",
+    "test:performance": "jest --selectProjects performance --runInBand",
+    "test:performance:runner": "tsx __tests__/performance/performance-test-runner.ts",
+    "test:performance:ci": "jest --selectProjects performance --runInBand --ci --watchAll=false",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false",
@@ -40,7 +43,11 @@
     "test:security": "tsx scripts/run-security-tests.ts run",
     "test:security:endpoint": "tsx scripts/run-security-tests.ts run --endpoint",
     "test:security:discover": "tsx scripts/run-security-tests.ts discover",
-    "test:security:analyze": "tsx scripts/run-security-tests.ts analyze"
+    "test:security:analyze": "tsx scripts/run-security-tests.ts analyze",
+    "test:regression": "node scripts/run-regression-tests.js",
+    "test:security:scan": "node scripts/security-scan.js",
+    "perf:report": "node scripts/generate-performance-report.js",
+    "perf:compare": "node scripts/compare-performance.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

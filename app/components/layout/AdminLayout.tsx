@@ -67,7 +67,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <Sidebar 
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)}
-        userRole={session?.user?.role}
       />
 
       {/* Main content area */}

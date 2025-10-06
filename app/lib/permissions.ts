@@ -974,6 +974,26 @@ export class RoleHierarchyValidator {
     
     return descriptions[role] || 'Unknown role';
   }
+
+  /**
+   * Get role level number
+   */
+  static getRoleLevel(role: UserRole): number {
+    return this.ROLE_HIERARCHY[role] || 0;
+  }
+
+  /**
+   * Check if role transition is valid
+   */
+  static isValidRoleTransition(assignerRole: UserRole, currentRole: UserRole, newRole: UserRole): boolean {
+    // Can only assign roles lower than your own
+    if (!this.canManageUser(assignerRole, newRole)) return false;
+    
+    // Cannot assign admin role (only system can do that)
+    if (newRole === UserRole.ADMIN) return false;
+    
+    return true;
+  }
 }
 
 // Export singleton instances

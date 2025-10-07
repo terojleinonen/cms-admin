@@ -5,6 +5,7 @@
 
 import { UserRole } from '@prisma/client';
 import { User } from './types';
+import { permissionPerformanceMonitor } from './permission-performance-monitor';
 
 // Permission model interfaces
 export interface Permission {
@@ -40,39 +41,59 @@ class PermissionCache {
 
   get(userId: string, resource: string, action: string, scope?: string): boolean | null {
     const key = this.getCacheKey(userId, resource, action, scope);
-    const entry = this.cache.get(key);
     
-    if (!entry) return null;
-    
-    if (entry.expiresAt < new Date()) {
-      this.cache.delete(key);
-      return null;
-    }
-    
-    return entry.result;
+    return permissionPerformanceMonitor.trackCacheOperation(
+      'cache_get',
+      key,
+      () => {
+        const entry = this.cache.get(key);
+        
+        if (!entry) return null;
+        
+        if (entry.expiresAt < new Date()) {
+          this.cache.delete(key);
+          return null;
+        }
+        
+        return entry.result;
+      }
+    ) as boolean | null;
   }
 
   set(userId: string, resource: string, action: string, result: boolean, scope?: string): void {
     const key = this.getCacheKey(userId, resource, action, scope);
-    const entry: PermissionCacheEntry = {
-      userId,
-      resource,
-      action,
-      scope,
-      result,
-      expiresAt: new Date(Date.now() + this.TTL),
-      createdAt: new Date()
-    };
     
-    this.cache.set(key, entry);
+    permissionPerformanceMonitor.trackCacheOperation(
+      'cache_set',
+      key,
+      () => {
+        const entry: PermissionCacheEntry = {
+          userId,
+          resource,
+          action,
+          scope,
+          result,
+          expiresAt: new Date(Date.now() + this.TTL),
+          createdAt: new Date()
+        };
+        
+        this.cache.set(key, entry);
+      }
+    );
   }
 
   invalidateUser(userId: string): void {
-    for (const [key, entry] of this.cache.entries()) {
-      if (entry.userId === userId) {
-        this.cache.delete(key);
+    permissionPerformanceMonitor.trackCacheOperation(
+      'cache_invalidate',
+      `user:${userId}`,
+      () => {
+        for (const [key, entry] of this.cache.entries()) {
+          if (entry.userId === userId) {
+            this.cache.delete(key);
+          }
+        }
       }
-    }
+    );
   }
 
   clear(): void {
@@ -381,16 +402,24 @@ export class PermissionService {
   hasPermission(user: User | null, permission: Permission): boolean {
     if (!user || !user.role) return false;
     
-    // Check cache first
-    const cached = this.cache.get(user.id, permission.resource, permission.action, permission.scope);
-    if (cached !== null) return cached;
-    
-    const result = this.validatePermission(user, permission);
-    
-    // Cache the result
-    this.cache.set(user.id, permission.resource, permission.action, result, permission.scope);
-    
-    return result;
+    // Track performance of permission check
+    return permissionPerformanceMonitor.trackPermissionCheck(
+      'hasPermission',
+      user.id,
+      permission,
+      () => {
+        // Check cache first
+        const cached = this.cache.get(user.id, permission.resource, permission.action, permission.scope);
+        if (cached !== null) return cached;
+        
+        const result = this.validatePermission(user, permission);
+        
+        // Cache the result
+        this.cache.set(user.id, permission.resource, permission.action, result, permission.scope);
+        
+        return result;
+      }
+    ) as boolean;
   }
 
   /**
@@ -573,30 +602,38 @@ export class EnhancedPermissionService extends PermissionService {
   async hasPermission(user: User | null, permission: Permission): Promise<boolean> {
     if (!user || !user.role) return false;
     
-    let cached: boolean | null = null;
-    
-    if (this.useDatabase) {
-      // Use database cache for production
-      const { PermissionCacheDB } = await import('./permission-db');
-      cached = await PermissionCacheDB.get(user.id, permission.resource, permission.action, permission.scope);
-    } else {
-      // Use in-memory cache for development/testing
-      cached = await this.enhancedCache.get(user.id, permission.resource, permission.action, permission.scope);
-    }
-    
-    if (cached !== null) return cached;
-    
-    const result = this.validatePermission(user, permission);
-    
-    // Cache the result
-    if (this.useDatabase) {
-      const { PermissionCacheDB } = await import('./permission-db');
-      await PermissionCacheDB.set(user.id, permission.resource, permission.action, result, 5 * 60 * 1000, permission.scope);
-    } else {
-      await this.enhancedCache.set(user.id, permission.resource, permission.action, result, permission.scope);
-    }
-    
-    return result;
+    // Track performance of async permission check
+    return await permissionPerformanceMonitor.trackPermissionCheck(
+      'hasPermissionAsync',
+      user.id,
+      permission,
+      async () => {
+        let cached: boolean | null = null;
+        
+        if (this.useDatabase) {
+          // Use database cache for production
+          const { PermissionCacheDB } = await import('./permission-db');
+          cached = await PermissionCacheDB.get(user.id, permission.resource, permission.action, permission.scope);
+        } else {
+          // Use in-memory cache for development/testing
+          cached = await this.enhancedCache.get(user.id, permission.resource, permission.action, permission.scope);
+        }
+        
+        if (cached !== null) return cached;
+        
+        const result = this.validatePermission(user, permission);
+        
+        // Cache the result
+        if (this.useDatabase) {
+          const { PermissionCacheDB } = await import('./permission-db');
+          await PermissionCacheDB.set(user.id, permission.resource, permission.action, result, 5 * 60 * 1000, permission.scope);
+        } else {
+          await this.enhancedCache.set(user.id, permission.resource, permission.action, result, permission.scope);
+        }
+        
+        return result;
+      }
+    );
   }
 
   async invalidateUserCache(userId: string): Promise<void> {

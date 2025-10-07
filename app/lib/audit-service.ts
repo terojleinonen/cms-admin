@@ -111,6 +111,7 @@ export interface AuditLogStats {
 export class AuditService {
   private prisma: PrismaClient | Prisma.TransactionClient
   private retentionDays: number
+  private checkingSuspiciousActivity: Set<string> = new Set()
 
   public constructor(prisma: PrismaClient | Prisma.TransactionClient, retentionDays: number = 365) {
     this.prisma = prisma
@@ -156,8 +157,16 @@ export class AuditService {
         },
       })
 
-      // Check for suspicious activity patterns
-      await this.checkSuspiciousActivity(entry.userId, entry.action, entry.ipAddress)
+      // Check for suspicious activity patterns (avoid recursive calls)
+      const checkKey = `${entry.userId}-${entry.action}`
+      if (!this.checkingSuspiciousActivity.has(checkKey)) {
+        this.checkingSuspiciousActivity.add(checkKey)
+        try {
+          await this.checkSuspiciousActivity(entry.userId, entry.action, entry.ipAddress)
+        } finally {
+          this.checkingSuspiciousActivity.delete(checkKey)
+        }
+      }
 
       return auditLog
     } catch (error) {
@@ -1152,17 +1161,614 @@ export class AuditService {
         alerts.push({
           type: 'suspicious_activity',
           severity: 'critical',
-          message: `${suspiciousActivity.length} suspicious activity events detected`,
+          message: `${suspiciousActivity.length} suspicious activities detected`,
           count: suspiciousActivity.length,
           users: uniqueUsers,
           lastOccurrence: new Date(Math.max(...suspiciousActivity.map(log => log.createdAt.getTime()))),
         })
       }
 
-      return alerts.sort((a, b) => b.lastOccurrence.getTime() - a.lastOccurrence.getTime())
+      // Permission denied events
+      const permissionDenied = await this.prisma.auditLog.groupBy({
+        by: ['userId'],
+        where: {
+          action: AUDIT_ACTIONS.SECURITY.PERMISSION_DENIED,
+          createdAt: {
+            gte: startDate,
+          },
+        },
+        _count: {
+          userId: true,
+        },
+        _max: {
+          createdAt: true,
+        },
+      })
+
+      const highPermissionDenied = permissionDenied.filter(stat => stat._count.userId >= 10)
+      if (highPermissionDenied.length > 0) {
+        alerts.push({
+          type: 'permission_denied',
+          severity: 'medium',
+          message: `${highPermissionDenied.length} users with multiple permission denials`,
+          count: highPermissionDenied.reduce((sum, stat) => sum + stat._count.userId, 0),
+          users: highPermissionDenied.map(stat => stat.userId),
+          lastOccurrence: new Date(Math.max(...highPermissionDenied.map(stat => stat._max.createdAt?.getTime() || 0))),
+        })
+      }
+
+      return alerts
     } catch (error) {
       console.error('Failed to get security alerts:', error)
       throw new Error(`Failed to get security alerts: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  /**
+   * Get detailed audit log analysis
+   */
+  async getAuditAnalysis(options: {
+    startDate: Date
+    endDate: Date
+    groupBy?: 'hour' | 'day' | 'week'
+    includeDetails?: boolean
+  }): Promise<{
+    timeline: Array<{
+      period: string
+      totalActions: number
+      failedActions: number
+      securityEvents: number
+      uniqueUsers: number
+    }>
+    topUsers: Array<{
+      userId: string
+      userName: string
+      userEmail: string
+      actionCount: number
+      failedActions: number
+      lastActivity: Date
+    }>
+    actionDistribution: Array<{
+      action: string
+      count: number
+      percentage: number
+    }>
+    resourceAccess: Array<{
+      resource: string
+      reads: number
+      writes: number
+      deletes: number
+      total: number
+    }>
+    securityMetrics: {
+      totalSecurityEvents: number
+      criticalEvents: number
+      suspiciousActivities: number
+      permissionViolations: number
+      accountLockouts: number
+    }
+    complianceMetrics: {
+      dataAccess: number
+      dataModification: number
+      dataExport: number
+      adminActions: number
+      userManagement: number
+    }
+  }> {
+    try {
+      const { startDate, endDate, groupBy = 'day', includeDetails = false } = options
+
+      // Get timeline data
+      const timelineData = await this.getTimelineAnalysis(startDate, endDate, groupBy)
+      
+      // Get top users by activity
+      const topUsersData = await this.getTopUsersByActivity(startDate, endDate)
+      
+      // Get action distribution
+      const actionDistribution = await this.getActionDistribution(startDate, endDate)
+      
+      // Get resource access patterns
+      const resourceAccess = await this.getResourceAccessPatterns(startDate, endDate)
+      
+      // Get security metrics
+      const securityMetrics = await this.getSecurityMetrics(startDate, endDate)
+      
+      // Get compliance metrics
+      const complianceMetrics = await this.getComplianceMetrics(startDate, endDate)
+
+      return {
+        timeline: timelineData,
+        topUsers: topUsersData,
+        actionDistribution,
+        resourceAccess,
+        securityMetrics,
+        complianceMetrics,
+      }
+    } catch (error) {
+      console.error('Failed to get audit analysis:', error)
+      throw new Error(`Failed to get audit analysis: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  /**
+   * Get timeline analysis
+   */
+  private async getTimelineAnalysis(
+    startDate: Date,
+    endDate: Date,
+    groupBy: 'hour' | 'day' | 'week'
+  ): Promise<Array<{
+    period: string
+    totalActions: number
+    failedActions: number
+    securityEvents: number
+    uniqueUsers: number
+  }>> {
+    // This would need to be implemented with proper SQL aggregation
+    // For now, return a simplified version
+    const logs = await this.prisma.auditLog.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      select: {
+        createdAt: true,
+        action: true,
+        userId: true,
+        details: true,
+      },
+    })
+
+    // Group by time period
+    const grouped = new Map<string, {
+      totalActions: number
+      failedActions: number
+      securityEvents: number
+      users: Set<string>
+    }>()
+
+    logs.forEach(log => {
+      let period: string
+      const date = new Date(log.createdAt)
+      
+      switch (groupBy) {
+        case 'hour':
+          period = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:00`
+          break
+        case 'week':
+          const weekStart = new Date(date)
+          weekStart.setDate(date.getDate() - date.getDay())
+          period = `${weekStart.getFullYear()}-W${Math.ceil(weekStart.getDate() / 7)}`
+          break
+        default: // day
+          period = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      }
+
+      if (!grouped.has(period)) {
+        grouped.set(period, {
+          totalActions: 0,
+          failedActions: 0,
+          securityEvents: 0,
+          users: new Set(),
+        })
+      }
+
+      const group = grouped.get(period)!
+      group.totalActions++
+      group.users.add(log.userId)
+
+      // Check if it's a failed action
+      if (log.details && typeof log.details === 'object' && 'success' in log.details && log.details.success === false) {
+        group.failedActions++
+      }
+
+      // Check if it's a security event
+      if (log.action.includes('security.') || log.action.includes('PERMISSION_DENIED')) {
+        group.securityEvents++
+      }
+    })
+
+    return Array.from(grouped.entries()).map(([period, data]) => ({
+      period,
+      totalActions: data.totalActions,
+      failedActions: data.failedActions,
+      securityEvents: data.securityEvents,
+      uniqueUsers: data.users.size,
+    })).sort((a, b) => a.period.localeCompare(b.period))
+  }
+
+  /**
+   * Get top users by activity
+   */
+  private async getTopUsersByActivity(
+    startDate: Date,
+    endDate: Date
+  ): Promise<Array<{
+    userId: string
+    userName: string
+    userEmail: string
+    actionCount: number
+    failedActions: number
+    lastActivity: Date
+  }>> {
+    const userStats = await this.prisma.auditLog.groupBy({
+      by: ['userId'],
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      _count: {
+        userId: true,
+      },
+      _max: {
+        createdAt: true,
+      },
+      orderBy: {
+        _count: {
+          userId: 'desc',
+        },
+      },
+      take: 10,
+    })
+
+    // Get user details and failed actions count
+    const userDetails = await Promise.all(
+      userStats.map(async (stat) => {
+        const user = await this.prisma.user.findUnique({
+          where: { id: stat.userId },
+          select: { name: true, email: true },
+        })
+
+        const failedActions = await this.prisma.auditLog.count({
+          where: {
+            userId: stat.userId,
+            createdAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+            details: {
+              path: ['success'],
+              equals: false,
+            },
+          },
+        })
+
+        return {
+          userId: stat.userId,
+          userName: user?.name || 'Unknown',
+          userEmail: user?.email || 'Unknown',
+          actionCount: stat._count.userId,
+          failedActions,
+          lastActivity: stat._max.createdAt || new Date(),
+        }
+      })
+    )
+
+    return userDetails
+  }
+
+  /**
+   * Get action distribution
+   */
+  private async getActionDistribution(
+    startDate: Date,
+    endDate: Date
+  ): Promise<Array<{
+    action: string
+    count: number
+    percentage: number
+  }>> {
+    const actionStats = await this.prisma.auditLog.groupBy({
+      by: ['action'],
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      _count: {
+        action: true,
+      },
+      orderBy: {
+        _count: {
+          action: 'desc',
+        },
+      },
+    })
+
+    const total = actionStats.reduce((sum, stat) => sum + stat._count.action, 0)
+
+    return actionStats.map(stat => ({
+      action: stat.action,
+      count: stat._count.action,
+      percentage: total > 0 ? (stat._count.action / total) * 100 : 0,
+    }))
+  }
+
+  /**
+   * Get resource access patterns
+   */
+  private async getResourceAccessPatterns(
+    startDate: Date,
+    endDate: Date
+  ): Promise<Array<{
+    resource: string
+    reads: number
+    writes: number
+    deletes: number
+    total: number
+  }>> {
+    const resourceStats = await this.prisma.auditLog.groupBy({
+      by: ['resource', 'action'],
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      _count: {
+        resource: true,
+      },
+    })
+
+    const resourceMap = new Map<string, {
+      reads: number
+      writes: number
+      deletes: number
+      total: number
+    }>()
+
+    resourceStats.forEach(stat => {
+      if (!resourceMap.has(stat.resource)) {
+        resourceMap.set(stat.resource, {
+          reads: 0,
+          writes: 0,
+          deletes: 0,
+          total: 0,
+        })
+      }
+
+      const resource = resourceMap.get(stat.resource)!
+      const count = stat._count.resource
+
+      resource.total += count
+
+      // Categorize actions
+      if (stat.action.includes('read') || stat.action.includes('view') || stat.action.includes('get')) {
+        resource.reads += count
+      } else if (stat.action.includes('delete') || stat.action.includes('remove')) {
+        resource.deletes += count
+      } else {
+        resource.writes += count
+      }
+    })
+
+    return Array.from(resourceMap.entries()).map(([resource, stats]) => ({
+      resource,
+      ...stats,
+    })).sort((a, b) => b.total - a.total)
+  }
+
+  /**
+   * Get security metrics
+   */
+  private async getSecurityMetrics(
+    startDate: Date,
+    endDate: Date
+  ): Promise<{
+    totalSecurityEvents: number
+    criticalEvents: number
+    suspiciousActivities: number
+    permissionViolations: number
+    accountLockouts: number
+  }> {
+    const [
+      totalSecurityEvents,
+      criticalEvents,
+      suspiciousActivities,
+      permissionViolations,
+      accountLockouts,
+    ] = await Promise.all([
+      this.prisma.auditLog.count({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          action: { contains: 'security.' },
+        },
+      }),
+      this.prisma.auditLog.count({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          details: { path: ['severity'], equals: 'critical' },
+        },
+      }),
+      this.prisma.auditLog.count({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          action: AUDIT_ACTIONS.SECURITY.SUSPICIOUS_ACTIVITY,
+        },
+      }),
+      this.prisma.auditLog.count({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          action: AUDIT_ACTIONS.SECURITY.PERMISSION_DENIED,
+        },
+      }),
+      this.prisma.auditLog.count({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          action: AUDIT_ACTIONS.SECURITY.ACCOUNT_LOCKED,
+        },
+      }),
+    ])
+
+    return {
+      totalSecurityEvents,
+      criticalEvents,
+      suspiciousActivities,
+      permissionViolations,
+      accountLockouts,
+    }
+  }
+
+  /**
+   * Get compliance metrics
+   */
+  private async getComplianceMetrics(
+    startDate: Date,
+    endDate: Date
+  ): Promise<{
+    dataAccess: number
+    dataModification: number
+    dataExport: number
+    adminActions: number
+    userManagement: number
+  }> {
+    const [
+      dataAccess,
+      dataModification,
+      dataExport,
+      adminActions,
+      userManagement,
+    ] = await Promise.all([
+      this.prisma.auditLog.count({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          OR: [
+            { action: { contains: 'read' } },
+            { action: { contains: 'view' } },
+            { action: { contains: 'get' } },
+          ],
+        },
+      }),
+      this.prisma.auditLog.count({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          OR: [
+            { action: { contains: 'create' } },
+            { action: { contains: 'update' } },
+            { action: { contains: 'modify' } },
+          ],
+        },
+      }),
+      this.prisma.auditLog.count({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          action: AUDIT_ACTIONS.SECURITY.DATA_EXPORT,
+        },
+      }),
+      this.prisma.auditLog.count({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          OR: [
+            { action: { contains: 'system.' } },
+            { action: { contains: 'admin.' } },
+          ],
+        },
+      }),
+      this.prisma.auditLog.count({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          action: { contains: 'user.' },
+        },
+      }),
+    ])
+
+    return {
+      dataAccess,
+      dataModification,
+      dataExport,
+      adminActions,
+      userManagement,
+    }
+  }
+
+  /**
+   * Get detailed audit log analysis
+   */
+  async getAuditAnalysis(options: {
+    startDate: Date
+    endDate: Date
+    groupBy?: 'hour' | 'day' | 'week'
+    includeDetails?: boolean
+  }): Promise<{
+    timeline: Array<{
+      period: string
+      totalActions: number
+      failedActions: number
+      securityEvents: number
+      uniqueUsers: number
+    }>
+    topUsers: Array<{
+      userId: string
+      userName: string
+      userEmail: string
+      actionCount: number
+      failedActions: number
+      lastActivity: Date
+    }>
+    actionDistribution: Array<{
+      action: string
+      count: number
+      percentage: number
+    }>
+    resourceAccess: Array<{
+      resource: string
+      reads: number
+      writes: number
+      deletes: number
+      total: number
+    }>
+    securityMetrics: {
+      totalSecurityEvents: number
+      criticalEvents: number
+      suspiciousActivities: number
+      permissionViolations: number
+      accountLockouts: number
+    }
+    complianceMetrics: {
+      dataAccess: number
+      dataModification: number
+      dataExport: number
+      adminActions: number
+      userManagement: number
+    }
+  }> {
+    try {
+      const { startDate, endDate, groupBy = 'day', includeDetails = false } = options
+
+      // Get timeline data
+      const timelineData = await this.getTimelineAnalysis(startDate, endDate, groupBy)
+      
+      // Get top users by activity
+      const topUsersData = await this.getTopUsersByActivity(startDate, endDate)
+      
+      // Get action distribution
+      const actionDistribution = await this.getActionDistribution(startDate, endDate)
+      
+      // Get resource access patterns
+      const resourceAccess = await this.getResourceAccessPatterns(startDate, endDate)
+      
+      // Get security metrics
+      const securityMetrics = await this.getSecurityMetrics(startDate, endDate)
+      
+      // Get compliance metrics
+      const complianceMetrics = await this.getComplianceMetrics(startDate, endDate)
+
+      return {
+        timeline: timelineData,
+        topUsers: topUsersData,
+        actionDistribution,
+        resourceAccess,
+        securityMetrics,
+        complianceMetrics,
+      }
+    } catch (error) {
+      console.error('Failed to get audit analysis:', error)
+      throw new Error(`Failed to get audit analysis: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 }

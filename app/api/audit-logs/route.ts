@@ -1,12 +1,13 @@
 /**
  * Audit Logs API Endpoint
- * Handles frontend audit log submissions
+ * Handles audit log submissions, queries, and analysis
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { AuditService } from '@/app/lib/audit-service'
 import { db } from '@/app/lib/db'
+import { hasPermission } from '@/app/lib/has-permission'
 
 const auditService = new AuditService(db)
 
@@ -22,6 +23,40 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    
+    // Check if this is an export request
+    if (body.format) {
+      // Verify admin permissions for export
+      if (!await hasPermission(session.user, 'system', 'manage')) {
+        return NextResponse.json(
+          { error: 'Insufficient permissions for audit log export' },
+          { status: 403 }
+        )
+      }
+
+      const exportData = await auditService.exportLogs(
+        {
+          userId: body.userId,
+          action: body.action,
+          resource: body.resource,
+          startDate: body.startDate ? new Date(body.startDate) : undefined,
+          endDate: body.endDate ? new Date(body.endDate) : undefined,
+        },
+        body.format
+      )
+
+      const contentType = body.format === 'csv' ? 'text/csv' : 'application/json'
+      const filename = `audit-logs-${new Date().toISOString().split('T')[0]}.${body.format}`
+
+      return new NextResponse(exportData, {
+        headers: {
+          'Content-Type': contentType,
+          'Content-Disposition': `attachment; filename="${filename}"`,
+        },
+      })
+    }
+
+    // Regular audit log submission
     const { action, resource, resourceId, details, severity } = body
 
     if (!action || !resource) {
@@ -58,6 +93,58 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Audit log API error:', error)
+    
+    return NextResponse.json(
+      { 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    )
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const session = await auth()
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check permissions for viewing audit logs
+    if (!await hasPermission(session.user, 'system', 'read')) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions to view audit logs' },
+        { status: 403 }
+      )
+    }
+
+    const { searchParams } = new URL(request.url)
+    
+    const filters = {
+      userId: searchParams.get('userId') || undefined,
+      action: searchParams.get('action') || undefined,
+      resource: searchParams.get('resource') || undefined,
+      severity: searchParams.get('severity') || undefined,
+      startDate: searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : undefined,
+      endDate: searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined,
+      search: searchParams.get('search') || undefined,
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: parseInt(searchParams.get('limit') || '20'),
+    }
+
+    const result = await auditService.getLogs(filters)
+
+    return NextResponse.json({
+      success: true,
+      data: result,
+    })
+  } catch (error) {
+    console.error('Failed to fetch audit logs:', error)
     
     return NextResponse.json(
       { 

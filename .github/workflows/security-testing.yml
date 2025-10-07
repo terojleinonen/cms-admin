@@ -1,0 +1,237 @@
+name: Security Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of security test to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - scan
+          - penetration
+          - regression
+
+jobs:
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      NEXTAUTH_SECRET: test-secret-key-for-security-testing
+      NEXTAUTH_URL: http://localhost:3001
+      NODE_ENV: test
+      CI: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup database
+        run: |
+          npx prisma migrate deploy
+          npx prisma generate
+
+      - name: Run security vulnerability scanning
+        if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'scan' || github.event.inputs.test_type == '' }}
+        run: npm run test:security:scan
+        continue-on-error: true
+
+      - name: Run permission boundary penetration tests
+        if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'penetration' || github.event.inputs.test_type == '' }}
+        run: npm run test:security:penetration
+        continue-on-error: true
+
+      - name: Run security regression tests
+        if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'regression' || github.event.inputs.test_type == '' }}
+        run: npm run test:security:regression
+        continue-on-error: true
+
+      - name: Run comprehensive security test suite
+        if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == '' }}
+        run: npm run test:security
+        continue-on-error: true
+
+      - name: Run security CI integration
+        run: npm run test:security:ci
+        env:
+          SLACK_SECURITY_WEBHOOK: ${{ secrets.SLACK_SECURITY_WEBHOOK }}
+          SECURITY_EMAIL_NOTIFICATIONS: ${{ secrets.SECURITY_EMAIL_NOTIFICATIONS }}
+
+      - name: Upload security test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-test-results
+          path: |
+            security-reports/
+            security-test-report.json
+            security-test-report.md
+          retention-days: 30
+
+      - name: Upload JUnit test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-junit-results
+          path: security-reports/security-junit.xml
+          retention-days: 30
+
+      - name: Publish security test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Security Test Results
+          path: security-reports/security-junit.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Comment security results on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'security-test-report.md';
+            
+            if (fs.existsSync(path)) {
+              const report = fs.readFileSync(path, 'utf8');
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🔒 Security Test Results\n\n${report}`
+              });
+            }
+
+      - name: Fail on critical security issues
+        run: |
+          if [ -f "security-test-report.json" ]; then
+            CRITICAL_ISSUES=$(cat security-test-report.json | jq -r '.summary.criticalIssues // 0')
+            HIGH_RISK_ISSUES=$(cat security-test-report.json | jq -r '.summary.highRiskIssues // 0')
+            
+            echo "Critical issues: $CRITICAL_ISSUES"
+            echo "High risk issues: $HIGH_RISK_ISSUES"
+            
+            if [ "$CRITICAL_ISSUES" -gt 0 ]; then
+              echo "❌ Critical security issues found! Failing the build."
+              exit 1
+            fi
+            
+            if [ "$HIGH_RISK_ISSUES" -gt 0 ]; then
+              echo "⚠️ High risk security issues found! Review required."
+              # Uncomment the next line to fail on high risk issues
+              # exit 1
+            fi
+          fi
+
+  security-monitoring:
+    name: Security Monitoring
+    runs-on: ubuntu-latest
+    needs: security-tests
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download security test results
+        uses: actions/download-artifact@v4
+        with:
+          name: security-test-results
+          path: security-results/
+
+      - name: Send security alerts
+        if: failure()
+        run: |
+          echo "🚨 Security test failures detected!"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Workflow: ${{ github.workflow }}"
+          
+          # In a real implementation, you would send alerts to your security team
+          # Example: curl -X POST $SECURITY_WEBHOOK_URL -d "Security tests failed on ${{ github.ref_name }}"
+
+      - name: Update security dashboard
+        if: always()
+        run: |
+          echo "📊 Updating security dashboard..."
+          echo "Test results available in security-results/"
+          
+          # In a real implementation, you would update your security dashboard
+          # with the latest test results and trends
+
+  dependency-security:
+    name: Dependency Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=moderate --json > npm-audit-results.json || true
+          npm audit --audit-level=moderate
+
+      - name: Run Snyk security scan
+        if: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          npx snyk test --json > snyk-results.json || true
+          npx snyk test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Upload dependency scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-security-results
+          path: |
+            npm-audit-results.json
+            snyk-results.json
+          retention-days: 30

@@ -100,7 +100,7 @@ function isAuthenticatedRoute(pathname: string): boolean {
 }
 
 /**
- * Enhanced security logging with threat detection
+ * Enhanced security logging with threat detection and monitoring integration
  */
 async function logSecurityEvent(
   token: any,
@@ -144,9 +144,109 @@ async function logSecurityEvent(
     // Detect and handle security threats
     await detectSecurityThreats(logData)
 
+    // Log to security monitoring system
+    await logToSecurityMonitoring(logData, result, severity)
+
   } catch (error) {
     console.error('Failed to log security event:', error)
   }
+}
+
+/**
+ * Log security events to the monitoring system
+ */
+async function logToSecurityMonitoring(
+  logData: any,
+  result: string,
+  severity: string
+): Promise<void> {
+  try {
+    // Determine security event type based on result and context
+    let eventType: string;
+    let eventSeverity: string;
+
+    switch (result) {
+      case 'UNAUTHORIZED':
+        eventType = 'UNAUTHORIZED_ACCESS';
+        eventSeverity = 'HIGH';
+        break;
+      case 'FORBIDDEN':
+        eventType = 'PERMISSION_DENIED';
+        eventSeverity = 'MEDIUM';
+        break;
+      case 'RATE_LIMITED':
+        eventType = 'RAPID_REQUESTS';
+        eventSeverity = 'MEDIUM';
+        break;
+      case 'BLOCKED':
+        eventType = 'SUSPICIOUS_ACTIVITY';
+        eventSeverity = 'HIGH';
+        break;
+      default:
+        return; // Don't log successful requests to security monitoring
+    }
+
+    // Create security event data
+    const securityEventData = {
+      type: eventType,
+      severity: eventSeverity,
+      userId: logData.userId !== 'anonymous' ? logData.userId : undefined,
+      resource: extractResourceFromPath(logData.pathname),
+      action: logData.method || 'GET',
+      ipAddress: logData.ipAddress,
+      userAgent: logData.userAgent,
+      details: {
+        pathname: logData.pathname,
+        reason: logData.reason,
+        userRole: logData.userRole,
+        timestamp: logData.timestamp,
+        requestId: logData.requestId
+      },
+      metadata: {
+        requestId: logData.requestId,
+        timestamp: new Date(logData.timestamp)
+      }
+    };
+
+    // In a real implementation, this would call the security monitoring service
+    // For now, we'll just log it with a special marker for the security system
+    console.log('[SECURITY_MONITORING]', JSON.stringify(securityEventData, null, 2));
+
+    // TODO: Integrate with actual SecurityMonitoringService
+    // const securityService = getSecurityMonitoringService();
+    // await securityService.logSecurityEvent(securityEventData);
+
+  } catch (error) {
+    console.error('Failed to log to security monitoring:', error);
+  }
+}
+
+/**
+ * Extract resource name from pathname for security monitoring
+ */
+function extractResourceFromPath(pathname: string): string {
+  const segments = pathname.split('/').filter(Boolean);
+  
+  if (segments.length === 0) return 'root';
+  
+  // Handle API routes
+  if (segments[0] === 'api') {
+    if (segments.length > 1) {
+      return segments[1]; // e.g., /api/products -> products
+    }
+    return 'api';
+  }
+  
+  // Handle admin routes
+  if (segments[0] === 'admin') {
+    if (segments.length > 1) {
+      return segments[1]; // e.g., /admin/users -> users
+    }
+    return 'admin';
+  }
+  
+  // Handle other routes
+  return segments[0];
 }
 
 /**

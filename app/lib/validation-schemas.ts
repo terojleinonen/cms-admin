@@ -6,22 +6,23 @@
 import { z } from 'zod'
 import { UserRole, ProductStatus } from '@prisma/client'
 import { commonSchemas } from './api-security'
+import { secureValidationSchemas } from './input-validation'
 
-// User validation schemas
+// User validation schemas with enhanced security
 export const userSchemas = {
   create: z.object({
-    name: commonSchemas.name,
-    email: commonSchemas.email,
+    name: secureValidationSchemas.secureString(100),
+    email: secureValidationSchemas.secureEmail,
     password: commonSchemas.password,
     role: z.nativeEnum(UserRole).default('EDITOR'),
-    isActive: commonSchemas.boolean.default(true),
+    isActive: secureValidationSchemas.secureBoolean.default(true),
   }),
 
   update: z.object({
-    name: commonSchemas.name.optional(),
-    email: commonSchemas.email.optional(),
+    name: secureValidationSchemas.secureString(100).optional(),
+    email: secureValidationSchemas.secureEmail.optional(),
     role: z.nativeEnum(UserRole).optional(),
-    isActive: commonSchemas.boolean.optional(),
+    isActive: secureValidationSchemas.secureBoolean.optional(),
   }),
 
   changePassword: z.object({
@@ -34,11 +35,11 @@ export const userSchemas = {
   }),
 
   query: z.object({
-    page: z.string().transform(Number).pipe(z.number().int().positive()).default(1),
-    limit: z.string().transform(Number).pipe(z.number().int().positive().max(100)).default(10),
-    search: z.string().max(255).optional(),
+    page: z.string().transform(Number).pipe(secureValidationSchemas.secureInteger.positive()).default(1),
+    limit: z.string().transform(Number).pipe(secureValidationSchemas.secureInteger.positive().max(100)).default(10),
+    search: secureValidationSchemas.secureString(255).optional(),
     role: z.nativeEnum(UserRole).optional(),
-    isActive: z.string().transform(val => val === 'true').pipe(commonSchemas.boolean).optional(),
+    isActive: z.string().transform(val => val === 'true').pipe(secureValidationSchemas.secureBoolean).optional(),
     sortBy: z.enum(['name', 'email', 'role', 'createdAt', 'updatedAt']).default('createdAt'),
     sortOrder: z.enum(['asc', 'desc']).default('desc'),
   }),

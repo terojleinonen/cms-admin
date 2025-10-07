@@ -1,50 +1,54 @@
-/**
- * Resolve Security Event API
- * POST /api/admin/security/events/[id]/resolve - Resolve a security event
- */
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../../../../auth/[...nextauth]/route';
+import { prisma } from '../../../../../../lib/db';
+import { AuditService } from '../../../../../../lib/audit-service';
+import { getSecurityMonitoringService } from '../../../../../../lib/security-monitoring';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
-import { SecurityService } from '@/lib/security'
-import { prisma } from '@/lib/db'
-
-export const POST = withApiPermissions(
-  async (request: NextRequest, { user }) => {
-    
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Check authentication and admin role
-    ,
-        { status: 401 }
-      )
-    }
-
-    const { id } = params
-
-    // Get security service instance
-    const securityService = SecurityService.getInstance(prisma)
+    const session = await getServerSession(authOptions);
     
-    // Resolve the security event
-    const resolved = await securityService.resolveSecurityEvent(id, session.user.id)
-
-    if (!resolved) {
-      return NextResponse.json(
-        { error: 'Security event not found' },
-        { status: 404 }
-      )
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    return createApiSuccessResponse( success: true )
+    // Check if user has admin permissions
+    if (session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
+    const eventId = params.id;
+    
+    // Initialize services
+    const auditService = new AuditService(prisma);
+    const securityService = getSecurityMonitoringService(prisma, auditService);
+
+    // Resolve the security event
+    await securityService.resolveSecurityEvent(eventId, session.user.id);
+
+    // Log the resolution action
+    await auditService.logSecurity(
+      session.user.id,
+      'SUSPICIOUS_ACTIVITY',
+      {
+        action: 'security_event_resolved',
+        eventId,
+        resolvedBy: session.user.id
+      },
+      request.headers.get('x-forwarded-for') || 'unknown',
+      request.headers.get('user-agent') || 'unknown'
+    );
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Resolve security event API error:', error)
+    console.error('Failed to resolve security event:', error);
     return NextResponse.json(
       { error: 'Failed to resolve security event' },
       { status: 500 }
-    )
+    );
   }
-
-  },
-  {
-  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
-)

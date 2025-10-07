@@ -1,47 +1,42 @@
-/**
- * Security Events API
- * GET /api/admin/security/events - Get security events
- */
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../../auth/[...nextauth]/route';
+import { SecurityEventDB } from '../../../../lib/permission-db';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
-import { SecurityService, SecurityEventType } from '@/lib/security'
-import { prisma } from '@/lib/db'
-
-export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
-    
+export async function GET(request: NextRequest) {
   try {
-    // Check authentication and admin role
-    ,
-        { status: 401 }
-      )
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Parse query parameters
-    const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const severity = searchParams.get('severity') || undefined
-    const type = searchParams.get('type') || undefined
+    // Check if user has admin permissions
+    if (session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
-    // Get security service instance
-    const securityService = SecurityService.getInstance(prisma)
+    const { searchParams } = new URL(request.url);
     
-    // Get security events
-    const events = await securityService.getSecurityEvents(limit, severity, type as SecurityEventType)
+    const options = {
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: parseInt(searchParams.get('limit') || '50'),
+      type: searchParams.get('type') || undefined,
+      severity: searchParams.get('severity') || undefined,
+      userId: searchParams.get('userId') || undefined,
+      resolved: searchParams.get('resolved') ? searchParams.get('resolved') === 'true' : undefined,
+      startDate: searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : undefined,
+      endDate: searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined,
+    };
 
-    return createApiSuccessResponse( events )
+    const result = await SecurityEventDB.getEvents(options);
 
+    return NextResponse.json(result);
   } catch (error) {
-    console.error('Security events API error:', error)
+    console.error('Failed to get security events:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch security events' },
+      { error: 'Failed to get security events' },
       { status: 500 }
-    )
+    );
   }
-
-  },
-  {
-  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
-)

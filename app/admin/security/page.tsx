@@ -4,17 +4,17 @@
  */
 
 import { Metadata } from 'next'
-import SecurityDashboard from '@/components/admin/SecurityDashboard'
+import { SecurityMonitoringDashboard } from '@/components/admin/SecurityMonitoringDashboard'
 
 export const metadata: Metadata = {
-  title: 'Security Dashboard - CMS Admin',
-  description: 'Monitor security events and manage threats',
+  title: 'Security Monitoring - CMS Admin',
+  description: 'Real-time security event monitoring and alerting',
 }
 
 export default function SecurityPage() {
   return (
     <div className="container mx-auto px-4 py-8">
-      <SecurityDashboard />
+      <SecurityMonitoringDashboard />
     </div>
   )
 }

@@ -20,7 +20,7 @@ import {
 import Button from '@/components/ui/Button'
 import FormField from '@/components/ui/FormField'
 import Select from '@/components/ui/Select'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { UserPreferences, NotificationSettings, DashboardSettings } from '@/lib/types'
 import { Theme } from '@prisma/client'
 import { userPreferencesUpdateSchema, formatValidationErrors } from '@/lib/user-validation-schemas'

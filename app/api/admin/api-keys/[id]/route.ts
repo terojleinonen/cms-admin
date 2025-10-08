@@ -20,13 +20,9 @@ const updateApiKeySchema = z.object({
 
 // GET /api/admin/api-keys/[id] - Get specific API key
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
-    
-  try {
-    , { status: 401 });
-    }
-
-    const { id } = await params;
+  async (request: NextRequest, { user, params }) => {
+    try {
+      const { id } = await params;
     const apiKey = await prisma.apiKey.findUnique({
       where: { id },
       select: {
@@ -68,13 +64,9 @@ export const GET = withApiPermissions(
 
 // PUT /api/admin/api-keys/[id] - Update API key
 export const PUT = withApiPermissions(
-  async (request: NextRequest, { user }) => {
-    
-  try {
-    , { status: 401 });
-    }
-
-    const { id } = await params;
+  async (request: NextRequest, { user, params }) => {
+    try {
+      const { id } = await params;
     const body = await request.json();
     const validatedData = updateApiKeySchema.parse(body);
 
@@ -109,10 +101,10 @@ export const PUT = withApiPermissions(
       }
     });
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       apiKey: updatedKey,
       message: 'API key updated successfully'
-    );
+    });
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -137,13 +129,9 @@ export const PUT = withApiPermissions(
 
 // DELETE /api/admin/api-keys/[id] - Delete API key
 export const DELETE = withApiPermissions(
-  async (request: NextRequest, { user }) => {
-    
-  try {
-    , { status: 401 });
-    }
-
-    const { id } = await params;
+  async (request: NextRequest, { user, params }) => {
+    try {
+      const { id } = await params;
     // Check if API key exists
     const existingKey = await prisma.apiKey.findUnique({
       where: { id }
@@ -158,9 +146,9 @@ export const DELETE = withApiPermissions(
       where: { id }
     });
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       message: 'API key deleted successfully'
-    );
+    });
 
   } catch (error) {
     console.error('Error deleting API key:', error);

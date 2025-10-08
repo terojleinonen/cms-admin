@@ -14,7 +14,7 @@ import {
 /**
  * Form validation configuration
  */
-export interface SecureFormConfig {
+interface SecureFormConfig {
   sanitizeInputs?: boolean
   validateOnChange?: boolean
   validateOnBlur?: boolean
@@ -28,7 +28,7 @@ export interface SecureFormConfig {
 /**
  * Form field validation result
  */
-export interface FieldValidationResult {
+interface FieldValidationResult {
   isValid: boolean
   error?: string
   sanitizedValue?: any
@@ -37,7 +37,7 @@ export interface FieldValidationResult {
 /**
  * Form validation result
  */
-export interface FormValidationResult {
+interface FormValidationResult {
   isValid: boolean
   errors: Record<string, string>
   sanitizedData: Record<string, any>
@@ -46,7 +46,7 @@ export interface FormValidationResult {
 /**
  * Secure form handler class
  */
-export class SecureFormHandler {
+class SecureFormHandler {
   private config: Required<SecureFormConfig>
   private schema: z.ZodSchema<any>
   private submissionTimes: number[] = []
@@ -303,7 +303,7 @@ export class SecureFormHandler {
 /**
  * Secure form input component utilities
  */
-export class SecureFormInputUtils {
+class SecureFormInputUtils {
   /**
    * Create secure input event handler
    */
@@ -401,7 +401,7 @@ export class SecureFormInputUtils {
 /**
  * Form security monitor
  */
-export class FormSecurityMonitor {
+class FormSecurityMonitor {
   private static suspiciousActivity: Map<string, number> = new Map()
   private static readonly MAX_SUSPICIOUS_ACTIONS = 10
   private static readonly SUSPICIOUS_RESET_TIME = 300000 // 5 minutes
@@ -494,6 +494,9 @@ export class FormSecurityMonitor {
 
 // Export utilities
 export {
+  SecureFormConfig,
+  FieldValidationResult,
+  FormValidationResult,
   SecureFormHandler,
   SecureFormInputUtils,
   FormSecurityMonitor

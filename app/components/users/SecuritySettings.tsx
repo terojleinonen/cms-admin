@@ -23,7 +23,7 @@ import {
 import Button from '@/components/ui/Button'
 import FormField from '@/components/ui/FormField'
 import Input from '@/components/ui/Input'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { validatePasswordStrength } from '@/lib/user-validation-schemas'
 import QRCode from 'qrcode'
 

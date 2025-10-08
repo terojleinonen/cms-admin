@@ -4,7 +4,7 @@
  */
 
 import { Metadata } from 'next'
-import { ComplianceDashboard } from '@/app/components/admin/ComplianceDashboard'
+import { ComplianceDashboard } from '@/components/admin/ComplianceDashboard'
 
 export const metadata: Metadata = {
   title: 'Compliance Management | Admin Dashboard',

@@ -19,20 +19,8 @@ const statsFiltersSchema = z.object({
  */
 export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
-    
-  try {
-    ,
-        { status: 401 }
-      )
-    }
-
-    // Check if user has admin permissions
-    ,
-        { status: 403 }
-      )
-    }
-
-    const { searchParams } = new URL(request.url)
+    try {
+      const { searchParams } = new URL(request.url)
     const params = Object.fromEntries(searchParams.entries())
     const filters = statsFiltersSchema.parse(params)
 

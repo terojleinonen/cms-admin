@@ -24,18 +24,7 @@ const restoreSchema = z.object({
  */
 export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
-    
-  try {
-    ,
-        { status: 401 }
-      )
-    }
-
-    // Check if user has admin permissions
-    ,
-        { status: 403 }
-      )
-    }
+    try {
 
     const retentionManager = createRetentionManager(prisma, { autoSchedule: false })
     const stats = await retentionManager.getRetentionStats()
@@ -88,18 +77,7 @@ export const GET = withApiPermissions(
  */
 export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
-    
-  try {
-    ,
-        { status: 401 }
-      )
-    }
-
-    // Check if user has admin permissions
-    ,
-        { status: 403 }
-      )
-    }
+    try {
 
     const body = await request.json()
     const { action, policy } = retentionActionSchema.parse(body)
@@ -130,14 +108,14 @@ export const POST = withApiPermissions(
     // Log the retention action
     const auditService = await import('@/lib/audit-service')
     await auditService.getAuditService(prisma).logSystem(
-      session.user.id,
+      user.id,
       'SETTINGS_CHANGED',
       {
         action: 'retention_action',
         retentionAction: action,
         policy,
         result,
-        executedBy: session.user.id,
+        executedBy: user.id,
       },
       request.headers.get('x-forwarded-for') || 'unknown',
       request.headers.get('user-agent') || 'unknown'
@@ -179,18 +157,7 @@ export const POST = withApiPermissions(
  */
 export const PUT = withApiPermissions(
   async (request: NextRequest, { user }) => {
-    
-  try {
-    ,
-        { status: 401 }
-      )
-    }
-
-    // Check if user has admin permissions
-    ,
-        { status: 403 }
-      )
-    }
+    try {
 
     const body = await request.json()
     const { archiveFilePath } = restoreSchema.parse(body)
@@ -201,14 +168,14 @@ export const PUT = withApiPermissions(
     // Log the restore action
     const auditService = await import('@/lib/audit-service')
     await auditService.getAuditService(prisma).logSystem(
-      session.user.id,
+      user.id,
       'BACKUP_RESTORED',
       {
         action: 'archive_restore',
         archiveFilePath,
         restoredCount: result.restoredCount,
         archiveMetadata: result.archiveMetadata,
-        restoredBy: session.user.id,
+        restoredBy: user.id,
       },
       request.headers.get('x-forwarded-for') || 'unknown',
       request.headers.get('user-agent') || 'unknown'

@@ -35,12 +35,8 @@ const backupService = new BackupService(backupConfig.backupDir);
 // POST /api/admin/backup/restore - Restore from backup
 export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
-    
-  try {
-    , { status: 401 });
-    }
-
-    const body = await request.json();
+    try {
+      const body = await request.json();
     const validatedData = restoreBackupSchema.parse(body);
 
     // Perform restore operation
@@ -52,9 +48,9 @@ export const POST = withApiPermissions(
       session.user.id
     );
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       message: 'Backup restored successfully'
-    );
+    });
 
   } catch (error) {
     if (error instanceof z.ZodError) {

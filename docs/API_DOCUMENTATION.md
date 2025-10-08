@@ -112,8 +112,7 @@ Authenticate user and create session.
 ```json
 {
   "email": "user@example.com",
-  "password": "securePassword123!",
-  "rememberMe": false
+  "password": "securePassword123!"
 }
 ```
 

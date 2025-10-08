@@ -55,7 +55,7 @@ export const POST = withAPISecurity(
           )
         }
 
-        const { email, password, rememberMe } = bodyValidation.data
+        const { email, password } = bodyValidation.data
         // Find user by email
         const foundUser = await prisma.user.findUnique({
           where: {
@@ -165,7 +165,7 @@ export const POST = withAPISecurity(
           )
         }
 
-        const expiresIn = rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60 // 30 days or 24 hours
+        const expiresIn = 24 * 60 * 60 // 24 hours
         const tokenPayload = {
           sub: foundUser.id,
           email: foundUser.email,
@@ -191,7 +191,7 @@ export const POST = withAPISecurity(
           'low',
           'User logged in successfully',
           ip,
-          { email, userId: foundUser.id, rememberMe },
+          { email, userId: foundUser.id },
           foundUser.id,
           userAgent
         )

@@ -6,9 +6,9 @@
 import { Metadata } from 'next'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { hasPermission } from '@/app/lib/has-permission'
-import AuditLogAnalytics from '@/app/components/admin/AuditLogAnalytics'
-import AuditLogViewer from '@/app/components/admin/AuditLogViewer'
+import { hasPermission } from '@/lib/has-permission'
+import AuditLogAnalytics from '@/components/admin/AuditLogAnalytics'
+import AuditLogViewer from '@/components/admin/AuditLogViewer'
 
 export const metadata: Metadata = {
   title: 'Audit Logs - Admin Dashboard',

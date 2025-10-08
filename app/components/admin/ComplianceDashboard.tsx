@@ -16,9 +16,9 @@ import {
   DocumentTextIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline'
-import { Button } from '@/app/components/ui/Button'
-import { LoadingSpinner } from '@/app/components/ui/LoadingSpinner'
-import { ErrorMessage } from '@/app/components/ui/ErrorMessage'
+import { Button } from '@/components/ui/Button'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { ErrorMessage } from '@/components/ui/ErrorMessage'
 
 interface ComplianceMetrics {
   totalUsers: number

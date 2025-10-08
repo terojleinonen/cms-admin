@@ -21,12 +21,8 @@ const createApiKeySchema = z.object({
 // GET /api/admin/api-keys - List API keys
 export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
-    
-  try {
-    , { status: 401 });
-    }
-
-    const apiKeys = await prisma.apiKey.findMany({
+    try {
+      const apiKeys = await prisma.apiKey.findMany({
       select: {
         id: true,
         name: true,
@@ -64,12 +60,8 @@ export const GET = withApiPermissions(
 // POST /api/admin/api-keys - Create new API key
 export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
-    
-  try {
-    , { status: 401 });
-    }
-
-    const body = await request.json();
+    try {
+      const body = await request.json();
     const validatedData = createApiKeySchema.parse(body);
 
     // Create API key
@@ -79,11 +71,11 @@ export const POST = withApiPermissions(
       validatedData.permissions
     );
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       id: result.id,
       apiKey: result.key,
       message: 'API key created successfully'
-    );
+    });
 
   } catch (error) {
     if (error instanceof z.ZodError) {

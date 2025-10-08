@@ -4,7 +4,7 @@
  */
 
 // Security configuration for client-side validation
-export const CLIENT_SECURITY_CONFIG = {
+const CLIENT_SECURITY_CONFIG = {
   maxStringLength: 10000,
   maxArrayLength: 1000,
   maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -32,7 +32,7 @@ export const CLIENT_SECURITY_CONFIG = {
 /**
  * Client-side input sanitization utilities
  */
-export class ClientInputSanitizer {
+class ClientInputSanitizer {
   /**
    * Sanitize HTML content with strict rules
    */
@@ -271,7 +271,7 @@ export class ClientInputSanitizer {
 /**
  * XSS prevention utilities for client-side
  */
-export class ClientXSSPrevention {
+class ClientXSSPrevention {
   private static xssPatterns = [
     /<script[^>]*>.*?<\/script>/gi,
     /<iframe[^>]*>.*?<\/iframe>/gi,
@@ -319,7 +319,7 @@ export class ClientXSSPrevention {
 /**
  * File upload validation with security checks
  */
-export class ClientFileValidator {
+class ClientFileValidator {
   /**
    * Validate file upload with security checks
    */
@@ -420,7 +420,7 @@ export class ClientFileValidator {
 /**
  * CSRF token management for client-side
  */
-export class ClientCSRFManager {
+class ClientCSRFManager {
   private static token: string | null = null
   private static tokenExpiry: number | null = null
 
@@ -498,7 +498,7 @@ export class ClientCSRFManager {
 /**
  * Custom validation error class for client-side
  */
-export class ClientValidationError extends Error {
+class ClientValidationError extends Error {
   constructor(
     message: string,
     public code: string,
@@ -513,7 +513,7 @@ export class ClientValidationError extends Error {
 /**
  * Secure fetch wrapper with automatic CSRF protection
  */
-export class SecureFetch {
+class SecureFetch {
   /**
    * Secure fetch with automatic CSRF token and input sanitization
    */
@@ -622,5 +622,6 @@ export {
   ClientXSSPrevention,
   ClientFileValidator,
   ClientCSRFManager,
+  ClientValidationError,
   SecureFetch
 }

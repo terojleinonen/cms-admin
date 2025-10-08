@@ -35,12 +35,8 @@ const backupService = new BackupService(backupConfig.backupDir);
 // POST /api/admin/backup - Create new backup
 export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
-    
-  try {
-    , { status: 401 });
-    }
-
-    const body = await request.json();
+    try {
+      const body = await request.json();
     const validatedData = createBackupSchema.parse(body);
 
     let backupId: string;
@@ -68,10 +64,10 @@ export const POST = withApiPermissions(
         throw new Error('Invalid backup type');
     }
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       backupId,
       message: 'Backup created successfully'
-    );
+    });
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -97,12 +93,8 @@ export const POST = withApiPermissions(
 // GET /api/admin/backup - List backups
 export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
-    
-  try {
-    , { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
+    try {
+      const { searchParams } = new URL(request.url);
     const queryParams = {
       type: searchParams.get('type') as 'database' | 'media' | 'full' | undefined,
       limit: parseInt(searchParams.get('limit') || '50')

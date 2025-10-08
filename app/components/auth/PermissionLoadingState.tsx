@@ -7,7 +7,7 @@
 
 import React from 'react'
 import { ShieldCheckIcon, UserIcon, LockClosedIcon } from '@heroicons/react/24/outline'
-import LoadingSpinner from '../ui/LoadingSpinner'
+import { LoadingSpinner } from '../ui/LoadingSpinner'
 
 export interface PermissionLoadingStateProps {
   message?: string

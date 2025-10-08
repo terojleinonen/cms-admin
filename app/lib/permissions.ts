@@ -133,8 +133,15 @@ export class EnhancedPermissionCache {
   private async initializeRedis(redisUrl: string): Promise<void> {
     try {
       // Dynamic import for Redis to avoid bundling in development
-      const { createClient } = await import('redis');
-      this.redisClient = createClient({ url: redisUrl });
+      // Only try to import redis if it's available
+      const redis = await import('redis').catch(() => null);
+      if (!redis) {
+        console.warn('Redis package not installed, falling back to memory cache');
+        this.redisClient = null;
+        return;
+      }
+      
+      this.redisClient = redis.createClient({ url: redisUrl });
       await this.redisClient.connect();
       console.log('Redis cache connected successfully');
     } catch (error) {

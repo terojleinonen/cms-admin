@@ -28,7 +28,7 @@ import AccountSettings from '@/components/users/AccountSettings'
 import SecuritySettings from '@/components/users/SecuritySettings'
 import SessionManagement from '@/components/profile/SessionManagement'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),

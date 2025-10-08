@@ -272,7 +272,6 @@ export const authSchemas = {
   login: z.object({
     email: commonSchemas.email,
     password: z.string().min(1, 'Password is required'),
-    rememberMe: commonSchemas.boolean.default(false),
   }),
 
   register: z.object({

@@ -6,9 +6,9 @@
 import { Metadata } from 'next';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import { authOptions } from '@/app/lib/auth-utils';
-import { hasPermission } from '@/app/lib/has-permission';
-import ScalabilityMonitoringDashboard from '@/app/components/admin/ScalabilityMonitoringDashboard';
+import { authOptions } from '@/lib/auth-utils';
+import { hasPermission } from '@/lib/has-permission';
+import ScalabilityMonitoringDashboard from '@/components/admin/ScalabilityMonitoringDashboard';
 
 export const metadata: Metadata = {
   title: 'Scalability Monitoring - Admin Dashboard',

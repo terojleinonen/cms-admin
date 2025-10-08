@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/auth'
 import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'

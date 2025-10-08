@@ -1,18 +1,20 @@
 /**
- * Bulk User Operations API
+ * Admin Users Bulk Operations API endpoint
  * Handles bulk operations on multiple users
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { z } from 'zod'
+import { hashPassword } from '@/lib/password-utils'
+import { auditService } from '@/lib/audit-service'
 
-// Validation schemas
+// Validation schema for bulk operations
 const bulkOperationSchema = z.object({
   operation: z.enum(['activate', 'deactivate', 'change_role', 'reset_password', 'send_invitation']),
-  userIds: z.array(z.string()).min(1, 'At least one user ID is required'),
+  userIds: z.array(z.string().uuid()),
   data: z.object({
     role: z.enum(['ADMIN', 'EDITOR', 'VIEWER']).optional(),
   }).optional(),
@@ -40,23 +42,36 @@ async function requireAdminAccess() {
 }
 
 // POST /api/admin/users/bulk - Perform bulk operations on users
-export const POST = withApiPermissions(
-  async (request: NextRequest, { user }) => {
-    
+export async function POST(request: NextRequest) {
   try {
     const authError = await requireAdminAccess()
     if (authError) return authError
 
+    const session = await auth()
+    const adminUser = session!.user
+
     const body = await request.json()
-    const { operation, userIds, data } = bulkOperationSchema.parse(body)
+    const validation = bulkOperationSchema.safeParse(body)
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request data',
+            details: validation.error.flatten().fieldErrors,
+          },
+        },
+        { status: 400 }
+      )
+    }
 
-    let updated = 0
-    const errors: string[] = []
+    const { operation, userIds, data } = validation.data
 
-    // Validate that users exist
-    const existingUsers = await prisma.user.findMany({
+    // Validate that userIds exist and get user details
+    const users = await prisma.user.findMany({
       where: {
-        id: { in: userIds }
+        id: { in: userIds },
       },
       select: {
         id: true,
@@ -64,187 +79,265 @@ export const POST = withApiPermissions(
         email: true,
         role: true,
         isActive: true,
-      }
+      },
     })
 
-    if (existingUsers.length !== userIds.length) {
-      const foundIds = existingUsers.map(u => u.id)
-      const missingIds = userIds.filter(id => !foundIds.includes(id))
-      errors.push(`Users not found: ${missingIds.join(', ')}`)
-    }
-
-    // Prevent admin from deactivating themselves
-    if ((operation === 'deactivate' || (operation === 'change_role' && data?.role !== 'ADMIN')) && 
-        session?.user?.id && userIds.includes(session.user.id)) {
-      errors.push('Cannot deactivate or demote your own account')
-    }
-
-    if (errors.length > 0) {
+    if (users.length !== userIds.length) {
       return NextResponse.json(
-        { error: { code: 'VALIDATION_ERROR', message: 'Operation validation failed', details: errors } },
-        { status: 400 }
+        { error: { code: 'NOT_FOUND', message: 'Some users not found' } },
+        { status: 404 }
       )
     }
+
+    let updated = 0
+    const results: Array<{ userId: string; success: boolean; error?: string }> = []
 
     // Perform the bulk operation
     switch (operation) {
       case 'activate':
-        const activateResult = await prisma.user.updateMany({
-          where: {
-            id: { in: userIds },
-            isActive: false, // Only update inactive users
-          },
-          data: {
-            isActive: true,
-            updatedAt: new Date(),
+        {
+          const inactiveUsers = users.filter(u => !u.isActive)
+          if (inactiveUsers.length > 0) {
+            await prisma.user.updateMany({
+              where: {
+                id: { in: inactiveUsers.map(u => u.id) },
+              },
+              data: {
+                isActive: true,
+                updatedAt: new Date(),
+              },
+            })
+            updated = inactiveUsers.length
+
+            // Log audit events
+            for (const user of inactiveUsers) {
+              await auditService.log({
+                userId: adminUser.id,
+                action: 'USER_ACTIVATED',
+                resource: 'users',
+                resourceId: user.id,
+                details: {
+                  targetUser: { id: user.id, name: user.name, email: user.email },
+                  bulkOperation: true,
+                },
+              })
+              results.push({ userId: user.id, success: true })
+            }
           }
-        })
-        updated = activateResult.count
+        }
         break
 
       case 'deactivate':
-        const deactivateResult = await prisma.user.updateMany({
-          where: {
-            id: { in: userIds },
-            isActive: true, // Only update active users
-          },
-          data: {
-            isActive: false,
-            updatedAt: new Date(),
-          }
-        })
-        updated = deactivateResult.count
+        {
+          const activeUsers = users.filter(u => u.isActive && u.id !== adminUser.id) // Can't deactivate self
+          if (activeUsers.length > 0) {
+            await prisma.user.updateMany({
+              where: {
+                id: { in: activeUsers.map(u => u.id) },
+              },
+              data: {
+                isActive: false,
+                updatedAt: new Date(),
+              },
+            })
+            updated = activeUsers.length
 
-        // Also invalidate all sessions for deactivated users
-        await prisma.session.updateMany({
-          where: {
-            userId: { in: userIds }
-          },
-          data: {
-            isActive: false,
+            // Log audit events
+            for (const user of activeUsers) {
+              await auditService.log({
+                userId: adminUser.id,
+                action: 'USER_DEACTIVATED',
+                resource: 'users',
+                resourceId: user.id,
+                details: {
+                  targetUser: { id: user.id, name: user.name, email: user.email },
+                  bulkOperation: true,
+                },
+              })
+              results.push({ userId: user.id, success: true })
+            }
+
+            // Handle users that couldn't be deactivated (self)
+            const skippedUsers = users.filter(u => u.id === adminUser.id)
+            for (const user of skippedUsers) {
+              results.push({ 
+                userId: user.id, 
+                success: false, 
+                error: 'Cannot deactivate your own account' 
+              })
+            }
           }
-        })
+        }
         break
 
       case 'change_role':
-        if (!data?.role) {
-          return NextResponse.json(
-            { error: { code: 'VALIDATION_ERROR', message: 'Role is required for role change operation' } },
-            { status: 400 }
-          )
-        }
-
-        const roleChangeResult = await prisma.user.updateMany({
-          where: {
-            id: { in: userIds },
-          },
-          data: {
-            role: data.role as UserRole,
-            updatedAt: new Date(),
+        {
+          if (!data?.role) {
+            return NextResponse.json(
+              { error: { code: 'VALIDATION_ERROR', message: 'Role is required for change_role operation' } },
+              { status: 400 }
+            )
           }
-        })
-        updated = roleChangeResult.count
+
+          const eligibleUsers = users.filter(u => u.role !== data.role && u.id !== adminUser.id) // Can't change own role
+          if (eligibleUsers.length > 0) {
+            await prisma.user.updateMany({
+              where: {
+                id: { in: eligibleUsers.map(u => u.id) },
+              },
+              data: {
+                role: data.role,
+                updatedAt: new Date(),
+              },
+            })
+            updated = eligibleUsers.length
+
+            // Log audit events and role change history
+            for (const user of eligibleUsers) {
+              await auditService.log({
+                userId: adminUser.id,
+                action: 'USER_ROLE_CHANGED',
+                resource: 'users',
+                resourceId: user.id,
+                details: {
+                  targetUser: { id: user.id, name: user.name, email: user.email },
+                  oldRole: user.role,
+                  newRole: data.role,
+                  bulkOperation: true,
+                },
+              })
+
+              // Create role change history record
+              await prisma.roleChangeHistory.create({
+                data: {
+                  userId: user.id,
+                  oldRole: user.role,
+                  newRole: data.role,
+                  changedBy: adminUser.id,
+                  reason: 'Bulk role change operation',
+                },
+              })
+
+              results.push({ userId: user.id, success: true })
+            }
+
+            // Handle users that couldn't be changed (self or already has role)
+            const skippedUsers = users.filter(u => u.role === data.role || u.id === adminUser.id)
+            for (const user of skippedUsers) {
+              const reason = u.id === adminUser.id 
+                ? 'Cannot change your own role' 
+                : `User already has ${data.role} role`
+              results.push({ 
+                userId: user.id, 
+                success: false, 
+                error: reason
+              })
+            }
+          }
+        }
         break
 
       case 'reset_password':
-        // In a real implementation, this would send password reset emails
-        // For now, we'll just log the action
-        updated = existingUsers.length
-        
-        // Create audit logs for password reset requests
-        const auditLogs = existingUsers.map(user => ({
-          userId: user.id,
-          action: 'PASSWORD_RESET_REQUESTED',
-          resource: 'user',
-          details: {
-            requestedBy: session?.user?.id,
-            requestedAt: new Date(),
-          },
-          ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-          userAgent: request.headers.get('user-agent') || 'unknown',
-        }))
+        {
+          // For password reset, we'll generate password reset tokens
+          // In a real implementation, this would send emails
+          for (const user of users) {
+            try {
+              // Create password reset token (simplified - in real app would send email)
+              const resetToken = crypto.randomUUID()
+              const tokenHash = await hashPassword(resetToken) // Simple hash for demo
+              
+              await prisma.passwordResetToken.create({
+                data: {
+                  userId: user.id,
+                  tokenHash,
+                  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+                },
+              })
 
-        await prisma.auditLog.createMany({
-          data: auditLogs
-        })
+              await auditService.log({
+                userId: adminUser.id,
+                action: 'PASSWORD_RESET_INITIATED',
+                resource: 'users',
+                resourceId: user.id,
+                details: {
+                  targetUser: { id: user.id, name: user.name, email: user.email },
+                  bulkOperation: true,
+                },
+              })
+
+              results.push({ userId: user.id, success: true })
+              updated++
+            } catch (error) {
+              results.push({ 
+                userId: user.id, 
+                success: false, 
+                error: 'Failed to create reset token' 
+              })
+            }
+          }
+        }
         break
 
       case 'send_invitation':
-        // Filter to only unverified users
-        const unverifiedUsers = existingUsers.filter(u => !u.email)
-        updated = unverifiedUsers.length
+        {
+          const uninvitedUsers = users.filter(u => !u.emailVerified)
+          // In a real implementation, this would send invitation emails
+          for (const user of uninvitedUsers) {
+            await auditService.log({
+              userId: adminUser.id,
+              action: 'INVITATION_SENT',
+              resource: 'users',
+              resourceId: user.id,
+              details: {
+                targetUser: { id: user.id, name: user.name, email: user.email },
+                bulkOperation: true,
+              },
+            })
+            results.push({ userId: user.id, success: true })
+          }
+          updated = uninvitedUsers.length
 
-        // In a real implementation, this would send invitation emails
-        // Create audit logs for invitations sent
-        if (unverifiedUsers.length > 0) {
-          const invitationLogs = unverifiedUsers.map(user => ({
-            userId: user.id,
-            action: 'INVITATION_SENT',
-            resource: 'user',
-            details: {
-              sentBy: session?.user?.id,
-              sentAt: new Date(),
-            },
-            ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-            userAgent: request.headers.get('user-agent') || 'unknown',
-          }))
-
-          await prisma.auditLog.createMany({
-            data: invitationLogs
-          })
+          // Handle users that don't need invitations
+          const alreadyVerifiedUsers = users.filter(u => u.emailVerified)
+          for (const user of alreadyVerifiedUsers) {
+            results.push({ 
+              userId: user.id, 
+              success: false, 
+              error: 'User email already verified' 
+            })
+          }
         }
         break
 
       default:
         return NextResponse.json(
-          { error: { code: 'INVALID_OPERATION', message: 'Unknown bulk operation' } },
+          { error: { code: 'INVALID_OPERATION', message: 'Unknown operation' } },
           { status: 400 }
         )
     }
-
-    // Create audit log for the bulk operation
-    await prisma.auditLog.create({
-      data: {
-        userId: session?.user?.id || 'system',
-        action: `BULK_${operation.toUpperCase()}`,
-        resource: 'users',
-        details: {
-          operation,
-          userIds,
-          data,
-          updated,
-          performedAt: new Date(),
-        },
-        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
-      }
-    })
 
     return NextResponse.json({
       success: true,
       operation,
       updated,
-      message: `Successfully ${operation.replace('_', ' ')}d ${updated} user${updated !== 1 ? 's' : ''}`,
+      results,
+      message: `Successfully performed ${operation} on ${updated} users`,
     })
 
   } catch (error) {
     console.error('Error performing bulk operation:', error)
     
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: { code: 'VALIDATION_ERROR', message: 'Invalid operation data', details: error.issues } },
-        { status: 400 }
-      )
-    }
-
     return NextResponse.json(
-      { error: { code: 'INTERNAL_ERROR', message: 'Failed to perform bulk operation' } },
+      { 
+        error: { 
+          code: 'INTERNAL_ERROR', 
+          message: 'Failed to perform bulk operation',
+          timestamp: new Date().toISOString()
+        },
+        success: false
+      },
       { status: 500 }
     )
   }
-
-  },
-  {
-  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
-)

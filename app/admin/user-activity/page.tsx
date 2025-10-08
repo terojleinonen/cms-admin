@@ -1,16 +1,16 @@
 /**
- * User Activity Analysis Page
- * Admin interface for analyzing user behavior patterns
+ * User Activity Monitoring Page
+ * Enhanced admin interface for real-time user activity monitoring and analytics
  */
 
 import { Metadata } from 'next'
-import { UserActivityAnalysis } from '@/app/components/admin/UserActivityAnalysis'
+import UserActivityDashboard from '@/app/components/admin/UserActivityDashboard'
 
 export const metadata: Metadata = {
-  title: 'User Activity Analysis | Admin Dashboard',
-  description: 'Analyze user behavior patterns and identify potential risks',
+  title: 'User Activity Monitoring | Admin Dashboard',
+  description: 'Real-time user activity monitoring with permission analytics and behavior analysis',
 }
 
 export default function UserActivityPage() {
-  return <UserActivityAnalysis />
+  return <UserActivityDashboard />
 }

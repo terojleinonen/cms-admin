@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../../../auth/[...nextauth]/route';
-import { prisma } from '../../../../../../lib/db';
-import { AuditService } from '../../../../../../lib/audit-service';
-import { getSecurityMonitoringService } from '../../../../../../lib/security-monitoring';
+import { SecurityEventDB } from '../../../../../../lib/permission-db';
 
 export async function POST(
   request: NextRequest,
@@ -22,28 +20,14 @@ export async function POST(
     }
 
     const eventId = params.id;
-    
-    // Initialize services
-    const auditService = new AuditService(prisma);
-    const securityService = getSecurityMonitoringService(prisma, auditService);
 
     // Resolve the security event
-    await securityService.resolveSecurityEvent(eventId, session.user.id);
+    await SecurityEventDB.resolve(eventId, session.user.email || session.user.id);
 
-    // Log the resolution action
-    await auditService.logSecurity(
-      session.user.id,
-      'SUSPICIOUS_ACTIVITY',
-      {
-        action: 'security_event_resolved',
-        eventId,
-        resolvedBy: session.user.id
-      },
-      request.headers.get('x-forwarded-for') || 'unknown',
-      request.headers.get('user-agent') || 'unknown'
-    );
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Security event resolved successfully' 
+    });
   } catch (error) {
     console.error('Failed to resolve security event:', error);
     return NextResponse.json(

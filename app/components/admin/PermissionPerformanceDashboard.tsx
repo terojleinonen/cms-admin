@@ -1,323 +1,437 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
+/**
+ * Permission Performance Dashboard Component
+ * 
+ * Provides a comprehensive dashboard for monitoring permission system performance
+ * Requirements: 6.1, 6.2
+ */
+
+import { useState, useEffect } from 'react'
 import { 
   ChartBarIcon, 
   ClockIcon, 
+  CpuChipIcon, 
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  XCircleIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon
-} from '@heroicons/react/24/outline';
-import { 
-  PermissionPerformanceStats, 
-  CachePerformanceMetrics, 
-  PerformanceAlert 
-} from '../../lib/permission-performance-monitor';
+} from '@heroicons/react/24/outline'
 
-interface PerformanceDashboardProps {
-  className?: string;
+interface PerformanceMetrics {
+  summary: {
+    totalOperations: number
+    averageDuration: number
+    p95Duration: number
+    p99Duration: number
+    operationsPerSecond: number
+    errorRate: number
+    cacheHitRate: number
+    slowOperations: Array<{
+      name: string
+      duration: number
+    }>
+  }
+  trends: {
+    trend: 'improving' | 'degrading' | 'stable'
+    averageChange: number
+    recommendation: string
+  }
+  anomalies: Array<{
+    type: string
+    severity: 'low' | 'medium' | 'high'
+    description: string
+  }>
+  recommendations: string[]
 }
 
-interface PerformanceData {
-  stats: PermissionPerformanceStats;
-  cacheMetrics: CachePerformanceMetrics;
-  alerts: PerformanceAlert[];
-  recommendations: Array<{
-    type: 'performance' | 'cache' | 'alerting';
-    priority: 'low' | 'medium' | 'high';
-    description: string;
-    impact: string;
-    implementation: string;
-  }>;
+interface PerformanceStatus {
+  cacheWarming: {
+    enabled: boolean
+    lastWarmed: Date | null
+    entriesWarmed: number
+  }
+  queryOptimization: {
+    enabled: boolean
+    cacheHitRate: number
+    averageQueryTime: number
+  }
+  profiling: {
+    enabled: boolean
+    totalOperations: number
+    averageResponseTime: number
+    errorRate: number
+  }
+  systemHealth: {
+    status: 'healthy' | 'warning' | 'critical'
+    issues: string[]
+    recommendations: string[]
+  }
 }
 
-export default function PermissionPerformanceDashboard({ className = '' }: PerformanceDashboardProps) {
-  const [data, setData] = useState<PerformanceData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [timeWindow, setTimeWindow] = useState<number>(24 * 60 * 60 * 1000); // 24 hours
+export default function PermissionPerformanceDashboard() {
+  const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null)
+  const [status, setStatus] = useState<PerformanceStatus | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [optimizing, setOptimizing] = useState(false)
+  const [autoRefresh, setAutoRefresh] = useState(true)
 
-  useEffect(() => {
-    fetchPerformanceData();
-    const interval = setInterval(fetchPerformanceData, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
-  }, [timeWindow]);
-
+  // Fetch performance data
   const fetchPerformanceData = async () => {
     try {
-      const response = await fetch(`/api/admin/performance/permissions?timeWindow=${timeWindow}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch performance data');
+      const [metricsResponse, statusResponse] = await Promise.all([
+        fetch('/api/admin/performance/metrics'),
+        fetch('/api/admin/performance/status')
+      ])
+
+      if (metricsResponse.ok && statusResponse.ok) {
+        const metricsData = await metricsResponse.json()
+        const statusData = await statusResponse.json()
+        
+        setMetrics(metricsData)
+        setStatus(statusData)
       }
-      const performanceData = await response.json();
-      setData(performanceData);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+    } catch (error) {
+      console.error('Failed to fetch performance data:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const formatLatency = (ms: number): string => {
-    if (ms < 1) return `${(ms * 1000).toFixed(0)}μs`;
-    if (ms < 1000) return `${ms.toFixed(1)}ms`;
-    return `${(ms / 1000).toFixed(2)}s`;
-  };
-
-  const formatPercentage = (ratio: number): string => {
-    return `${(ratio * 100).toFixed(1)}%`;
-  };
-
-  const getAlertSeverityColor = (severity: PerformanceAlert['severity']): string => {
-    switch (severity) {
-      case 'CRITICAL': return 'text-red-600 bg-red-50';
-      case 'HIGH': return 'text-orange-600 bg-orange-50';
-      case 'MEDIUM': return 'text-yellow-600 bg-yellow-50';
-      case 'LOW': return 'text-blue-600 bg-blue-50';
-      default: return 'text-gray-600 bg-gray-50';
+  // Trigger performance optimization
+  const triggerOptimization = async () => {
+    setOptimizing(true)
+    try {
+      const response = await fetch('/api/admin/performance/optimize', {
+        method: 'POST'
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Optimization completed:', result)
+        
+        // Refresh data after optimization
+        await fetchPerformanceData()
+      }
+    } catch (error) {
+      console.error('Optimization failed:', error)
+    } finally {
+      setOptimizing(false)
     }
-  };
+  }
 
-  const getPriorityColor = (priority: 'low' | 'medium' | 'high'): string => {
-    switch (priority) {
-      case 'high': return 'text-red-600 bg-red-50';
-      case 'medium': return 'text-yellow-600 bg-yellow-50';
-      case 'low': return 'text-green-600 bg-green-50';
-      default: return 'text-gray-600 bg-gray-50';
+  // Auto-refresh effect
+  useEffect(() => {
+    fetchPerformanceData()
+    
+    if (autoRefresh) {
+      const interval = setInterval(fetchPerformanceData, 30000) // 30 seconds
+      return () => clearInterval(interval)
     }
-  };
+  }, [autoRefresh])
 
   if (loading) {
     return (
-      <div className={`bg-white shadow rounded-lg p-6 ${className}`}>
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="space-y-3">
-            <div className="h-4 bg-gray-200 rounded"></div>
-            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-            <div className="h-4 bg-gray-200 rounded w-4/6"></div>
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
-    );
+    )
   }
 
-  if (error) {
-    return (
-      <div className={`bg-white shadow rounded-lg p-6 ${className}`}>
-        <div className="text-center">
-          <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Error Loading Performance Data</h3>
-          <p className="mt-1 text-sm text-gray-500">{error}</p>
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'healthy': return 'text-green-600 bg-green-100'
+      case 'warning': return 'text-yellow-600 bg-yellow-100'
+      case 'critical': return 'text-red-600 bg-red-100'
+      default: return 'text-gray-600 bg-gray-100'
+    }
+  }
+
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'improving': return <ArrowTrendingDownIcon className="h-5 w-5 text-green-500" />
+      case 'degrading': return <ArrowTrendingUpIcon className="h-5 w-5 text-red-500" />
+      default: return <div className="h-5 w-5 bg-gray-300 rounded-full" />
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Permission System Performance</h1>
+          <p className="text-gray-600">Monitor and optimize permission system performance</p>
+        </div>
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="ml-2 text-sm text-gray-700">Auto-refresh</span>
+          </label>
           <button
-            onClick={fetchPerformanceData}
-            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+            onClick={triggerOptimization}
+            disabled={optimizing}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
-            Retry
+            {optimizing ? 'Optimizing...' : 'Optimize Performance'}
           </button>
         </div>
       </div>
-    );
-  }
 
-  if (!data) {
-    return null;
-  }
-
-  const { stats, cacheMetrics, alerts, recommendations } = data;
-
-  return (
-    <div className={`space-y-6 ${className}`}>
-      {/* Header */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-medium text-gray-900">Permission System Performance</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Real-time monitoring of permission checks and cache performance
-            </p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <select
-              value={timeWindow}
-              onChange={(e) => setTimeWindow(Number(e.target.value))}
-              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-            >
-              <option value={60 * 60 * 1000}>Last Hour</option>
-              <option value={24 * 60 * 60 * 1000}>Last 24 Hours</option>
-              <option value={7 * 24 * 60 * 60 * 1000}>Last 7 Days</option>
-              <option value={30 * 24 * 60 * 60 * 1000}>Last 30 Days</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white shadow rounded-lg p-6">
+      {/* System Health Status */}
+      {status && (
+        <div className={`rounded-lg p-4 ${getStatusColor(status.systemHealth.status)}`}>
           <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <ChartBarIcon className="h-8 w-8 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Checks</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.totalChecks.toLocaleString()}</p>
-            </div>
+            {status.systemHealth.status === 'healthy' ? (
+              <CheckCircleIcon className="h-6 w-6 mr-2" />
+            ) : (
+              <ExclamationTriangleIcon className="h-6 w-6 mr-2" />
+            )}
+            <h2 className="text-lg font-semibold">
+              System Health: {status.systemHealth.status.toUpperCase()}
+            </h2>
           </div>
+          
+          {status.systemHealth.issues.length > 0 && (
+            <div className="mt-2">
+              <p className="font-medium">Issues:</p>
+              <ul className="list-disc list-inside text-sm">
+                {status.systemHealth.issues.map((issue, index) => (
+                  <li key={index}>{issue}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
+      )}
 
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <ClockIcon className="h-8 w-8 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Avg Latency</p>
-              <p className="text-2xl font-semibold text-gray-900">{formatLatency(stats.avgLatency)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <CheckCircleIcon className="h-8 w-8 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Cache Hit Ratio</p>
-              <p className="text-2xl font-semibold text-gray-900">{formatPercentage(stats.cacheHitRatio)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <XCircleIcon className="h-8 w-8 text-red-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Error Rate</p>
-              <p className="text-2xl font-semibold text-gray-900">{formatPercentage(stats.errorRate)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Detailed Performance Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Latency Distribution</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Average</span>
-              <span className="text-sm font-medium text-gray-900">{formatLatency(stats.avgLatency)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">95th Percentile</span>
-              <span className="text-sm font-medium text-gray-900">{formatLatency(stats.p95Latency)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">99th Percentile</span>
-              <span className="text-sm font-medium text-gray-900">{formatLatency(stats.p99Latency)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Slow Checks (&gt;50ms)</span>
-              <span className="text-sm font-medium text-gray-900">{stats.slowChecks}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Cache Performance</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Total Operations</span>
-              <span className="text-sm font-medium text-gray-900">{cacheMetrics.totalOperations.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Cache Hits</span>
-              <span className="text-sm font-medium text-green-600">{cacheMetrics.hits.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Cache Misses</span>
-              <span className="text-sm font-medium text-red-600">{cacheMetrics.misses.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Avg Get Latency</span>
-              <span className="text-sm font-medium text-gray-900">{formatLatency(cacheMetrics.avgGetLatency)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Active Alerts */}
-      {alerts.length > 0 && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Active Performance Alerts</h3>
-          <div className="space-y-3">
-            {alerts.slice(0, 10).map((alert) => (
-              <div
-                key={alert.id}
-                className={`p-4 rounded-md border ${getAlertSeverityColor(alert.severity)}`}
-              >
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <ExclamationTriangleIcon className="h-5 w-5" />
-                  </div>
-                  <div className="ml-3 flex-1">
-                    <p className="text-sm font-medium">{alert.message}</p>
-                    <p className="text-xs mt-1 opacity-75">
-                      {new Date(alert.timestamp).toLocaleString()} • {alert.severity}
-                    </p>
-                  </div>
-                </div>
+      {/* Key Metrics Grid */}
+      {metrics && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <ClockIcon className="h-8 w-8 text-blue-500" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Avg Response Time</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {metrics.summary.averageDuration.toFixed(1)}ms
+                </p>
               </div>
-            ))}
+            </div>
+            <div className="mt-2 flex items-center">
+              {getTrendIcon(metrics.trends.trend)}
+              <span className="ml-1 text-sm text-gray-600">
+                {metrics.trends.averageChange > 0 ? '+' : ''}{metrics.trends.averageChange.toFixed(1)}%
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <ChartBarIcon className="h-8 w-8 text-green-500" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Cache Hit Rate</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {metrics.summary.cacheHitRate.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <CpuChipIcon className="h-8 w-8 text-purple-500" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Operations/sec</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {metrics.summary.operationsPerSecond.toFixed(1)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="h-8 w-8 text-red-500" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Error Rate</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {metrics.summary.errorRate.toFixed(2)}%
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Recommendations */}
-      {recommendations.length > 0 && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Performance Recommendations</h3>
-          <div className="space-y-4">
-            {recommendations.map((rec, index) => (
-              <div
-                key={index}
-                className={`p-4 rounded-md border ${getPriorityColor(rec.priority)}`}
-              >
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    {rec.priority === 'high' ? (
-                      <ArrowTrendingUpIcon className="h-5 w-5" />
-                    ) : (
-                      <ArrowTrendingDownIcon className="h-5 w-5" />
-                    )}
-                  </div>
-                  <div className="ml-3 flex-1">
-                    <p className="text-sm font-medium">{rec.description}</p>
-                    <p className="text-xs mt-1 opacity-75">
-                      <strong>Impact:</strong> {rec.impact}
-                    </p>
-                    <p className="text-xs mt-1 opacity-75">
-                      <strong>Implementation:</strong> {rec.implementation}
-                    </p>
-                    <div className="mt-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(rec.priority)}`}>
-                        {rec.priority.toUpperCase()} PRIORITY
+      {/* Detailed Performance Metrics */}
+      {metrics && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Performance Summary */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Performance Summary</h3>
+            </div>
+            <div className="p-6">
+              <dl className="grid grid-cols-1 gap-4">
+                <div className="flex justify-between">
+                  <dt className="text-sm font-medium text-gray-600">Total Operations</dt>
+                  <dd className="text-sm text-gray-900">{metrics.summary.totalOperations.toLocaleString()}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm font-medium text-gray-600">95th Percentile</dt>
+                  <dd className="text-sm text-gray-900">{metrics.summary.p95Duration.toFixed(2)}ms</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm font-medium text-gray-600">99th Percentile</dt>
+                  <dd className="text-sm text-gray-900">{metrics.summary.p99Duration.toFixed(2)}ms</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          {/* Slow Operations */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Slowest Operations</h3>
+            </div>
+            <div className="p-6">
+              {metrics.summary.slowOperations.length > 0 ? (
+                <div className="space-y-3">
+                  {metrics.summary.slowOperations.slice(0, 5).map((operation, index) => (
+                    <div key={index} className="flex justify-between items-center">
+                      <span className="text-sm text-gray-900">{operation.name}</span>
+                      <span className="text-sm font-medium text-red-600">
+                        {operation.duration.toFixed(2)}ms
                       </span>
                     </div>
-                  </div>
+                  ))}
                 </div>
+              ) : (
+                <p className="text-sm text-gray-500">No slow operations detected</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Anomalies and Recommendations */}
+      {metrics && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Anomalies */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Performance Anomalies</h3>
+            </div>
+            <div className="p-6">
+              {metrics.anomalies.length > 0 ? (
+                <div className="space-y-3">
+                  {metrics.anomalies.map((anomaly, index) => (
+                    <div key={index} className="flex items-start space-x-3">
+                      <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
+                        anomaly.severity === 'high' ? 'bg-red-500' :
+                        anomaly.severity === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'
+                      }`} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{anomaly.type}</p>
+                        <p className="text-sm text-gray-600">{anomaly.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No anomalies detected</p>
+              )}
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Optimization Recommendations</h3>
+            </div>
+            <div className="p-6">
+              {metrics.recommendations.length > 0 ? (
+                <div className="space-y-3">
+                  {metrics.recommendations.map((recommendation, index) => (
+                    <div key={index} className="flex items-start space-x-3">
+                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" />
+                      <p className="text-sm text-gray-900">{recommendation}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No recommendations at this time</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* System Status Details */}
+      {status && (
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900">System Status Details</h3>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Cache Warming</h4>
+                <dl className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <dt className="text-gray-600">Enabled</dt>
+                    <dd className={status.cacheWarming.enabled ? 'text-green-600' : 'text-red-600'}>
+                      {status.cacheWarming.enabled ? 'Yes' : 'No'}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <dt className="text-gray-600">Entries Warmed</dt>
+                    <dd className="text-gray-900">{status.cacheWarming.entriesWarmed}</dd>
+                  </div>
+                </dl>
               </div>
-            ))}
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Query Optimization</h4>
+                <dl className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <dt className="text-gray-600">Enabled</dt>
+                    <dd className={status.queryOptimization.enabled ? 'text-green-600' : 'text-red-600'}>
+                      {status.queryOptimization.enabled ? 'Yes' : 'No'}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <dt className="text-gray-600">Cache Hit Rate</dt>
+                    <dd className="text-gray-900">{status.queryOptimization.cacheHitRate.toFixed(1)}%</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Profiling</h4>
+                <dl className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <dt className="text-gray-600">Enabled</dt>
+                    <dd className={status.profiling.enabled ? 'text-green-600' : 'text-red-600'}>
+                      {status.profiling.enabled ? 'Yes' : 'No'}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <dt className="text-gray-600">Total Operations</dt>
+                    <dd className="text-gray-900">{status.profiling.totalOperations.toLocaleString()}</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }

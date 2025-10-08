@@ -1,66 +1,41 @@
 /**
- * Performance Metrics API
- * Provides real-time and historical performance data
+ * API endpoint for permission performance metrics
+ * Requirements: 6.1, 6.2
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
-import { PerformanceMonitor } from '@/lib/performance';
-import { CacheService } from '@/lib/cache';
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../../../auth/[...nextauth]/route'
+import { permissionPerformanceService } from '../../../../lib/permission-performance-service'
+import { hasPermission } from '../../../../lib/permissions'
 
-// GET /api/admin/performance/metrics - Get performance metrics
-export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
-    
+export async function GET(request: NextRequest) {
   try {
-    , { status: 401 });
+    // Check authentication and authorization
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const performanceMonitor = PerformanceMonitor.getInstance();
-    const cache = CacheService.getInstance();
+    // Check admin permissions
+    const canViewMetrics = await hasPermission(session.user, {
+      resource: 'analytics',
+      action: 'read'
+    })
 
-    // Get real-time metrics
-    const realTimeMetrics = performanceMonitor.getRealTimeMetrics();
+    if (!canViewMetrics) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
 
-    // Get performance report for last hour
-    const endTime = Date.now();
-    const startTime = endTime - (60 * 60 * 1000); // 1 hour ago
-    const performanceReport = performanceMonitor.getPerformanceReport(startTime, endTime);
+    // Get performance metrics
+    const metrics = permissionPerformanceService.getPerformanceMetrics()
 
-    // Get cache statistics
-    const cacheStats = cache.getStats();
-
-    // Mock image optimization metrics (would come from ImageOptimizationService)
-    const imageMetrics = {
-      totalProcessed: 150,
-      averageCompressionRatio: 65,
-      totalSizeSaved: 25 * 1024 * 1024 // 25MB
-    };
-
-    const metrics = {
-      realTime: realTimeMetrics,
-      database: {
-        totalQueries: performanceReport.databaseMetrics.totalQueries,
-        slowQueries: performanceReport.databaseMetrics.slowestQueries.length,
-        averageQueryTime: performanceReport.databaseMetrics.averageQueryTime,
-        cacheHitRate: cacheStats.hitRate
-      },
-      cache: cacheStats,
-      images: imageMetrics
-    };
-
-    return createApiSuccessResponse( metrics );
-
+    return NextResponse.json(metrics)
   } catch (error) {
-    console.error('Error fetching performance metrics:', error);
+    console.error('Failed to get performance metrics:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch performance metrics' },
+      { error: 'Failed to get performance metrics' },
       { status: 500 }
-    );
+    )
   }
-
-  },
-  {
-  permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
 }
-)

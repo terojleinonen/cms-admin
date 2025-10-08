@@ -4,6 +4,7 @@
  */
 
 import { permissionPerformanceMonitor, permissionPerformanceAlerting } from './permission-performance-monitor';
+import { initializeScalabilityMonitoring } from './scalability-middleware';
 
 /**
  * Initialize permission performance monitoring
@@ -28,7 +29,11 @@ export function initializePermissionPerformanceMonitoring() {
   // Start monitoring
   permissionPerformanceAlerting.startMonitoring(60000); // Check every minute
 
+  // Initialize scalability monitoring
+  initializeScalabilityMonitoring();
+
   console.log('✅ Permission performance monitoring initialized');
+  console.log('✅ Scalability monitoring initialized');
 }
 
 /**

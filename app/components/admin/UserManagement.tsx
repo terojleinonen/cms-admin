@@ -28,6 +28,7 @@ import Modal from '@/components/ui/Modal'
 import UserModal from '@/components/users/UserModal'
 import UserDetailModal from './UserDetailModal'
 import BulkOperationsModal from './BulkOperationsModal'
+import PermissionOverviewModal from './PermissionOverviewModal'
 // Simple notification helper
 const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
   // In a real app, you'd use a proper toast library
@@ -96,6 +97,7 @@ export default function UserManagement({
   const [viewingUser, setViewingUser] = useState<UserWithStats | null>(null)
   const [showBulkModal, setBulkModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
+  const [showPermissionOverview, setShowPermissionOverview] = useState(false)
 
   // Fetch users from API
   const fetchUsers = useCallback(async () => {
@@ -268,7 +270,14 @@ export default function UserManagement({
             Manage user accounts, roles, and permissions
           </p>
         </div>
-        <div className="mt-4 sm:mt-0">
+        <div className="mt-4 sm:mt-0 flex space-x-3">
+          <Button 
+            variant="outline"
+            onClick={() => setShowPermissionOverview(true)}
+          >
+            <ShieldCheckIcon className="w-4 h-4 mr-2" />
+            Permission Overview
+          </Button>
           <Button onClick={() => setShowCreateModal(true)}>
             <PlusIcon className="w-4 h-4 mr-2" />
             Add User
@@ -667,6 +676,13 @@ export default function UserManagement({
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Permission Overview Modal */}
+      {showPermissionOverview && (
+        <PermissionOverviewModal
+          onClose={() => setShowPermissionOverview(false)}
+        />
       )}
     </div>
   )

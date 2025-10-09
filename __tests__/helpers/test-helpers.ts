@@ -135,6 +135,26 @@ global.setInterval = jest.fn().mockImplementation((callback, delay) => {
 // Mock clearInterval
 global.clearInterval = jest.fn()
 
+// Suppress performance alerts during testing
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
+console.error = (...args) => {
+  // Only suppress permission performance alerts
+  if (args[0] && typeof args[0] === 'string' && args[0].includes('Permission Performance Alert')) {
+    return;
+  }
+  originalConsoleError(...args);
+};
+
+console.warn = (...args) => {
+  // Only suppress permission performance alerts
+  if (args[0] && typeof args[0] === 'string' && args[0].includes('Permission Performance Alert')) {
+    return;
+  }
+  originalConsoleWarn(...args);
+};
+
 // Global test setup
 beforeEach(() => {
   jest.clearAllMocks()

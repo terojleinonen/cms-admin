@@ -62,25 +62,25 @@ jobs:
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         REDIS_URL: redis://localhost:6379
-      run: npm run test -- --testPathPattern="performance.*permission" --run
+      run: npm run test -- --testPathPatterns="performance.*permission"
     
     - name: Run cache performance tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         REDIS_URL: redis://localhost:6379
-      run: npm run test -- --testPathPattern="cache.*performance" --run
+      run: npm run test -- --testPathPatterns="cache.*performance"
     
     - name: Run concurrent user tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         REDIS_URL: redis://localhost:6379
-      run: npm run test -- --testPathPattern="concurrent.*user" --run
+      run: npm run test -- --testPathPatterns="concurrent.*user"
     
     - name: Run load testing
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         REDIS_URL: redis://localhost:6379
-      run: npm run test -- --testPathPattern="load.*test" --run
+      run: npm run test -- --testPathPatterns="load.*test"
     
     - name: Generate performance report
       run: |

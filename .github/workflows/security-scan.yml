@@ -97,17 +97,17 @@ jobs:
     - name: Run security scenario tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-      run: npm run test -- --testPathPattern="security.*test" --run
+      run: npm run test -- --testPathPatterns="security.*test"
     
     - name: Run permission boundary tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-      run: npm run test -- --testPathPattern="permission.*boundary" --run
+      run: npm run test -- --testPathPatterns="permission.*boundary"
     
     - name: Run authentication security tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-      run: npm run test -- --testPathPattern="auth.*security" --run
+      run: npm run test -- --testPathPatterns="auth.*security"
     
     - name: Generate security report
       run: |

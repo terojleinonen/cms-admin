@@ -52,22 +52,22 @@ jobs:
     - name: Run permission unit tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-      run: npm run test -- --testPathPattern="permission|auth|role" --coverage --run
+      run: npm run test -- --testPathPatterns="permission|auth|role" --coverage
     
     - name: Run permission integration tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-      run: npm run test -- --testPathPattern="integration.*permission" --run
+      run: npm run test -- --testPathPatterns="integration.*permission"
     
     - name: Run API permission tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-      run: npm run test -- --testPathPattern="api.*permission" --run
+      run: npm run test -- --testPathPatterns="api.*permission"
     
     - name: Run E2E permission tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-      run: npm run test -- --testPathPattern="e2e.*permission" --run
+      run: npm run test -- --testPathPatterns="e2e.*permission"
     
     - name: Upload test results
       uses: actions/upload-artifact@v4

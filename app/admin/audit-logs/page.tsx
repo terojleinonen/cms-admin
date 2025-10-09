@@ -9,6 +9,8 @@ import { redirect } from 'next/navigation'
 import { hasPermission } from '@/lib/has-permission'
 import AuditLogAnalytics from '@/components/admin/AuditLogAnalytics'
 import AuditLogViewer from '@/components/admin/AuditLogViewer'
+import ComplianceReportingInterface from '@/components/admin/ComplianceReportingInterface'
+import AuditLogSearchInterface from '@/components/admin/AuditLogSearchInterface'
 
 export const metadata: Metadata = {
   title: 'Audit Logs - Admin Dashboard',
@@ -46,6 +48,28 @@ export default async function AuditLogsPage() {
           </p>
         </div>
         <AuditLogAnalytics />
+      </section>
+
+      {/* Compliance Reporting Section */}
+      <section>
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Compliance Reporting</h2>
+          <p className="text-gray-600">
+            Generate comprehensive compliance reports and regulatory audit trails.
+          </p>
+        </div>
+        <ComplianceReportingInterface />
+      </section>
+
+      {/* Advanced Search Section */}
+      <section>
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Advanced Search</h2>
+          <p className="text-gray-600">
+            Powerful search and filtering capabilities with faceted navigation.
+          </p>
+        </div>
+        <AuditLogSearchInterface />
       </section>
 
       {/* Audit Log Viewer Section */}

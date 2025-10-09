@@ -1,0 +1,148 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "RBAC System Monitoring",
+    "tags": ["rbac", "security", "permissions"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Permission Check Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(permission_checks_total[5m])",
+            "legendFormat": "Permission Checks/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Checks per second"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Permission Check Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(permission_check_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(permission_check_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Cache Hit Rate",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "rate(permission_cache_hits_total[5m]) / (rate(permission_cache_hits_total[5m]) + rate(permission_cache_misses_total[5m]))",
+            "legendFormat": "Hit Rate"
+          }
+        ],
+        "valueName": "current",
+        "format": "percentunit",
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Security Events",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(security_events_total[5m])",
+            "legendFormat": "{{type}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Events per second"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 6,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "Failed Authentication Attempts",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(auth_login_attempts_total{status=\"failed\"}[5m])",
+            "legendFormat": "Failed Logins/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Attempts per second"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 6,
+        "title": "Permission Denials by Resource",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(permission_checks_total{result=\"denied\"}[5m])",
+            "legendFormat": "{{resource}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Denials per second"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+}

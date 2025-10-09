@@ -4,6 +4,15 @@
 
 The Kin Workspace CMS provides a comprehensive REST API for managing content, users, and system operations. This documentation covers all available endpoints, authentication requirements, request/response formats, and usage examples.
 
+### RBAC System Documentation
+
+For detailed information about the Role-Based Access Control system:
+
+- **[RBAC API Documentation](./API_RBAC_DOCUMENTATION.md)** - Complete API reference for permission-related endpoints
+- **[RBAC Integration Guide](./RBAC_INTEGRATION_GUIDE.md)** - Step-by-step integration guide for developers
+- **[RBAC Permission Model](./RBAC_PERMISSION_MODEL.md)** - Detailed permission model and role definitions
+- **[RBAC Developer Reference](./RBAC_DEVELOPER_REFERENCE.md)** - Quick reference for common patterns and usage
+
 ## Base URL
 
 ```

@@ -1,0 +1,146 @@
+# Prometheus Alert Rules for Production Monitoring
+groups:
+  - name: application_alerts
+    rules:
+      - alert: ApplicationDown
+        expr: up{job="kin-workspace-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application is down"
+          description: "The Kin Workspace application has been down for more than 1 minute."
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is above 2 seconds for 5 minutes."
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for 5 minutes."
+
+      - alert: PermissionCheckLatency
+        expr: histogram_quantile(0.95, rate(permission_check_duration_seconds_bucket[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Permission check latency is high"
+          description: "95th percentile permission check latency is above 100ms."
+
+  - name: database_alerts
+    rules:
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database is down"
+          description: "PostgreSQL database has been down for more than 1 minute."
+
+      - alert: DatabaseConnectionsHigh
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connections are high"
+          description: "Database connections are above 80% of maximum."
+
+      - alert: DatabaseSlowQueries
+        expr: rate(pg_stat_database_tup_returned[5m]) / rate(pg_stat_database_tup_fetched[5m]) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database has slow queries"
+          description: "Database query efficiency is below 10%."
+
+  - name: security_alerts
+    rules:
+      - alert: UnauthorizedAccessAttempts
+        expr: rate(security_events_total{type="unauthorized_access"}[5m]) > 10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High number of unauthorized access attempts"
+          description: "More than 10 unauthorized access attempts per second for 2 minutes."
+
+      - alert: FailedLoginAttempts
+        expr: rate(auth_login_attempts_total{status="failed"}[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of failed login attempts"
+          description: "More than 5 failed login attempts per second for 5 minutes."
+
+      - alert: PermissionDeniedSpike
+        expr: rate(permission_checks_total{result="denied"}[5m]) > 20
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of permission denials"
+          description: "More than 20 permission denials per second for 3 minutes."
+
+  - name: system_alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% for 5 minutes."
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 90% for 5 minutes."
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is below 10%."
+
+  - name: cache_alerts
+    rules:
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache server has been down for more than 1 minute."
+
+      - alert: CacheHitRateLow
+        expr: rate(permission_cache_hits_total[5m]) / (rate(permission_cache_hits_total[5m]) + rate(permission_cache_misses_total[5m])) < 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Permission cache hit rate is low"
+          description: "Permission cache hit rate is below 80% for 10 minutes."

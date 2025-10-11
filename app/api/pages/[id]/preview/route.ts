@@ -17,10 +17,11 @@ const previewSchema = z.object({
 
 // POST /api/pages/[id]/preview - Generate preview for page
 export const POST = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 403 })
+    if (!user) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -85,10 +86,11 @@ export const POST = withApiPermissions(
 
 // GET /api/pages/[id]/preview - Get preview URL for page
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 403 })
+    if (!user) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Get the page

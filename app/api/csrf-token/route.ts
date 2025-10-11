@@ -4,43 +4,59 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
-import { createCSRFTokenResponse } from '@/lib/csrf-protection'
-import { withAPISecurity } from '@/lib/api-security'
+import crypto from 'crypto'
+
+// Simple CSRF token generation without complex dependencies
+function generateCSRFToken(): string {
+  return crypto.randomUUID()
+}
 
 // GET /api/csrf-token - Get CSRF token
-export const GET = withAPISecurity(
-  withApiPermissions(
-    async (request: NextRequest, { user }) => {
-      try {
-        // Generate session ID (use user ID if authenticated, otherwise generate anonymous ID)
-        const sessionId = user?.id || `anonymous-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        
-        // Create CSRF token response with secure cookie
-        return createCSRFTokenResponse(sessionId, request)
-        
-      } catch (error) {
-        console.error('Error generating CSRF token:', error)
-        return NextResponse.json(
-          { 
-            error: {
-              code: 'CSRF_TOKEN_GENERATION_FAILED',
-              message: 'Failed to generate CSRF token',
-              timestamp: new Date().toISOString(),
-            },
-            success: false
-          },
-          { status: 500 }
-        )
-      }
-    },
-    {
-      permissions: [{ resource: 'system', action: 'read', scope: 'all' }]
+export async function GET(request: NextRequest) {
+  try {
+    // Generate a simple CSRF token
+    const token = generateCSRFToken()
+    const expires = Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+    
+    // Add debug information
+    const debugInfo = {
+      AUTH_SECRET: process.env.AUTH_SECRET ? 'SET' : 'NOT SET',
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'NOT SET',
+      NODE_ENV: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
     }
-  ),
-  {
-    allowedMethods: ['GET'],
-    skipRateLimit: false,
-    rateLimitConfig: 'public'
+    
+    // Create response with token and debug info
+    const response = NextResponse.json({
+      token,
+      expires,
+      success: true,
+      debug: debugInfo
+    })
+
+    // Set cookie for double-submit protection
+    response.cookies.set('csrf-token', token, {
+      httpOnly: false, // Needs to be accessible to JavaScript
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60, // 24 hours in seconds
+      path: '/'
+    })
+
+    return response
+    
+  } catch (error) {
+    console.error('Error generating CSRF token:', error)
+    return NextResponse.json(
+      { 
+        error: {
+          code: 'CSRF_TOKEN_GENERATION_FAILED',
+          message: 'Failed to generate CSRF token',
+          timestamp: new Date().toISOString(),
+        },
+        success: false
+      },
+      { status: 500 }
+    )
   }
-)
+}

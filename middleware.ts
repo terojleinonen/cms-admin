@@ -545,10 +545,11 @@ export async function middleware(request: NextRequest) {
     return response
   }
 
-  // Check if route is public
-  if (isPublicRoute(pathname)) {
+  // Check if route is public or NextAuth route
+  if (isPublicRoute(pathname) || pathname.startsWith('/api/auth/')) {
     // Still log access for security monitoring
-    await logSecurityEvent(null, pathname, 'SUCCESS', 'public_route', ip, userAgent, logMetadata)
+    const reason = pathname.startsWith('/api/auth/') ? 'nextauth_route' : 'public_route'
+    await logSecurityEvent(null, pathname, 'SUCCESS', reason, ip, userAgent, logMetadata)
     
     let response = NextResponse.next({
       request: {

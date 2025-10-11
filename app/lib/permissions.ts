@@ -125,18 +125,25 @@ export class EnhancedPermissionCache {
     this.TTL = config.ttl || 5 * 60 * 1000; // 5 minutes default
     this.enableDistributed = config.enableDistributed || false;
     
-    if (this.enableDistributed && config.redisUrl) {
+    // Only initialize Redis on server side
+    if (this.enableDistributed && config.redisUrl && typeof window === 'undefined') {
       this.initializeRedis(config.redisUrl);
     }
   }
 
   private async initializeRedis(redisUrl: string): Promise<void> {
+    // Only initialize Redis on the server side
+    if (typeof window !== 'undefined') {
+      console.warn('Redis not available in browser environment, using memory cache');
+      this.redisClient = null;
+      return;
+    }
+
     try {
-      // Dynamic import for Redis to avoid bundling in development
-      // Only try to import redis if it's available
+      // Dynamic import for Redis to avoid bundling in client
       const redis = await import('redis').catch(() => null);
       if (!redis) {
-        console.warn('Redis package not installed, falling back to memory cache');
+        console.warn('Redis package not available, falling back to memory cache');
         this.redisClient = null;
         return;
       }
@@ -722,14 +729,28 @@ export class CacheInvalidationService {
 // Singleton instance (basic)
 export const permissionService = new PermissionService();
 
-// Production-ready singleton with enhanced caching
-export const enhancedPermissionService = new EnhancedPermissionService({
-  ttl: process.env.PERMISSION_CACHE_TTL ? parseInt(process.env.PERMISSION_CACHE_TTL) : 5 * 60 * 1000,
-  redisUrl: process.env.REDIS_URL,
-  enableDistributed: process.env.NODE_ENV === 'production'
-});
+// Production-ready singleton with enhanced caching (server-side only)
+export const enhancedPermissionService = typeof window === 'undefined' 
+  ? new EnhancedPermissionService({
+      ttl: process.env.PERMISSION_CACHE_TTL ? parseInt(process.env.PERMISSION_CACHE_TTL) : 5 * 60 * 1000,
+      redisUrl: process.env.REDIS_URL,
+      enableDistributed: process.env.NODE_ENV === 'production'
+    })
+  : new PermissionService(); // Fallback to basic service on client side
 
 export const cacheInvalidationService = new CacheInvalidationService(enhancedPermissionService);
+
+// Create and export auditService instance for compatibility
+export const auditService = {
+  logAction: async (userId: string, action: string, resource: string, resourceId: string | null, details: any) => {
+    // Placeholder implementation - replace with actual audit service
+    console.log('Audit log:', { userId, action, resource, resourceId, details });
+  },
+  logSecurityEvent: async (eventType: string, severity: string, userId?: string, details?: any) => {
+    // Placeholder implementation - replace with actual audit service
+    console.log('Security event:', { eventType, severity, userId, details });
+  }
+};
 
 // Legacy compatibility - maintain existing hasPermission function
 export function hasPermission(session: { user?: User } | null, permission: string): boolean {

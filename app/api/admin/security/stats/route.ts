@@ -13,7 +13,9 @@ export const GET = withApiPermissions(
     
   try {
     // Check authentication and admin role
-    ,
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }

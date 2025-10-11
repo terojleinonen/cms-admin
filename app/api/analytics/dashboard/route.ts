@@ -7,11 +7,13 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Only ADMIN and EDITOR can access dashboard analytics
-    , { status: 403 })
+    if (!['ADMIN', 'EDITOR'].includes(user.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Get dashboard analytics data

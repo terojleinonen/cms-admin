@@ -248,7 +248,7 @@ function GlobalSearch() {
     } else {
       setResults([])
     }
-  }, [query, permissions])
+  }, [query, permissions.user?.id]) // Use stable user ID instead of permissions object
 
   return (
     <Combobox value="" onChange={() => {}}>
@@ -384,7 +384,7 @@ function NotificationsDropdown() {
       console.error('Error filtering notifications:', error)
       return [] // Return empty array on error
     }
-  }, [notifications, permissions])
+  }, [notifications, permissions.user?.id, permissions.user?.role])
 
   const unreadCount = filteredNotifications.filter(n => !n.read).length
 
@@ -490,7 +490,7 @@ export default function Header({ onMenuClick, user }: HeaderProps) {
       console.error('Error filtering quick actions:', error)
       return [] // Return empty array on error to prevent crashes
     }
-  }, [permissions])
+  }, [permissions.user?.id, permissions.user?.role])
 
   const handleSignOut = async () => {
     try {

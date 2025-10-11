@@ -33,7 +33,8 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -61,11 +62,11 @@ export const GET = withApiPermissions(
     // Perform search
     const searchResults = await searchService.search(validatedOptions)
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       ...searchResults,
       query: validatedOptions.query,
       options: validatedOptions
-    )
+    })
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -93,7 +94,8 @@ export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Clear existing index

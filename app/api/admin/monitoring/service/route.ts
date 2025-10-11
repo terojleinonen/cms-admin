@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth'
-import { hasPermission } from '@/app/lib/permissions'
-import { healthMonitoringService } from '@/app/lib/health-monitoring-service'
+import { authOptions } from '@/auth'
+import { hasPermission } from '@/lib/permissions'
+import { healthMonitoringService } from '@/lib/health-monitoring-service'
 
 export async function GET(request: NextRequest) {
   try {

@@ -81,12 +81,12 @@ export const POST = withApiPermissions(
       request.headers.get('user-agent') || ''
     )
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       result,
       policy,
       message: 'Data cleanup completed successfully',
-    )
+    })
 
   } catch (error) {
     console.error('Error performing data cleanup:', error)

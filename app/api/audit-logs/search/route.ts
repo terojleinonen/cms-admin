@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { db } from '@/app/lib/db'
-import { hasPermission } from '@/app/lib/has-permission'
+import { prisma as db } from '@/lib/db'
+import { hasPermission } from '@/lib/permissions'
 import { z } from 'zod'
 
 const searchQuerySchema = z.object({

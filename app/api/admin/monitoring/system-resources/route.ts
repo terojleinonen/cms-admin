@@ -5,10 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth-utils';
-import { hasPermission } from '@/app/lib/has-permission';
-import { getScalabilityMonitor } from '@/app/lib/scalability-monitor';
-import { prisma } from '@/app/lib/db';
+import { authOptions } from '@/auth';
+import { hasPermission } from '@/lib/permissions';
+import { getScalabilityMonitor } from '@/lib/scalability-monitor';
+import { prisma } from '@/lib/db';
 import { cpus, freemem, totalmem, loadavg, uptime } from 'os';
 
 /**
@@ -336,7 +336,7 @@ export async function POST(request: NextRequest) {
   /**
    * Calculate trend (slope) of a data series
    */
-  private calculateTrend(data: number[]): number {
+  function calculateTrend(data: number[]): number {
     if (data.length < 2) return 0;
     
     const n = data.length;

@@ -7,9 +7,9 @@
 
 import React, { createContext, useContext, ReactNode, useCallback, useEffect, useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
-import { User } from '@/lib/types'
-import { Permission, permissionService } from '@/lib/permissions'
-import { PermissionHook } from '@/lib/hooks/usePermissions'
+import { User } from '../../lib/types'
+import { Permission, permissionService } from '../../lib/permissions-client'
+import { PermissionHook } from '../../lib/hooks/usePermissions'
 
 interface PermissionCache {
   [key: string]: {

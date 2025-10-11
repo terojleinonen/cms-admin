@@ -20,11 +20,13 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user has admin role for exports
-    , { status: 403 });
+    if (user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

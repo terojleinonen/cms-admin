@@ -31,7 +31,8 @@ export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -54,10 +55,10 @@ export const POST = withApiPermissions(
       searchTime: validatedEvent.searchTime
     })
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       message: 'Search event tracked successfully'
-    )
+    })
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -85,7 +86,8 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)

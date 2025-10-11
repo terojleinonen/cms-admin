@@ -17,11 +17,13 @@ export const GET = withApiPermissions(
     
   try {
     // Check authentication
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check admin role
-    , { status: 403 })
+    if (user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Collect performance metrics
@@ -112,11 +114,13 @@ export const POST = withApiPermissions(
     
   try {
     // Check authentication
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check admin role
-    , { status: 403 })
+    if (user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -125,22 +129,22 @@ export const POST = withApiPermissions(
     switch (action) {
       case 'clear_metrics':
         performanceMonitor.clearMetrics()
-        return createApiSuccessResponse( success: true, message: 'Metrics cleared' )
+        return createApiSuccessResponse({ success: true, message: 'Metrics cleared' })
 
       case 'optimize_database':
         // This would trigger database optimization tasks
         // For now, just return success
-        return createApiSuccessResponse( 
+        return createApiSuccessResponse({ 
           success: true, 
           message: 'Database optimization initiated' 
-        )
+        })
 
       case 'clear_cache':
         // This would clear application caches
-        return createApiSuccessResponse( 
+        return createApiSuccessResponse({ 
           success: true, 
           message: 'Cache cleared' 
-        )
+        })
 
       default:
         return NextResponse.json(

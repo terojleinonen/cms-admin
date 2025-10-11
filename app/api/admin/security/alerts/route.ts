@@ -23,13 +23,17 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    ,
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
     // Check if user has admin permissions
-    ,
+    if (user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden' },
         { status: 403 }
       )
     }
@@ -74,13 +78,17 @@ export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    ,
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
     // Check if user has admin permissions
-    ,
+    if (user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden' },
         { status: 403 }
       )
     }
@@ -89,19 +97,19 @@ export const POST = withApiPermissions(
     const { alertId, resolution, notes } = alertResolutionSchema.parse(body)
 
     const securitySystem = SecurityService.getInstance()
-    await securitySystem.resolveSecurityEvent(alertId, session.user.id as string)
+    await securitySystem.resolveSecurityEvent(alertId, user.id as string)
 
     // Log the resolution action
     const auditService = await import('@/lib/audit-service')
     await auditService.getAuditService(prisma).logSecurity(
-      session.user.id,
+      user.id,
       'SUSPICIOUS_ACTIVITY',
       {
         action: 'alert_resolved',
         alertId,
         resolution,
         notes,
-        resolvedBy: session.user.id,
+        resolvedBy: user.id,
       },
       request.headers.get('x-forwarded-for') || 'unknown',
       request.headers.get('user-agent') || 'unknown'

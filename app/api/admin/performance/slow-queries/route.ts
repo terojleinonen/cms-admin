@@ -12,7 +12,8 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -22,7 +23,7 @@ export const GET = withApiPermissions(
     const performanceMonitor = PerformanceMonitor.getInstance();
     const slowQueries = performanceMonitor.getSlowQueries(limit, minDuration);
 
-    return createApiSuccessResponse( slowQueries );
+    return createApiSuccessResponse({ slowQueries });
 
   } catch (error) {
     console.error('Error fetching slow queries:', error);

@@ -97,7 +97,8 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -111,10 +112,10 @@ export const GET = withApiPermissions(
       return NextResponse.json(template)
     }
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       templates: PAGE_TEMPLATES,
       count: PAGE_TEMPLATES.length
-    )
+    })
 
   } catch (error) {
     console.error('Error fetching page templates:', error)

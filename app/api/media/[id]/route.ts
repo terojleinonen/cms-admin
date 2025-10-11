@@ -11,10 +11,11 @@ const updateMediaSchema = z.object({
 })
 
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = params
@@ -44,10 +45,11 @@ export const GET = withApiPermissions(
 )
 
 export const PUT = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = params
@@ -72,7 +74,7 @@ export const PUT = withApiPermissions(
       }
     })
 
-    return createApiSuccessResponse( media: updatedMedia )
+    return createApiSuccessResponse({ media: updatedMedia })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid data', details: error.issues }, { status: 400 })
@@ -88,10 +90,11 @@ export const PUT = withApiPermissions(
 )
 
 export const DELETE = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = params
@@ -107,7 +110,7 @@ export const DELETE = withApiPermissions(
       where: { id }
     })
 
-    return createApiSuccessResponse( message: 'Media deleted successfully' )
+    return createApiSuccessResponse({ message: 'Media deleted successfully' })
   } catch (error) {
     console.error('Error deleting media:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -18,7 +18,9 @@ export const POST = withApiPermissions(
     
   try {
     // Check authentication and admin role
-    ,
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
@@ -48,7 +50,7 @@ export const POST = withApiPermissions(
       request.headers.get('user-agent') || ''
     )
 
-    return createApiSuccessResponse( success: true )
+    return createApiSuccessResponse({ success: true })
 
   } catch (error) {
     console.error('Unblock IP API error:', error)

@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { AuditService } from '@/app/lib/audit-service'
-import { db } from '@/app/lib/db'
-import { hasPermission } from '@/app/lib/has-permission'
+import { AuditService } from '@/lib/audit-service'
+import { prisma as db } from '@/lib/db'
+import { hasPermission } from '@/lib/permissions'
 import { z } from 'zod'
 
 const auditService = new AuditService(db)

@@ -24,7 +24,8 @@ export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -107,7 +108,7 @@ export const POST = withApiPermissions(
       return updatedCategories
     })
 
-    return createApiSuccessResponse( categories: result )
+    return createApiSuccessResponse({ categories: result })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

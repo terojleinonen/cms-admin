@@ -49,13 +49,13 @@ export const POST = withApiPermissions(
       )
     }
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       message: result.message,
       // In development, return the token for testing
       ...(process.env.NODE_ENV === 'development' && result.token && { 
         resetToken: result.token 
-      )
+      })
     })
   } catch (error) {
     console.error('Password reset request error:', error)

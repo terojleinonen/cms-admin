@@ -5,9 +5,20 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import DOMPurify from 'isomorphic-dompurify'
 import { SecurityService } from './security'
 import { rateLimit, rateLimitConfigs } from './rate-limit'
+
+// Server-safe HTML sanitization
+let DOMPurify: any = null;
+
+// Only import DOMPurify on the server side
+if (typeof window === 'undefined') {
+  try {
+    DOMPurify = require('isomorphic-dompurify');
+  } catch (error) {
+    console.warn('DOMPurify not available, using basic sanitization');
+  }
+}
 
 // Security configuration
 export const SECURITY_CONFIG = {
@@ -59,12 +70,22 @@ export class InputSanitizer {
    * Sanitize HTML content
    */
   static sanitizeHTML(input: string): string {
-    return DOMPurify.sanitize(input, {
-      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
-      ALLOWED_ATTR: ['href', 'target', 'rel'],
-      ALLOW_DATA_ATTR: false,
-      ALLOW_UNKNOWN_PROTOCOLS: false,
-    })
+    if (DOMPurify) {
+      return DOMPurify.sanitize(input, {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+        ALLOWED_ATTR: ['href', 'target', 'rel'],
+        ALLOW_DATA_ATTR: false,
+        ALLOW_UNKNOWN_PROTOCOLS: false,
+      });
+    }
+    
+    // Fallback: basic HTML sanitization
+    return input
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '') // Remove iframe tags
+      .replace(/javascript:/gi, '') // Remove javascript: URLs
+      .replace(/on\w+\s*=/gi, '') // Remove event handlers
+      .trim();
   }
 
   /**

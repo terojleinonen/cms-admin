@@ -1,12 +1,12 @@
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/app/lib/auth'
-import { hasPermission } from '@/app/lib/permissions'
-import SystemHealthDashboard from '@/app/components/admin/SystemHealthDashboard'
-import AlertConfigurationPanel from '@/app/components/admin/AlertConfigurationPanel'
-import MonitoringServiceControl from '@/app/components/admin/MonitoringServiceControl'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs'
+import { authOptions } from '@/auth'
+import { hasPermission } from '@/lib/permissions'
+import SystemHealthDashboard from '@/components/admin/SystemHealthDashboard'
+import AlertConfigurationPanel from '@/components/admin/AlertConfigurationPanel'
+import MonitoringServiceControl from '@/components/admin/MonitoringServiceControl'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export const metadata: Metadata = {
   title: 'System Health Monitoring - Admin Dashboard',

@@ -23,10 +23,11 @@ const updateCategorySchema = z.object({
  * Get a specific category with its hierarchy
  */
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = params
@@ -81,10 +82,11 @@ export const GET = withApiPermissions(
  * Update a specific category
  */
 export const PUT = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = params
@@ -204,10 +206,11 @@ export const PUT = withApiPermissions(
  * Delete a specific category
  */
 export const DELETE = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = params
@@ -251,7 +254,7 @@ export const DELETE = withApiPermissions(
       where: { id },
     })
 
-    return createApiSuccessResponse( message: 'Category deleted successfully' )
+    return createApiSuccessResponse({ message: 'Category deleted successfully' })
   } catch (error) {
     console.error('Error deleting category:', error)
     return NextResponse.json(

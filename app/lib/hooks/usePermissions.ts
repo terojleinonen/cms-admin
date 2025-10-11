@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react'
 import { useMemo, useCallback } from 'react'
 import { UserRole } from '@prisma/client'
 import { User } from '../types'
-import { Permission, permissionService } from '../permissions'
+import { Permission, permissionService } from '../permissions-client'
 
 export interface PermissionHook {
   // Basic permission checks

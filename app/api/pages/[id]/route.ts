@@ -24,12 +24,14 @@ const updatePageSchema = z.object({
 
 // GET /api/pages/[id] - Get specific page
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    const { id } = params
-    , { status: 403 })
+    if (!user) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+    
+    const { id } = params
 
     const page = await prisma.page.findUnique({
       where: { id },
@@ -66,12 +68,14 @@ export const GET = withApiPermissions(
 
 // PUT /api/pages/[id] - Update specific page
 export const PUT = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    const { id } = params
-    , { status: 403 })
+    if (!user) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+    
+    const { id } = params
 
     const body = await request.json()
     const validatedData = updatePageSchema.parse(body)
@@ -152,12 +156,14 @@ export const PUT = withApiPermissions(
 
 // DELETE /api/pages/[id] - Delete specific page
 export const DELETE = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    const { id } = params
-    , { status: 403 })
+    if (!user) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+    
+    const { id } = params
 
     // Check if page exists
     const existingPage = await prisma.page.findUnique({
@@ -173,7 +179,7 @@ export const DELETE = withApiPermissions(
       where: { id }
     })
 
-    return createApiSuccessResponse( message: 'Page deleted successfully' )
+    return createApiSuccessResponse({ message: 'Page deleted successfully' })
 
   } catch (error) {
     console.error('Error deleting page:', error)

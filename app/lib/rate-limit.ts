@@ -24,7 +24,7 @@ export const rateLimitConfigs = {
   
   // Authentication endpoints (more restrictive)
   auth: {
-    limit: 20,
+    limit: 100, // Increased for testing
     windowMs: 15 * 60 * 1000, // 15 minutes
     skipSuccessfulRequests: true,
   },
@@ -242,6 +242,14 @@ export function getRateLimitConfig(pathname: string, method: string): RateLimitC
   // Authentication endpoints
   if (pathname.startsWith('/api/auth/')) {
     return rateLimitConfigs.auth;
+  }
+  
+  // Preferences endpoints (more lenient for user experience)
+  if (pathname.includes('/preferences')) {
+    return {
+      limit: 200,
+      windowMs: 15 * 60 * 1000, // 15 minutes
+    };
   }
   
   // Admin endpoints

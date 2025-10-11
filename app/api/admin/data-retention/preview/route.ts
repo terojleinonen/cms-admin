@@ -96,11 +96,11 @@ export const POST = withApiPermissions(
       }
     };
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       preview,
       policy,
-    )
+    })
 
   } catch (error) {
     console.error('Error getting cleanup preview:', error)

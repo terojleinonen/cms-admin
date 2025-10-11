@@ -11,7 +11,8 @@ export const GET = withApiPermissions(
     
   try {
     // Check authentication and admin role
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const connectionManager = DatabaseConnectionManager.getInstance()

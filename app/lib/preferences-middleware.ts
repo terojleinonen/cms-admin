@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '../../auth'
+import { getToken } from 'next-auth/jwt'
 
 export interface UserPreferencesData {
   theme: 'LIGHT' | 'DARK' | 'SYSTEM'
@@ -32,15 +32,15 @@ export async function applyUserPreferences(
   response: NextResponse
 ): Promise<NextResponse> {
   try {
-    const session = await auth()
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
 
-    if (!session?.user?.id) {
+    if (!token?.id) {
       // No authenticated user, apply default preferences
       return applyDefaultPreferences(response)
     }
 
     // Get user preferences from cache or database
-    const preferences = await getUserPreferences(session.user.id)
+    const preferences = await getUserPreferences(token.id as string)
 
     if (!preferences) {
       return applyDefaultPreferences(response)

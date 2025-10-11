@@ -5,10 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth-utils';
-import { hasPermission } from '@/app/lib/has-permission';
-import { getScalabilityMonitor } from '@/app/lib/scalability-monitor';
-import { prisma } from '@/app/lib/db';
+import { authOptions } from '@/auth';
+import { hasPermission } from '@/lib/permissions';
+import { getScalabilityMonitor } from '@/lib/scalability-monitor';
+import { prisma } from '@/lib/db';
 
 /**
  * GET /api/admin/monitoring/scalability

@@ -17,9 +17,11 @@ export const GET = withApiPermissions(
     
   try {
     // Check authentication and authorization
-    ,
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 403 }
-      )
+      );
     }
 
     const { searchParams } = new URL(request.url)

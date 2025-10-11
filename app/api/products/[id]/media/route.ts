@@ -32,10 +32,11 @@ const setPrimaryMediaSchema = z.object({
 
 // GET /api/products/[id]/media - Get product media
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const productId = params.id
@@ -72,13 +73,13 @@ export const GET = withApiPermissions(
       orderBy: { sortOrder: 'asc' }
     })
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       productMedia: productMedia.map((pm: ProductMediaWithMedia) => ({
         mediaId: pm.mediaId,
         sortOrder: pm.sortOrder,
         isPrimary: pm.isPrimary,
         media: pm.media
-      ))
+      }))
     })
 
   } catch (error) {
@@ -97,10 +98,11 @@ export const GET = withApiPermissions(
 
 // POST /api/products/[id]/media - Add media to product
 export const POST = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const productId = params.id

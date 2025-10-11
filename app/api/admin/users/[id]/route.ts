@@ -169,10 +169,10 @@ export const DELETE = withApiPermissions(
       }
     })
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       message: 'User deleted successfully',
-    )
+    })
 
   } catch (error) {
     console.error('Error deleting user:', error)

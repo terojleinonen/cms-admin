@@ -48,10 +48,11 @@ const updateProductSchema = z.object({
  * Get a specific product with all relations
  */
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = params
@@ -96,7 +97,7 @@ export const GET = withApiPermissions(
     }
 
     const transformedProduct = transformProductForResponse(product)
-    return createApiSuccessResponse( product: transformedProduct )
+    return createApiSuccessResponse({ product: transformedProduct })
   } catch (error) {
     console.error('Error fetching product:', error)
     return NextResponse.json(
@@ -116,10 +117,11 @@ export const GET = withApiPermissions(
  * Update a specific product
  */
 export const PUT = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = params
@@ -270,7 +272,7 @@ export const PUT = withApiPermissions(
     }
     const transformedProduct = transformProductForResponse(product)
 
-    return createApiSuccessResponse( product: transformedProduct )
+    return createApiSuccessResponse({ product: transformedProduct })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

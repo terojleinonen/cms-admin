@@ -12,7 +12,8 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -26,11 +27,11 @@ export const GET = withApiPermissions(
       notificationService.getUnreadNotificationCount(session.user.id)
     ])
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       notifications,
       unreadCount,
       hasMore: notifications.length === limit
-    )
+    })
   } catch (error) {
     console.error('Error fetching notifications:', error)
     return NextResponse.json(
@@ -49,7 +50,8 @@ export const PUT = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -57,7 +59,7 @@ export const PUT = withApiPermissions(
 
     if (action === 'markAllAsRead') {
       await notificationService.markAllNotificationsAsRead(session.user.id)
-      return createApiSuccessResponse( success: true )
+      return createApiSuccessResponse({ success: true })
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })

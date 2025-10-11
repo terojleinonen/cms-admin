@@ -217,6 +217,11 @@ export function usePreferences() {
       return
     }
 
+    // Prevent multiple simultaneous requests
+    if (state.isLoading) {
+      return
+    }
+
     setState(prev => ({ ...prev, isLoading: true, error: null }))
 
     try {
@@ -269,7 +274,7 @@ export function usePreferences() {
         error: error instanceof Error ? error.message : 'Failed to load preferences',
       }))
     }
-  }, [session?.user?.id, getCachedPreferences, fetchPreferences, cachePreferences, applyPreferencesToDOM, (session as any)?.status])
+  }, [session?.user?.id, (session as any)?.status]) // Simplified dependencies
 
   /**
    * Debounced sync to prevent too frequent API calls
@@ -283,23 +288,31 @@ export function usePreferences() {
       const now = Date.now()
       if (now - lastSyncRef.current > 30000) { // Sync at most every 30 seconds
         lastSyncRef.current = now
-        loadPreferences()
+        // Call loadPreferences directly instead of depending on it
+        if (session?.user?.id && (session as any)?.status !== 'loading') {
+          loadPreferences()
+        }
       }
     }, 1000)
-  }, [loadPreferences])
+  }, [session?.user?.id])
 
   /**
    * Invalidate cache and reload preferences
    */
   const invalidateCache = useCallback(() => {
     localStorage.removeItem(CACHE_KEY)
-    loadPreferences()
-  }, [loadPreferences])
+    if (session?.user?.id && (session as any)?.status !== 'loading') {
+      loadPreferences()
+    }
+  }, [session?.user?.id])
 
   // Load preferences on mount and session change
   useEffect(() => {
-    loadPreferences()
-  }, [loadPreferences])
+    // Only load if we have a user ID and session is not loading
+    if (session?.user?.id && (session as any)?.status !== 'loading') {
+      loadPreferences()
+    }
+  }, [session?.user?.id]) // Remove session status to prevent excessive calls
 
   // Listen for storage events (preferences changed in another tab)
   useEffect(() => {

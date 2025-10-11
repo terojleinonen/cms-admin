@@ -34,10 +34,10 @@ export const GET = withApiPermissions(
 
     const result = await verifyPasswordResetToken(token)
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       isValid: result.success,
       message: result.message
-    )
+    })
   } catch (error) {
     console.error('Password reset token verification error:', error)
     return NextResponse.json(
@@ -84,10 +84,10 @@ export const POST = withApiPermissions(
       newPassword
     )
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       message: 'Password has been reset successfully.'
-    )
+    })
   } catch (error) {
     console.error('Password reset completion error:', error)
     return NextResponse.json(

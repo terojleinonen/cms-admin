@@ -36,6 +36,8 @@ export default function LoginForm({ callbackUrl = '/', error }: LoginFormProps) 
     setIsLoading(true)
     setLoginError(null)
 
+    console.log('🚀 Login attempt for:', data.email)
+
     try {
       const result = await signIn('credentials', {
         email: data.email,
@@ -43,15 +45,33 @@ export default function LoginForm({ callbackUrl = '/', error }: LoginFormProps) 
         redirect: false,
       })
 
+      console.log('📝 SignIn result:', { 
+        ok: result?.ok, 
+        error: result?.error, 
+        status: result?.status,
+        url: result?.url 
+      })
+
       if (result?.error) {
-        setLoginError('Invalid email or password')
+        console.error('❌ SignIn error:', result.error)
+        // Show more specific error based on the error type
+        if (result.error === 'CredentialsSignin') {
+          setLoginError('Invalid email or password')
+        } else {
+          setLoginError(`Authentication failed: ${result.error}`)
+        }
       } else if (result?.ok) {
-        router.push(callbackUrl)
+        console.log('✅ Login successful, redirecting...')
+        const redirectUrl = callbackUrl && callbackUrl !== 'undefined' ? callbackUrl : '/'
+        router.push(redirectUrl)
         router.refresh()
+      } else {
+        console.log('⚠️ Unexpected result:', result)
+        setLoginError('Login failed. Please try again.')
       }
     } catch (error) {
-      console.error('Login error:', error)
-      setLoginError('An unexpected error occurred. Please try again.')
+      console.error('💥 Login exception:', error)
+      setLoginError(`An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsLoading(false)
     }

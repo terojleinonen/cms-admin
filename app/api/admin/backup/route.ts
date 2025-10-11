@@ -133,18 +133,14 @@ export const GET = withApiPermissions(
 // DELETE /api/admin/backup - Cleanup old backups
 export const DELETE = withApiPermissions(
   async (request: NextRequest, { user }) => {
-    
-  try {
-    , { status: 401 });
-    }
+    try {
+      const result = await backupService.cleanupOldBackups();
 
-    const result = await backupService.cleanupOldBackups();
-
-    return createApiSuccessResponse(
-      message: 'Backup cleanup completed',
-      deletedCount: result.deletedCount,
-      freedSpace: result.freedSpace
-    );
+      return createApiSuccessResponse({
+        message: 'Backup cleanup completed',
+        deletedCount: result.deletedCount,
+        freedSpace: result.freedSpace
+      });
 
   } catch (error) {
     console.error('Backup cleanup error:', error);

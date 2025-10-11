@@ -5,10 +5,10 @@
 
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth'
+import { authOptions } from '@/auth'
 import { redirect } from 'next/navigation'
-import { hasPermission } from '@/app/lib/permissions'
-import ProductionMonitoringDashboard from '@/app/components/admin/ProductionMonitoringDashboard'
+import { hasPermission } from '@/lib/permissions'
+import ProductionMonitoringDashboard from '@/components/admin/ProductionMonitoringDashboard'
 
 export const metadata: Metadata = {
   title: 'Production Monitoring - Admin Dashboard',

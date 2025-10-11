@@ -1773,6 +1773,11 @@ export class AuditService {
   }
 }
 
+// Create and export singleton instance
+import { prisma } from './db'
+
+export const auditService = new AuditService(prisma);
+
 /**
  * Audit logging middleware for Express/Next.js
  */

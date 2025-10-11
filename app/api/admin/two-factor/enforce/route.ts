@@ -17,7 +17,9 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    ,
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden' },
         { status: 403 }
       )
     }
@@ -119,7 +121,9 @@ export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    ,
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden' },
         { status: 403 }
       )
     }
@@ -199,13 +203,13 @@ export const POST = withApiPermissions(
           })
           
           await auditLog({
-            userId: session.user.id,
+            userId: user.id,
             action: '2FA_ENFORCEMENT_LOGOUT',
             resource: 'USER_SECURITY',
             details: {
               targetUserId: user.id,
               targetUserEmail: user.email,
-              enforcedBy: session.user.id
+              enforcedBy: user.id
             },
             request
           })
@@ -220,13 +224,13 @@ export const POST = withApiPermissions(
           // In a real implementation, you would send an email notification here
           // For now, we'll just log the notification
           await auditLog({
-            userId: session.user.id,
+            userId: user.id,
             action: '2FA_ENFORCEMENT_NOTIFICATION',
             resource: 'USER_SECURITY',
             details: {
               targetUserId: user.id,
               targetUserEmail: user.email,
-              notifiedBy: session.user.id
+              notifiedBy: user.id
             },
             request
           })
@@ -252,13 +256,13 @@ export const POST = withApiPermissions(
       }
     }
     
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       processedUsers,
       totalUsers: users.length,
       action,
       results
-    )
+    })
     
   } catch (error) {
     console.error('2FA enforcement action error:', error)

@@ -3,10 +3,11 @@ import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permissi
 import { notificationService } from '@/lib/notification-service'
 
 export const PUT = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -14,7 +15,7 @@ export const PUT = withApiPermissions(
 
     if (action === 'markAsRead') {
       await notificationService.markNotificationAsRead(params.id, session.user.id)
-      return createApiSuccessResponse( success: true )
+      return createApiSuccessResponse({ success: true })
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
@@ -33,14 +34,15 @@ export const PUT = withApiPermissions(
 )
 
 export const DELETE = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await notificationService.deleteNotification(params.id, session.user.id)
-    return createApiSuccessResponse( success: true )
+    await notificationService.deleteNotification(params.id, user.id)
+    return createApiSuccessResponse({ success: true })
   } catch (error) {
     console.error('Error deleting notification:', error)
     return NextResponse.json(

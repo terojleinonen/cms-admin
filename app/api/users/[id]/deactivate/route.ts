@@ -164,11 +164,11 @@ export const POST = withApiPermissions(
       return deactivatedUser
     })
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       message: 'Account deactivated successfully',
       user: result,
-    )
+    })
 
   } catch (error) {
     console.error('Error deactivating account:', error)
@@ -276,11 +276,11 @@ export const PUT = withApiPermissions(
     // TODO: Send notification email to user if notifyUser is true
     // This would be implemented with an email service
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       message: 'Account reactivated successfully',
       user: result,
-    )
+    })
 
   } catch (error) {
     console.error('Error reactivating account:', error)

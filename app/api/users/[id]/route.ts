@@ -313,7 +313,7 @@ export const DELETE = withApiPermissions(
       request.headers.get('user-agent') || undefined
     )
 
-    return createApiSuccessResponse( message: 'User deleted successfully' )
+    return createApiSuccessResponse({ message: 'User deleted successfully' })
   } catch (error) {
     console.error('Error deleting user:', error)
     return NextResponse.json(

@@ -22,10 +22,12 @@ interface SetupParams {
  * Generate 2FA setup data (secret, QR code, backup codes)
  */
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    ,
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
@@ -82,12 +84,12 @@ export const GET = withApiPermissions(
       request
     })
     
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       qrCodeUrl: setupData.qrCodeDataUrl,
       backupCodes: setupData.backupCodes,
       secret: setupData.secret, // Temporary - will be stored after verification
       isRequired: await isTwoFactorRequired(user.role)
-    )
+    })
     
   } catch (error) {
     console.error('2FA setup error:', error)
@@ -108,10 +110,12 @@ export const GET = withApiPermissions(
  * Complete 2FA setup by verifying token
  */
 export const POST = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    ,
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
@@ -178,10 +182,10 @@ export const POST = withApiPermissions(
       request
     })
     
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       message: '2FA has been successfully enabled'
-    )
+    })
     
   } catch (error) {
     console.error('2FA setup completion error:', error)

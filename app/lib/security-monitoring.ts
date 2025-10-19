@@ -781,4 +781,4 @@ export function getSecurityMonitoringService(prisma?: PrismaClient, auditService
   return securityMonitoringService;
 }
 
-export { SecurityMonitoringService };
+// SecurityMonitoringService class is already exported above

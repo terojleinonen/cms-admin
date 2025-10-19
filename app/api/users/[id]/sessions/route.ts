@@ -26,10 +26,11 @@ const sessionActionSchema = z.object({
  * Get user's active sessions and statistics
  */
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const userId = params.id
@@ -54,12 +55,12 @@ export const GET = withApiPermissions(
       isCurrent: userId === currentUserId && (session as any).sessionToken && s.token === (session as any).sessionToken
     }))
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       sessions: sessionsWithCurrent,
       statistics,
       suspiciousActivity,
       hasSecurityConcerns: suspiciousActivity.length > 0
-    )
+    })
   } catch (error) {
     console.error('Error fetching user sessions:', error)
     return NextResponse.json(
@@ -79,10 +80,11 @@ export const GET = withApiPermissions(
  * Perform session management actions
  */
 export const POST = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const userId = params.id
@@ -133,7 +135,9 @@ export const POST = withApiPermissions(
       }
 
       case 'invalidate_session': {
-        ,
+        if (!sessionId) {
+          return NextResponse.json(
+            { error: 'Session ID is required' },
             { status: 400 }
           )
         }
@@ -152,10 +156,10 @@ export const POST = withApiPermissions(
             request
           })
 
-          return createApiSuccessResponse(
+          return createApiSuccessResponse({
             success: true,
             message: 'Session invalidated successfully'
-          )
+          })
         } else {
           return NextResponse.json(
             { error: 'Failed to invalidate session' },

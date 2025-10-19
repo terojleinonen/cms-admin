@@ -31,14 +31,17 @@ export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
     const validatedData = workflowActionSchema.parse(body);
 
     // Check user permissions for workflow actions
-    ,
+    if (!user.role || !['ADMIN', 'EDITOR'].includes(user.role)) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions for workflow actions' },
         { status: 403 }
       );
     }
@@ -94,7 +97,8 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -107,10 +111,10 @@ export const GET = withApiPermissions(
         const pendingContent = await WorkflowService.getContentPendingReview(
           validatedQuery.userId || undefined
         );
-        return createApiSuccessResponse( 
+        return createApiSuccessResponse({ 
           content: pendingContent,
           total: pendingContent.length
-        );
+        });
 
       case 'stats':
         const stats = await WorkflowService.getWorkflowStats();
@@ -127,19 +131,19 @@ export const GET = withApiPermissions(
           validatedQuery.status as WorkflowStatus,
           validatedQuery.userId || undefined
         );
-        return createApiSuccessResponse( 
+        return createApiSuccessResponse({ 
           content: contentByStatus,
           status: validatedQuery.status,
           total: contentByStatus.length
-        );
+        });
 
       case 'all':
         // Get all content with optional filtering
         const allContent = await WorkflowService.getContentPendingReview();
-        return createApiSuccessResponse( 
+        return createApiSuccessResponse({ 
           content: allContent,
           total: allContent.length
-        );
+        });
 
       default:
         return NextResponse.json(
@@ -174,11 +178,14 @@ export const PUT = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check user permissions for bulk workflow actions
-    ,
+    if (!user.role || !['ADMIN', 'EDITOR'].includes(user.role)) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions for bulk workflow actions' },
         { status: 403 }
       );
     }

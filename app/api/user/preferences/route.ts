@@ -41,22 +41,22 @@ export const GET = withApiPermissions(
         }
       })
 
-      return createApiSuccessResponse(
+      return createApiSuccessResponse({
         theme: newPreferences.theme,
         timezone: newPreferences.timezone,
         language: newPreferences.language,
         notifications: newPreferences.notifications,
         dashboard: newPreferences.dashboard,
-      )
+      })
     }
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       theme: preferences.theme,
       timezone: preferences.timezone,
       language: preferences.language,
       notifications: preferences.notifications,
       dashboard: preferences.dashboard,
-    )
+    })
   } catch (error) {
     console.error('Error fetching user preferences:', error)
     return NextResponse.json(
@@ -101,13 +101,13 @@ export const PUT = withApiPermissions(
       }
     })
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       theme: updatedPreferences.theme,
       timezone: updatedPreferences.timezone,
       language: updatedPreferences.language,
       notifications: updatedPreferences.notifications,
       dashboard: updatedPreferences.dashboard,
-    )
+    })
   } catch (error) {
     console.error('Error updating user preferences:', error)
     return NextResponse.json(

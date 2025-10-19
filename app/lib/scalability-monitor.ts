@@ -830,4 +830,4 @@ export function getScalabilityMonitor(prisma?: PrismaClient, thresholds?: Partia
   return scalabilityMonitorInstance;
 }
 
-export { ScalabilityMonitor };
+// ScalabilityMonitor class is already exported above

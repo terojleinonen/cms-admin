@@ -22,10 +22,12 @@ interface BackupCodesParams {
  * Get remaining backup codes count
  */
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    ,
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
@@ -67,10 +69,10 @@ export const GET = withApiPermissions(
     // Get remaining backup codes count
     const remainingCodes = await getRemainingBackupCodes(userId)
     
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       remainingCodes,
       totalCodes: 10 // Standard number of backup codes
-    )
+    })
     
   } catch (error) {
     console.error('Backup codes get error:', error)
@@ -91,10 +93,12 @@ export const GET = withApiPermissions(
  * Regenerate backup codes (requires 2FA token)
  */
 export const POST = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    ,
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
@@ -181,11 +185,11 @@ export const POST = withApiPermissions(
       request
     })
     
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       backupCodes: newBackupCodes,
       message: 'Backup codes have been regenerated'
-    )
+    })
     
   } catch (error) {
     console.error('Backup codes regenerate error:', error)

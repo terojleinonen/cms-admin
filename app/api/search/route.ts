@@ -210,10 +210,10 @@ export const POST = withApiPermissions(
     // Get index statistics
     const stats = searchService.getStats()
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       message: 'Search index rebuilt successfully',
       stats
-    )
+    })
 
   } catch (error) {
     console.error('Error rebuilding search index:', error)

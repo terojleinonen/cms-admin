@@ -21,7 +21,7 @@
 
 'use client'
 
-import React, { Fragment, useState, useEffect } from 'react'
+import React, { Fragment, useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -213,42 +213,35 @@ const mockResults: SearchResult[] = [
 
 function GlobalSearch() {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<SearchResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
   const permissions = usePermissions()
 
-  useEffect(() => {
-    if (query.length > 2) {
-      // Simulate search delay
-      const timer = setTimeout(() => {
-        try {
-          const filteredResults = mockResults
-            .filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
-            .filter(item => {
-              // Filter results based on user permissions
-              if (!item.requiredPermission) return true
-              try {
-                return permissions.canAccess(
-                  item.requiredPermission.resource, 
-                  item.requiredPermission.action
-                )
-              } catch (error) {
-                console.error('Error checking search result permission:', error)
-                return false // Hide result on permission check error
-              }
-            })
-          setResults(filteredResults)
-        } catch (error) {
-          console.error('Error filtering search results:', error)
-          setResults([]) // Clear results on error
-        }
-      }, 300)
-      return () => clearTimeout(timer)
-    } else {
-      setResults([])
+  // Memoize the filtered results to prevent infinite loops
+  const results = useMemo(() => {
+    if (query.length <= 2) return []
+    
+    try {
+      return mockResults
+        .filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
+        .filter(item => {
+          // Filter results based on user permissions
+          if (!item.requiredPermission) return true
+          try {
+            return permissions.canAccess(
+              item.requiredPermission.resource, 
+              item.requiredPermission.action
+            )
+          } catch (error) {
+            console.error('Error checking search result permission:', error)
+            return false // Hide result on permission check error
+          }
+        })
+    } catch (error) {
+      console.error('Error filtering search results:', error)
+      return [] // Return empty array on error
     }
-  }, [query, permissions.user?.id]) // Use stable user ID instead of permissions object
+  }, [query, permissions.user?.id, permissions.user?.role]) // Use stable user properties
 
   return (
     <Combobox value="" onChange={() => {}}>

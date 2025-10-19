@@ -108,13 +108,13 @@ export const POST = withApiPermissions(
       data: { lastLoginAt: new Date() }
     })
     
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       isBackupCode: validation.isBackupCode,
       message: validation.isBackupCode 
         ? 'Login successful using backup code' 
         : 'Login successful'
-    )
+    })
     
   } catch (error) {
     console.error('2FA verification error:', error)

@@ -754,12 +754,4 @@ export function validateSecureFileUpload(
   return { valid: true }
 }
 
-/**
- * Export all validation utilities
- */
-export {
-  AdvancedInputSanitizer,
-  SQLInjectionPrevention,
-  XSSPrevention,
-  INPUT_VALIDATION_CONFIG
-}
+// Classes are already exported individually above

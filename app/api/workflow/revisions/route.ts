@@ -35,7 +35,8 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -85,12 +86,12 @@ export const GET = withApiPermissions(
     const offset = validatedQuery.offset || 0;
     const paginatedRevisions = revisions.slice(offset, offset + limit);
 
-    return createApiSuccessResponse( 
+    return createApiSuccessResponse({ 
       revisions: paginatedRevisions,
       total: revisions.length,
       limit,
       offset
-    );
+    });
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -118,11 +119,14 @@ export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check user permissions
-    ,
+    if (!user.role || !['ADMIN', 'EDITOR'].includes(user.role)) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions for revision management' },
         { status: 403 }
       );
     }
@@ -184,11 +188,11 @@ export const POST = withApiPermissions(
       }
     });
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       revision,
       message: 'Manual revision created successfully'
-    );
+    });
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -216,11 +220,14 @@ export const DELETE = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    , { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Only admins can delete revisions
-    ,
+    if (user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Only administrators can delete revisions' },
         { status: 403 }
       );
     }
@@ -250,10 +257,10 @@ export const DELETE = withApiPermissions(
       where: { id: revisionId }
     });
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       message: 'Revision deleted successfully'
-    );
+    });
 
   } catch (error) {
     console.error('Delete revision error:', error);

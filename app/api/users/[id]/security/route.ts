@@ -121,7 +121,7 @@ export const GET = withApiPermissions(
       securityScore: calculateSecurityScore(user),
     }
 
-    return createApiSuccessResponse( security: securityInfo )
+    return createApiSuccessResponse({ security: securityInfo })
   } catch (error) {
     console.error('Error fetching security information:', error)
     return NextResponse.json(
@@ -253,7 +253,7 @@ async function handlePasswordChange(
     request.headers.get('user-agent') || undefined
   )
 
-  return createApiSuccessResponse( message: 'Password changed successfully' )
+  return createApiSuccessResponse({ message: 'Password changed successfully' })
 }
 
 // Handle 2FA setup
@@ -327,7 +327,7 @@ async function handleTwoFactorVerification(
     request.headers.get('user-agent') || undefined
   )
 
-  return createApiSuccessResponse( message: '2FA enabled successfully' )
+  return createApiSuccessResponse({ message: '2FA enabled successfully' })
 }
 
 // Handle 2FA disable
@@ -395,7 +395,7 @@ async function handleTwoFactorDisable(
     request.headers.get('user-agent') || undefined
   )
 
-  return createApiSuccessResponse( message: '2FA disabled successfully' )
+  return createApiSuccessResponse({ message: '2FA disabled successfully' })
 }
 
 // Handle session termination
@@ -443,7 +443,7 @@ async function handleSessionTermination(
     request.headers.get('user-agent') || undefined
   )
 
-  return createApiSuccessResponse( message: 'Sessions terminated successfully' )
+  return createApiSuccessResponse({ message: 'Sessions terminated successfully' })
 }
 
 interface SessionInfo {

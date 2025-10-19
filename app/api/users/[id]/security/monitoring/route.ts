@@ -26,10 +26,11 @@ const securityActionSchema = z.object({
  * Get security monitoring data for a user
  */
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const userId = params.id
@@ -134,10 +135,11 @@ export const GET = withApiPermissions(
  * Perform security actions (admin only)
  */
 export const POST = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 403 })
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const userId = params.id
@@ -177,10 +179,10 @@ export const POST = withApiPermissions(
           request
         })
 
-        return createApiSuccessResponse(
+        return createApiSuccessResponse({
           success: true,
           message: 'Account locked successfully'
-        )
+        })
       }
 
       case 'unlock_account': {
@@ -200,10 +202,10 @@ export const POST = withApiPermissions(
           request
         })
 
-        return createApiSuccessResponse(
+        return createApiSuccessResponse({
           success: true,
           message: 'Account unlocked successfully'
-        )
+        })
       }
 
       case 'force_logout': {

@@ -179,14 +179,14 @@ export const POST = withApiPermissions(
       orderBy: { sortOrder: 'asc' }
     })
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       message: 'Media added to product successfully',
       productMedia: updatedProductMedia.map((pm: ProductMediaWithMedia) => ({
         mediaId: pm.mediaId,
         sortOrder: pm.sortOrder,
         isPrimary: pm.isPrimary,
         media: pm.media
-      ))
+      }))
     })
 
   } catch (error) {
@@ -212,10 +212,11 @@ export const POST = withApiPermissions(
 
 // PUT /api/products/[id]/media - Update media order or set primary
 export const PUT = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const productId = params.id
@@ -240,7 +241,7 @@ export const PUT = withApiPermissions(
         )
       )
 
-      return createApiSuccessResponse( message: 'Media order updated successfully' )
+      return createApiSuccessResponse({ message: 'Media order updated successfully' })
     }
 
     // Handle primary media setting
@@ -264,7 +265,7 @@ export const PUT = withApiPermissions(
         })
       ])
 
-      return createApiSuccessResponse( message: 'Primary media updated successfully' )
+      return createApiSuccessResponse({ message: 'Primary media updated successfully' })
     }
 
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
@@ -292,10 +293,11 @@ export const PUT = withApiPermissions(
 
 // DELETE /api/products/[id]/media - Remove media from product
 export const DELETE = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const productId = params.id
@@ -314,7 +316,7 @@ export const DELETE = withApiPermissions(
       }
     })
 
-    return createApiSuccessResponse( message: 'Media removed from product successfully' )
+    return createApiSuccessResponse({ message: 'Media removed from product successfully' })
 
   } catch (error) {
     console.error('Error removing media from product:', error)

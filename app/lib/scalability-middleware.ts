@@ -309,11 +309,4 @@ export function initializeScalabilityMonitoring(): void {
   }, 300000); // Every 5 minutes
 }
 
-export {
-  withScalabilityMonitoring,
-  withScalabilityAPI,
-  withDatabaseTracking,
-  SessionTracker,
-  PerformanceTracker,
-  MemoryTracker
-};
+// Functions and classes are already exported individually above

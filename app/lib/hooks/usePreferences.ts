@@ -33,7 +33,7 @@ export interface PreferencesState {
 }
 
 const CACHE_KEY = 'user_preferences'
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+const CACHE_DURATION = 15 * 60 * 1000 // 15 minutes - increased to reduce API calls
 
 interface CachedPreferences {
   data: UserPreferences
@@ -54,6 +54,8 @@ export function usePreferences() {
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastSyncRef = useRef<number>(0)
+  const isLoadingRef = useRef<boolean>(false)
+  const lastApiCallRef = useRef<number>(0)
 
   /**
    * Get preferences from cache if valid
@@ -217,11 +219,19 @@ export function usePreferences() {
       return
     }
 
-    // Prevent multiple simultaneous requests
-    if (state.isLoading) {
+    // Prevent multiple simultaneous requests using ref
+    if (isLoadingRef.current) {
       return
     }
-
+    
+    // Prevent too frequent API calls (minimum 5 seconds between calls)
+    const now = Date.now()
+    if (now - lastApiCallRef.current < 5000) {
+      return
+    }
+    
+    isLoadingRef.current = true
+    lastApiCallRef.current = now
     setState(prev => ({ ...prev, isLoading: true, error: null }))
 
     try {
@@ -234,6 +244,7 @@ export function usePreferences() {
           isLoading: false,
         }))
         applyPreferencesToDOM(cachedPreferences)
+        isLoadingRef.current = false
 
         // Fetch fresh data in background
         fetchPreferences()
@@ -264,8 +275,10 @@ export function usePreferences() {
           isLoading: false,
         }))
         applyPreferencesToDOM(preferences)
+        isLoadingRef.current = false
       } else {
         setState(prev => ({ ...prev, isLoading: false }))
+        isLoadingRef.current = false
       }
     } catch (error) {
       setState(prev => ({
@@ -273,8 +286,9 @@ export function usePreferences() {
         isLoading: false,
         error: error instanceof Error ? error.message : 'Failed to load preferences',
       }))
+      isLoadingRef.current = false
     }
-  }, [session?.user?.id, (session as any)?.status]) // Simplified dependencies
+  }, [session?.user?.id]) // Only depend on stable session ID
 
   /**
    * Debounced sync to prevent too frequent API calls
@@ -288,31 +302,32 @@ export function usePreferences() {
       const now = Date.now()
       if (now - lastSyncRef.current > 30000) { // Sync at most every 30 seconds
         lastSyncRef.current = now
-        // Call loadPreferences directly instead of depending on it
-        if (session?.user?.id && (session as any)?.status !== 'loading') {
+        // Only sync if we have a user and not already loading
+        if (session?.user?.id && !isLoadingRef.current) {
           loadPreferences()
         }
       }
     }, 1000)
-  }, [session?.user?.id])
+  }, [session?.user?.id]) // Remove loadPreferences dependency
 
   /**
    * Invalidate cache and reload preferences
    */
   const invalidateCache = useCallback(() => {
     localStorage.removeItem(CACHE_KEY)
-    if (session?.user?.id && (session as any)?.status !== 'loading') {
+    // Only load if we have a user and not already loading
+    if (session?.user?.id && !isLoadingRef.current) {
       loadPreferences()
     }
-  }, [session?.user?.id])
+  }, [session?.user?.id]) // Remove loadPreferences dependency
 
   // Load preferences on mount and session change
   useEffect(() => {
     // Only load if we have a user ID and session is not loading
-    if (session?.user?.id && (session as any)?.status !== 'loading') {
+    if (session?.user?.id && (session as any)?.status !== 'loading' && !isLoadingRef.current) {
       loadPreferences()
     }
-  }, [session?.user?.id]) // Remove session status to prevent excessive calls
+  }, [session?.user?.id]) // Only depend on stable session ID
 
   // Listen for storage events (preferences changed in another tab)
   useEffect(() => {

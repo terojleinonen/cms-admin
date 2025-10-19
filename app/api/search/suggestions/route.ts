@@ -50,12 +50,12 @@ export const GET = withApiPermissions(
       responseType = 'suggestions'
     }
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       suggestions,
       query: validatedOptions.query,
       type: responseType,
       limit: validatedOptions.limit
-    )
+    })
 
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -12,10 +12,11 @@ const notificationPreferencesSchema = z.object({
 })
 
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Users can only access their own preferences, admins can access any
@@ -32,7 +33,7 @@ export const GET = withApiPermissions(
       return NextResponse.json({ error: 'Preferences not found' }, { status: 404 })
     }
 
-    return createApiSuccessResponse( preferences: preferences.notifications )
+    return createApiSuccessResponse({ preferences: preferences.notifications })
   } catch (error) {
     console.error('Error fetching notification preferences:', error)
     return NextResponse.json(
@@ -48,10 +49,11 @@ export const GET = withApiPermissions(
 )
 
 export const PUT = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Users can only update their own preferences, admins can update any
@@ -70,10 +72,10 @@ export const PUT = withApiPermissions(
       select: { notifications: true }
     })
 
-    return createApiSuccessResponse( 
+    return createApiSuccessResponse({ 
       preferences: updatedPreferences.notifications,
       message: 'Notification preferences updated successfully'
-    )
+    })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

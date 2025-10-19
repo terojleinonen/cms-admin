@@ -26,7 +26,9 @@ export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    ,
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
@@ -144,10 +146,10 @@ export const POST = withApiPermissions(
       request
     })
     
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       success: true,
       message: '2FA has been successfully disabled'
-    )
+    })
     
   } catch (error) {
     console.error('2FA disable error:', error)

@@ -299,10 +299,11 @@ export const PUT = withApiPermissions(
  * Delete a specific product
  */
 export const DELETE = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
-    , { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = params
@@ -324,7 +325,7 @@ export const DELETE = withApiPermissions(
       where: { id },
     })
 
-    return createApiSuccessResponse( message: 'Product deleted successfully' )
+    return createApiSuccessResponse({ message: 'Product deleted successfully' })
   } catch (error) {
     console.error('Error deleting product:', error)
     return NextResponse.json(

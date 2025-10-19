@@ -134,7 +134,7 @@ export const POST = withApiPermissions(
       request.headers.get('user-agent') || undefined
     )
 
-    return createApiSuccessResponse(
+    return createApiSuccessResponse({
       message: 'Profile picture uploaded successfully',
       profilePicture: {
         url: profilePictureUrl,
@@ -143,7 +143,7 @@ export const POST = withApiPermissions(
           url: variant.url,
           width: variant.width,
           height: variant.height,
-        )),
+        })),
         metadata: {
           originalSize: formatFileSize(result.metadata.originalSize),
           processedSize: formatFileSize(result.metadata.processedSize),

@@ -197,8 +197,10 @@ export function createMockUser(overrides: any = {}) {
 }
 
 export function createMockSession(user: any) {
+  const randomSuffix = Math.random().toString(36).substring(2, 15)
   return {
     user,
-    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    accessToken: `${user.role.toLowerCase()}-token-${randomSuffix}`
   }
 }

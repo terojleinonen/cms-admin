@@ -43,9 +43,9 @@
     "test:security": "tsx scripts/run-security-tests.ts",
     "test:security:ci": "node scripts/security-ci-integration.js",
     "test:security:scan": "node scripts/security-scan.js",
-    "test:security:penetration": "jest --testPathPattern='__tests__/security/permission-boundary-penetration.test.ts' --verbose",
-    "test:security:regression": "jest --testPathPattern='__tests__/security/security-regression-testing.test.ts' --verbose",
-    "test:security:all": "jest --testPathPattern='__tests__/security/' --verbose",
+    "test:security:penetration": "jest __tests__/security/permission-boundary-penetration.test.ts --verbose",
+    "test:security:regression": "jest __tests__/security/security-regression-testing.test.ts --verbose",
+    "test:security:all": "jest __tests__/security/ --verbose",
     "test:regression": "node scripts/run-regression-tests.js",
     "perf:report": "node scripts/generate-performance-report.js",
     "perf:compare": "node scripts/compare-performance.js"

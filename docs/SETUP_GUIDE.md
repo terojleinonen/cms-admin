@@ -11,8 +11,8 @@
 ## Development Setup
 
 ### Prerequisites
-- Node.js >= 18.0.0
-- npm >= 8.0.0
+- Node.js >= 20.0.0
+- npm >= 10.0.0
 - PostgreSQL >= 14.0 (or Docker)
 - Git
 
@@ -394,6 +394,53 @@ chmod 644 nginx/ssl/cert.pem
 ```
 
 ## Troubleshooting
+
+### Node.js Version Issues
+
+#### Engine Compatibility Warnings
+If you see engine compatibility warnings during npm install:
+
+```bash
+# Check your Node.js version
+node --version  # Should be v20.0.0 or higher
+
+# Check your npm version
+npm --version   # Should be v10.0.0 or higher
+
+# If using older versions, upgrade Node.js
+# Using Node Version Manager (nvm)
+nvm install 20
+nvm use 20
+
+# Or download from nodejs.org
+```
+
+#### Dependency Installation Issues
+If npm install fails with peer dependency conflicts:
+
+```bash
+# Use legacy peer deps flag for Next.js 15 + NextAuth compatibility
+npm install --legacy-peer-deps
+
+# Or for CI environments
+npm ci --legacy-peer-deps
+```
+
+#### Docker Build Issues with Node.js 20+
+If Docker builds fail:
+
+```bash
+# Ensure Dockerfile uses Node.js 20+ base image
+# Check that Dockerfile contains:
+FROM node:20-alpine
+
+# Ensure npm ci uses legacy peer deps
+RUN npm ci --legacy-peer-deps --omit=dev
+
+# Check for legacy ENV format issues
+# Use: ENV NODE_ENV=production
+# Not: ENV NODE_ENV production
+```
 
 ### Common Issues
 

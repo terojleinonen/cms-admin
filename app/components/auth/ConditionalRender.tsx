@@ -373,7 +373,9 @@ export function OrConditions({ conditions, ...props }: OrConditionsProps) {
 }
 
 // NOT logic for condition negation
-export interface NotConditionProps extends Omit<ConditionalRenderProps, 'operator'> {}
+export interface NotConditionProps extends Omit<ConditionalRenderProps, 'operator'> {
+  // Inherits all props from ConditionalRenderProps except operator
+}
 
 export function NotCondition(props: NotConditionProps) {
   return <ConditionalRender {...props} operator="NOT" />

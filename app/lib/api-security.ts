@@ -14,6 +14,7 @@ let DOMPurify: any = null;
 // Only import DOMPurify on the server side
 if (typeof window === 'undefined') {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     DOMPurify = require('isomorphic-dompurify');
   } catch (error) {
     console.warn('DOMPurify not available, using basic sanitization');

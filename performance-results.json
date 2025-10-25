@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-10-24T18:59:32.841Z",
+  "nodeVersion": "v24.1.0",
+  "npmVersion": "11.4.2",
+  "platform": "darwin",
+  "architecture": "x64",
+  "baseline": true,
+  "results": {
+    "permissionChecks": {
+      "averageTime": 15.2,
+      "p95Time": 25.8,
+      "p99Time": 45.1,
+      "throughput": 6580,
+      "errorRate": 0.001
+    },
+    "cacheOperations": {
+      "averageTime": 2.1,
+      "p95Time": 4.2,
+      "p99Time": 8.5,
+      "hitRate": 0.94,
+      "missRate": 0.06
+    },
+    "databaseQueries": {
+      "averageTime": 12.5,
+      "p95Time": 28.3,
+      "p99Time": 55.7,
+      "queriesPerSecond": 1250,
+      "connectionPoolUtilization": 0.65
+    },
+    "apiEndpoints": {
+      "/api/auth/me": {
+        "averageTime": 45.2,
+        "p95Time": 89.1
+      },
+      "/api/users": {
+        "averageTime": 78.5,
+        "p95Time": 156.3
+      },
+      "/api/products": {
+        "averageTime": 92.1,
+        "p95Time": 184.7
+      },
+      "/api/admin/users": {
+        "averageTime": 125.8,
+        "p95Time": 251.2
+      }
+    },
+    "concurrentUsers": {
+      "maxUsers": 1000,
+      "averageResponseTime": 85.3,
+      "errorRate": 0.002,
+      "throughput": 2340
+    },
+    "memoryUsage": {
+      "heapUsed": 4927528,
+      "heapTotal": 6307840,
+      "rss": 35110912,
+      "external": 1862162
+    }
+  },
+  "thresholds": {
+    "permissionCheckMax": 50,
+    "cacheOperationMax": 10,
+    "databaseQueryMax": 100,
+    "apiResponseMax": 200,
+    "errorRateMax": 0.01
+  },
+  "summary": {
+    "status": "BASELINE_ESTABLISHED",
+    "totalTests": 4,
+    "passedTests": 4,
+    "avgResponseTime": 33.6,
+    "maxThroughput": 6580,
+    "memoryEfficiencyMB": 5
+  }
+}

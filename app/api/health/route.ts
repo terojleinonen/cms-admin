@@ -142,8 +142,8 @@ async function checkPermissionSystem() {
 async function checkFileSystem() {
   try {
     // Check if we can write to logs directory
-    const fs = require('fs').promises
-    const path = require('path')
+    const fs = (await import('fs')).promises;
+    const path = await import('path');
     
     const logsDir = path.join(process.cwd(), 'logs')
     

@@ -8,6 +8,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 import { hasPermission } from '@/lib/permissions';
 import { getScalabilityMonitor } from '@/lib/scalability-monitor';
+import os from 'os';
+import v8 from 'v8';
 import { prisma } from '@/lib/db';
 import { cpus, freemem, totalmem, loadavg, uptime } from 'os';
 
@@ -108,9 +110,9 @@ export async function GET(request: NextRequest) {
         },
         system: {
           uptime: systemUptime,
-          hostname: require('os').hostname(),
-          type: require('os').type(),
-          release: require('os').release()
+          hostname: os.hostname(),
+          type: os.type(),
+          release: os.release()
         },
         timestamp: Date.now()
       };
@@ -195,8 +197,8 @@ export async function POST(request: NextRequest) {
       case 'getDetailedMemoryUsage':
         // Get detailed memory usage information
         const memUsage = process.memoryUsage();
-        const v8HeapStats = require('v8').getHeapStatistics();
-        const v8HeapSpaceStats = require('v8').getHeapSpaceStatistics();
+        const v8HeapStats = v8.getHeapStatistics();
+        const v8HeapSpaceStats = v8.getHeapSpaceStatistics();
 
         return NextResponse.json({
           success: true,

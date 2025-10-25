@@ -414,7 +414,9 @@ export function FeatureGate({
  */
 
 // Authenticated user gate
-export interface AuthenticatedGateProps extends Omit<PermissionGateProps, 'customValidator'> {}
+export interface AuthenticatedGateProps extends Omit<PermissionGateProps, 'customValidator'> {
+  // Inherits all props from PermissionGateProps except customValidator
+}
 
 export function AuthenticatedGate(props: AuthenticatedGateProps) {
   const authValidator = React.useCallback((permissions: ReturnType<typeof usePermissions>) => {

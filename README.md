@@ -39,8 +39,8 @@ A modern, comprehensive Content Management System built with Next.js 15, TypeScr
 
 ## 📋 Requirements
 
-- Node.js >= 18.0.0
-- npm >= 8.0.0
+- Node.js >= 20.0.0
+- npm >= 10.0.0
 - PostgreSQL >= 14.0
 - Docker (recommended for deployment)
 
@@ -207,6 +207,7 @@ docker-compose.*.yml     # Docker configurations
 
 ### Technical Documentation
 - **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Architecture, API reference, and development guidelines
+- **[Node.js Migration Guide](docs/NODE_VERSION_MIGRATION_GUIDE.md)** - Node.js 20+ upgrade documentation and troubleshooting
 - **[Monitoring Guide](docs/MONITORING_GUIDE.md)** - Logging, monitoring, and troubleshooting
 
 ### Quick References

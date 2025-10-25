@@ -5,7 +5,7 @@ This guide explains how to set up and manage the PostgreSQL database for the Kin
 ## Prerequisites
 
 - Docker Desktop installed and running
-- Node.js 18+ and npm 8+
+- Node.js 20+ and npm 10+
 
 ## Quick Setup
 

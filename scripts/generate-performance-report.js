@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Generate performance report from test results
@@ -176,8 +176,8 @@ function generateHtmlReport(report) {
   `;
 }
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   generatePerformanceReport().catch(console.error);
 }
 
-module.exports = { generatePerformanceReport };
+export { generatePerformanceReport };

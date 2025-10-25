@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Compare current performance results with baseline
@@ -187,7 +187,7 @@ function createDefaultBaseline() {
   };
 }
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   comparePerformance()
     .then(success => {
       process.exit(success ? 0 : 1);
@@ -198,4 +198,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { comparePerformance };
+export { comparePerformance };

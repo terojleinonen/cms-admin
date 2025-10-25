@@ -45,7 +45,7 @@ npm run test         # Run test suite
 - `.env` - Environment variables for database and auth
 
 ## Requirements
-- Node.js >= 18.0.0
+- Node.js >= 20.0.0
 - PostgreSQL >= 14.0
-- npm >= 8.0.0
+- npm >= 10.0.0
 - Environment variables for database connection

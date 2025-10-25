@@ -274,7 +274,7 @@ export class PerformanceTestRunner {
 }
 
 // CLI runner
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const runner = new PerformanceTestRunner();
   
   runner.runAllPerformanceTests()

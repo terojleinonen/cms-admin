@@ -8,10 +8,11 @@
 5. [Component Architecture](#component-architecture)
 6. [Authentication & Authorization](#authentication--authorization)
 7. [File Upload & Media Processing](#file-upload--media-processing)
-8. [Testing Strategy](#testing-strategy)
-9. [Performance Optimization](#performance-optimization)
-10. [Deployment](#deployment)
-11. [Contributing Guidelines](#contributing-guidelines)
+8. [Dependency Management](#dependency-management)
+9. [Testing Strategy](#testing-strategy)
+10. [Performance Optimization](#performance-optimization)
+11. [Deployment](#deployment)
+12. [Contributing Guidelines](#contributing-guidelines)
 
 ## Architecture Overview
 
@@ -556,6 +557,45 @@ async function generateThumbnails(
 }
 ```
 
+## Dependency Management
+
+### Overview
+The project follows strict dependency management practices to prevent security vulnerabilities and maintain code quality. All deprecated libraries have been removed and replaced with native alternatives.
+
+### Key Principles
+- **Use Native First**: Prefer native JavaScript/Node.js functionality over third-party libraries
+- **Security First**: All dependencies are regularly audited for vulnerabilities
+- **Maintenance Matters**: Only use actively maintained packages
+- **Bundle Size Awareness**: Consider the impact on bundle size
+
+### Blocked Libraries
+The following deprecated libraries are blocked by ESLint and CI/CD:
+- `lodash.isequal` → Use `util.isDeepStrictEqual`
+- `node-domexception` → Use native `DOMException`
+- `quill` / `react-quill` → Use `NativeRichTextEditor`
+
+### Validation Commands
+```bash
+# Check for deprecated dependencies
+npm run deps:check-deprecated
+
+# Run security audit
+npm run deps:audit
+
+# Full dependency validation
+npm run deps:validate
+```
+
+### Documentation
+- **[Dependency Management Guide](./DEPENDENCY_MANAGEMENT_GUIDE.md)** - Comprehensive guide for managing dependencies
+- **[Deprecated Libraries Reference](./DEPRECATED_LIBRARIES_REFERENCE.md)** - Quick reference for blocked libraries and alternatives
+
+### Migration Utilities
+Use the migration utilities in `lib/migration-utils.ts` for safe transitions:
+```typescript
+import { isDeepEqual, createDOMException } from '@/lib/migration-utils'
+```
+
 ## Testing Strategy
 
 ### Unit Tests
@@ -763,6 +803,8 @@ See `docker-compose.yml` and `Dockerfile` for containerized deployment.
 - Follow ESLint and Prettier configurations
 - Write meaningful commit messages
 - Include tests for new features
+- **No deprecated libraries** - ESLint will block deprecated imports
+- Run `npm run deps:validate` before committing
 
 ### Pull Request Process
 1. Create feature branch from main

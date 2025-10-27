@@ -1,16 +1,18 @@
-export const useSession = jest.fn(() => ({
+const { jest } = require('@jest/globals')
+
+const useSession = jest.fn(() => ({
   data: null,
   status: 'unauthenticated',
   update: jest.fn(),
 }))
 
-export const SessionProvider = ({ children }) => children
+const SessionProvider = ({ children }) => children
 
-export const signIn = jest.fn()
-export const signOut = jest.fn()
-export const getSession = jest.fn()
+const signIn = jest.fn()
+const signOut = jest.fn()
+const getSession = jest.fn()
 
-export const createMockSession = (overrides = {}) => ({
+const createMockSession = (overrides = {}) => ({
   user: {
     id: 'user-1',
     email: 'test@example.com',
@@ -20,3 +22,12 @@ export const createMockSession = (overrides = {}) => ({
   },
   expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 })
+
+module.exports = {
+  useSession,
+  SessionProvider,
+  signIn,
+  signOut,
+  getSession,
+  createMockSession
+}

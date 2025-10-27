@@ -1,0 +1,57 @@
+name: Dependency Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run dependency validation daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  validate-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+    
+    - name: Run dependency validation
+      run: npm run deps:validate
+    
+    - name: Check for deprecated imports in code
+      run: npm run lint
+    
+    - name: Generate dependency report
+      run: |
+        echo "# Dependency Validation Report" > dependency-report.md
+        echo "Generated on: $(date)" >> dependency-report.md
+        echo "" >> dependency-report.md
+        echo "## Audit Results" >> dependency-report.md
+        npm audit --audit-level=info >> dependency-report.md || true
+        echo "" >> dependency-report.md
+        echo "## Deprecated Dependencies Check" >> dependency-report.md
+        npm run deps:check-deprecated >> dependency-report.md || true
+    
+    - name: Upload dependency report
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-report
+        path: dependency-report.md
+    
+    - name: Fail on deprecated dependencies
+      run: |
+        if npm run deps:check-deprecated | grep -q "DEPRECATED"; then
+          echo "❌ Deprecated dependencies found!"
+          exit 1
+        else
+          echo "✅ No deprecated dependencies found"
+        fi

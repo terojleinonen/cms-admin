@@ -68,3 +68,10 @@
 .dynamic-height {
   height: var(--dynamic-height, 300px);
 }
+
+/* Native rich text editor placeholder styles */
+[contenteditable]:empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+}

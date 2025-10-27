@@ -27,6 +27,9 @@ jobs:
     - name: Run npm audit
       run: npm audit --audit-level=moderate || true
     
+    - name: Check for deprecated dependencies
+      run: npm run deps:check-deprecated
+    
     - name: Run Snyk security scan
       uses: snyk/actions/node@master
       env:

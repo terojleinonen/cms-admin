@@ -31,19 +31,7 @@ jest.mock('next/navigation', () => ({
 // Mock fetch for API calls
 global.fetch = jest.fn()
 
-// Mock React Quill to avoid compatibility issues
-jest.mock('react-quill', () => {
-  return function MockReactQuill({ value, onChange, placeholder }: any) {
-    return (
-      <textarea
-        data-testid="rich-text-editor"
-        value={value || ''}
-        onChange={(e) => onChange?.(e.target.value)}
-        placeholder={placeholder}
-      />
-    )
-  }
-})
+// React Quill has been replaced with native rich text editor
 
 // Mock CategorySelector to avoid API calls
 jest.mock('../../../app/components/categories/CategorySelector', () => {

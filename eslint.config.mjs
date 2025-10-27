@@ -38,6 +38,36 @@ const eslintConfig = [
             "react/react-in-jsx-scope": "off",
             "@typescript-eslint/no-non-null-assertion": "off",
             "react/prop-types": "off",
+            // Prevent deprecated library usage
+            "no-restricted-imports": [
+                "error",
+                {
+                    "paths": [
+                        {
+                            "name": "lodash.isequal",
+                            "message": "lodash.isequal is deprecated. Use Node.js native util.isDeepStrictEqual instead."
+                        },
+                        {
+                            "name": "node-domexception",
+                            "message": "node-domexception is deprecated. Use platform-native DOMException instead."
+                        },
+                        {
+                            "name": "quill",
+                            "message": "Quill has been replaced with native rich text editor. Use NativeRichTextEditor component instead."
+                        },
+                        {
+                            "name": "react-quill",
+                            "message": "react-quill has been replaced with native rich text editor. Use NativeRichTextEditor component instead."
+                        }
+                    ],
+                    "patterns": [
+                        {
+                            "group": ["lodash.*"],
+                            "message": "Individual lodash packages are deprecated. Use native JavaScript methods or Node.js utilities instead."
+                        }
+                    ]
+                }
+            ],
         },
     },
     {

@@ -48,7 +48,11 @@
     "test:security:all": "jest __tests__/security/ --verbose",
     "test:regression": "node scripts/run-regression-tests.js",
     "perf:report": "node scripts/generate-performance-report.js",
-    "perf:compare": "node scripts/compare-performance.js"
+    "perf:compare": "node scripts/compare-performance.js",
+    "deps:audit": "npm audit --audit-level=moderate",
+    "deps:check-deprecated": "tsx scripts/analyze-deprecated-deps.ts",
+    "deps:validate": "npm run deps:audit && npm run deps:check-deprecated",
+    "ci:validate": "npm run lint && npm run type-check && npm run deps:validate && npm run test:ci"
   },
   "dependencies": {
     "@babel/preset-env": "^7.28.3",
@@ -83,11 +87,9 @@
     "postcss": "^8.5.1",
     "prisma": "^6.13.0",
     "qrcode": "^1.5.4",
-    "quill": "^2.0.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.62.0",
-    "react-quill": "^2.0.0",
     "redis": "^5.8.3",
     "sharp": "^0.34.3",
     "tailwindcss": "^4.1.13",
@@ -108,7 +110,6 @@
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.1",
-    "@types/node-fetch": "^2.6.13",
     "@types/nodemailer": "^7.0.1",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
@@ -127,7 +128,6 @@
     "jest-environment-node": "^30.0.5",
     "jest-mock-extended": "^4.0.0",
     "jiti": "^2.5.1",
-    "node-fetch": "^3.3.2",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
     "ts-jest": "^29.4.1",
@@ -140,7 +140,6 @@
     "npm": ">=10.0.0"
   },
   "overrides": {
-    "glob": "^10.4.5",
-    "quill": "^2.0.3"
+    "glob": "^10.4.5"
   }
 }

@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
+import { withSimpleAuth, validateBody, createSuccessResponse, createErrorResponse } from '@/lib/simple-api-middleware'
 
 // Validation schemas
 const createCategorySchema = z.object({
@@ -22,7 +22,7 @@ const createCategorySchema = z.object({
  * GET /api/categories
  * Retrieve categories with hierarchical structure
  */
-export const GET = withApiPermissions(
+export const GET = withSimpleAuth(
   async (request: NextRequest, { user }) => {
     try {
 
@@ -73,38 +73,35 @@ export const GET = withApiPermissions(
 
     const total = await prisma.category.count({ where })
 
-    return createApiSuccessResponse({
+    return createSuccessResponse({
       categories,
       total,
     })
   } catch (error) {
     console.error('Error fetching categories:', error)
-    return NextResponse.json(
-      { 
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to fetch categories',
-          timestamp: new Date().toISOString()
-        },
-        success: false
-      },
-      { status: 500 }
-    )
+    return createErrorResponse('Failed to fetch categories', 500)
   }
 }, {
-  permissions: [{ resource: 'categories', action: 'read', scope: 'all' }]
+  resource: 'categories',
+  action: 'read',
+  allowedMethods: ['GET']
 })
 
 /**
  * POST /api/categories
  * Create a new category
  */
-export const POST = withApiPermissions(
+export const POST = withSimpleAuth(
   async (request: NextRequest, { user }) => {
     try {
 
-    const body = await request.json()
-    const validatedData = createCategorySchema.parse(body)
+    const bodyValidation = await validateBody(request, createCategorySchema)
+    
+    if (!bodyValidation.success) {
+      return createErrorResponse(bodyValidation.error)
+    }
+
+    const validatedData = bodyValidation.data
 
     // Check if slug already exists
     const existingCategory = await prisma.category.findUnique({
@@ -112,17 +109,7 @@ export const POST = withApiPermissions(
     })
 
     if (existingCategory) {
-      return NextResponse.json(
-        { 
-          error: {
-            code: 'DUPLICATE_ENTRY',
-            message: 'Category with this slug already exists',
-            timestamp: new Date().toISOString()
-          },
-          success: false
-        },
-        { status: 400 }
-      )
+      return createErrorResponse('Category with this slug already exists', 409)
     }
 
     // If parentId is provided, verify parent exists
@@ -132,17 +119,7 @@ export const POST = withApiPermissions(
       })
 
       if (!parentCategory) {
-        return NextResponse.json(
-          { 
-            error: {
-              code: 'NOT_FOUND',
-              message: 'Parent category not found',
-              timestamp: new Date().toISOString()
-            },
-            success: false
-          },
-          { status: 400 }
-        )
+        return createErrorResponse('Parent category not found')
       }
     }
 
@@ -173,37 +150,13 @@ export const POST = withApiPermissions(
       },
     })
 
-    return createApiSuccessResponse({ category }, 201)
+    return createSuccessResponse({ category }, 201)
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { 
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Validation failed',
-            details: error.issues,
-            timestamp: new Date().toISOString()
-          },
-          success: false
-        },
-        { status: 400 }
-      )
-    }
-
     console.error('Error creating category:', error)
-    return NextResponse.json(
-      { 
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to create category',
-          timestamp: new Date().toISOString()
-        },
-        success: false
-      },
-      { status: 500 }
-    )
+    return createErrorResponse('Failed to create category', 500)
   }
 }, {
-  permissions: [{ resource: 'categories', action: 'create', scope: 'all' }],
+  resource: 'categories',
+  action: 'create',
   allowedMethods: ['POST']
 })

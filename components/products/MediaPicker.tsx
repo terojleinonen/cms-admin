@@ -7,8 +7,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
-import { MagnifyingGlassIcon, PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import { CheckIcon } from '@heroicons/react/24/solid'
+import { MagnifyingGlassIcon, PhotoIcon, XMarkIcon, CheckIcon } from '../../app/components/ui/Icons'
+import { formatFileSize } from '../../app/lib/format-utils'
 
 interface MediaFile {
   id: string
@@ -122,14 +122,8 @@ export default function MediaPicker({
     setCurrentPage(page)
   }
 
-  // Format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
+  // Use consolidated formatFileSize from format-utils
+  // Removed local implementation
 
   if (!isOpen) return null
 

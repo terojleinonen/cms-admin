@@ -7,43 +7,58 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma, Prisma } from '@/lib/db'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ProductStatus } from '@prisma/client'
-import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
-import { withAPISecurity, validateAndSanitizeBody } from '@/lib/api-security'
-import { validationSchemas } from '@/lib/validation-schemas'
+import { withSimpleAuth, validateBody, createSuccessResponse, createErrorResponse } from '@/lib/simple-api-middleware'
+import { z } from 'zod'
 
 
 
-// Use centralized validation schemas
-const { product: productSchemas } = validationSchemas
+// Simplified validation schemas
+const productQuerySchema = z.object({
+  page: z.string().optional().transform(val => val ? parseInt(val) : 1),
+  limit: z.string().optional().transform(val => val ? parseInt(val) : 10),
+  search: z.string().optional(),
+  status: z.nativeEnum(ProductStatus).optional(),
+  featured: z.string().optional().transform(val => val === 'true'),
+  minPrice: z.string().optional().transform(val => val ? parseFloat(val) : undefined),
+  maxPrice: z.string().optional().transform(val => val ? parseFloat(val) : undefined),
+  categoryId: z.string().uuid().optional(),
+  tags: z.string().optional().transform(val => val ? val.split(',') : []),
+  sortBy: z.enum(['price', 'name', 'inventoryQuantity', 'createdAt']).default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc')
+})
+
+const productCreateSchema = z.object({
+  name: z.string().min(1).max(255),
+  slug: z.string().min(1).max(255),
+  description: z.string().optional(),
+  shortDescription: z.string().optional(),
+  price: z.number().positive(),
+  comparePrice: z.number().positive().optional(),
+  sku: z.string().optional(),
+  inventoryQuantity: z.number().int().min(0).default(0),
+  status: z.nativeEnum(ProductStatus).default('DRAFT'),
+  featured: z.boolean().default(false),
+  tags: z.array(z.string()).default([]),
+  categoryIds: z.array(z.string().uuid()).default([]),
+  weight: z.number().positive().optional()
+})
 
 /**
  * GET /api/products
  * Retrieve products with filtering, search, and pagination
  */
-export const GET = withAPISecurity(
-  withApiPermissions(
-    async (request: NextRequest, { user }) => {
-      try {
-        // Validate query parameters
-        const { searchParams } = new URL(request.url)
-        const queryValidation = productSchemas.query.safeParse(Object.fromEntries(searchParams))
-        
-        if (!queryValidation.success) {
-          return NextResponse.json(
-            {
-              error: {
-                code: 'VALIDATION_ERROR',
-                message: 'Invalid query parameters',
-                details: queryValidation.error.flatten().fieldErrors,
-                timestamp: new Date().toISOString(),
-              },
-              success: false,
-            },
-            { status: 400 }
-          )
-        }
+export const GET = withSimpleAuth(
+  async (request: NextRequest, { user }) => {
+    try {
+      // Validate query parameters
+      const { searchParams } = new URL(request.url)
+      const queryValidation = productQuerySchema.safeParse(Object.fromEntries(searchParams))
+      
+      if (!queryValidation.success) {
+        return createErrorResponse('Invalid query parameters')
+      }
 
-        const query = queryValidation.data
+      const query = queryValidation.data
 
         // Build where clause
         const where: Prisma.ProductWhereInput = {}
@@ -149,35 +164,22 @@ export const GET = withAPISecurity(
           weight: product.weight?.toNumber() || null,
         }))
 
-        return createApiSuccessResponse({
-          products: transformedProducts,
-          total,
-          page: query.page,
-          limit: query.limit,
-          totalPages,
-        })
-      } catch (error) {
-        console.error('Error fetching products:', error)
-        return NextResponse.json(
-          { 
-            error: {
-              code: 'INTERNAL_ERROR',
-              message: 'Failed to fetch products',
-              timestamp: new Date().toISOString()
-            },
-            success: false
-          },
-          { status: 500 }
-        )
-      }
-    },
-    {
-      permissions: [{ resource: 'products', action: 'read', scope: 'all' }]
+      return createSuccessResponse({
+        products: transformedProducts,
+        total,
+        page: query.page,
+        limit: query.limit,
+        totalPages,
+      })
+    } catch (error) {
+      console.error('Error fetching products:', error)
+      return createErrorResponse('Failed to fetch products', 500)
     }
-  ),
+  },
   {
-    allowedMethods: ['GET'],
-    rateLimitConfig: 'public'
+    resource: 'products',
+    action: 'read',
+    allowedMethods: ['GET']
   }
 )
 
@@ -185,29 +187,17 @@ export const GET = withAPISecurity(
  * POST /api/products
  * Create a new product
  */
-export const POST = withAPISecurity(
-  withApiPermissions(
-    async (request: NextRequest, { user }) => {
-      try {
-        // Validate and sanitize request body
-        const bodyValidation = await validateAndSanitizeBody(request, productSchemas.create)
-        
-        if (!bodyValidation.success) {
-          return NextResponse.json(
-            {
-              error: {
-                code: 'VALIDATION_ERROR',
-                message: bodyValidation.error,
-                details: bodyValidation.details,
-                timestamp: new Date().toISOString(),
-              },
-              success: false,
-            },
-            { status: 400 }
-          )
-        }
+export const POST = withSimpleAuth(
+  async (request: NextRequest, { user }) => {
+    try {
+      // Validate request body
+      const bodyValidation = await validateBody(request, productCreateSchema)
+      
+      if (!bodyValidation.success) {
+        return createErrorResponse(bodyValidation.error)
+      }
 
-        const validatedData = bodyValidation.data
+      const validatedData = bodyValidation.data
 
         // Check if slug already exists
         const existingProduct = await prisma.product.findUnique({
@@ -215,17 +205,7 @@ export const POST = withAPISecurity(
         })
 
         if (existingProduct) {
-          return NextResponse.json(
-            { 
-              error: {
-                code: 'DUPLICATE_ENTRY',
-                message: 'Product with this slug already exists',
-                timestamp: new Date().toISOString(),
-              },
-              success: false
-            },
-            { status: 409 }
-          )
+          return createErrorResponse('Product with this slug already exists', 409)
         }
 
         // Check if SKU already exists (if provided)
@@ -235,17 +215,7 @@ export const POST = withAPISecurity(
           })
 
           if (existingSku) {
-            return NextResponse.json(
-              { 
-                error: {
-                  code: 'DUPLICATE_ENTRY',
-                  message: 'Product with this SKU already exists',
-                  timestamp: new Date().toISOString(),
-                },
-                success: false
-              },
-              { status: 409 }
-            )
+            return createErrorResponse('Product with this SKU already exists', 409)
           }
         }
 
@@ -258,17 +228,7 @@ export const POST = withAPISecurity(
           })
 
           if (categories.length !== validatedData.categoryIds.length) {
-            return NextResponse.json(
-              { 
-                error: {
-                  code: 'INVALID_REFERENCE',
-                  message: 'One or more categories not found',
-                  timestamp: new Date().toISOString(),
-                },
-                success: false
-              },
-              { status: 400 }
-            )
+            return createErrorResponse('One or more categories not found')
           }
         }
 
@@ -326,29 +286,15 @@ export const POST = withAPISecurity(
           weight: product.weight?.toNumber() || null,
         }
 
-        return createApiSuccessResponse({ product: transformedProduct }, 201)
-      } catch (error) {
-        console.error('Error creating product:', error)
-        return NextResponse.json(
-          { 
-            error: {
-              code: 'INTERNAL_ERROR',
-              message: 'Failed to create product',
-              timestamp: new Date().toISOString()
-            },
-            success: false
-          },
-          { status: 500 }
-        )
-      }
-    },
-    {
-      permissions: [{ resource: 'products', action: 'create', scope: 'all' }]
+      return createSuccessResponse({ product: transformedProduct }, 201)
+    } catch (error) {
+      console.error('Error creating product:', error)
+      return createErrorResponse('Failed to create product', 500)
     }
-  ),
+  },
   {
-    allowedMethods: ['POST'],
-    requireCSRF: true,
-    rateLimitConfig: 'sensitive'
+    resource: 'products',
+    action: 'create',
+    allowedMethods: ['POST']
   }
 )

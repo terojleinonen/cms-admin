@@ -1,3 +1,8 @@
+/**
+ * Test Setup and Configuration
+ * Global test setup, mocks, and environment configuration
+ */
+
 import { jest } from '@jest/globals'
 import '@testing-library/jest-dom'
 import { TextEncoder, TextDecoder } from 'util'
@@ -21,7 +26,6 @@ jest.mock('next-auth/next', () => ({
   getServerSession: jest.fn()
 }))
 
-// Mock next-auth/jwt
 jest.mock('next-auth/jwt', () => ({
   getToken: jest.fn()
 }))
@@ -46,6 +50,37 @@ jest.mock('next/server', () => ({
     })),
     redirect: jest.fn(),
     next: jest.fn(),
+  },
+}))
+
+// Mock Prisma client
+jest.mock('@/lib/db', () => ({
+  prisma: {
+    user: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    product: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    category: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    auditLog: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+    },
   },
 }))
 

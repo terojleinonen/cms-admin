@@ -381,15 +381,23 @@ export class CacheService {
   }
 
   private constructor(config: CacheConfig = {}) {
+    // Environment-based configuration with fallbacks
+    const nodeEnv = process.env.NODE_ENV || 'development'
+    const redisUrl = process.env.REDIS_URL
+    
     this.config = {
       defaultTTL: 300,
-      maxMemoryItems: 1000,
-      enableRedis: false,
+      maxMemoryItems: nodeEnv === 'production' ? 2000 : 1000,
+      enableRedis: nodeEnv === 'production' && !!redisUrl,
+      redisUrl,
       ...config
     }
     
     this.memoryCache = new MemoryCache(this.config.maxMemoryItems)
     this.imageCache = new ImageCache()
+    
+    // Log cache configuration
+    console.log(`Cache initialized: ${this.config.enableRedis ? 'Redis + Memory' : 'Memory only'} (${nodeEnv})`)
   }
 
   static getInstance(config: CacheConfig = {}): CacheService {

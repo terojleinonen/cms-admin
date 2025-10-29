@@ -85,9 +85,10 @@ export const GET = withApiPermissions(
     })
     
     return createApiSuccessResponse({
-      qrCodeUrl: setupData.qrCodeDataUrl,
+      secret: setupData.secret,
+      otpauth: setupData.otpauth,
       backupCodes: setupData.backupCodes,
-      secret: setupData.secret, // Temporary - will be stored after verification
+      setupInstructions: setupData.setupInstructions,
       isRequired: await isTwoFactorRequired(user.role)
     })
     

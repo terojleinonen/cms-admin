@@ -6,7 +6,7 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react'
-import { ShieldExclamationIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { ShieldExclamationIcon, ExclamationTriangleIcon } from '../ui/Icons'
 import Button from '../ui/Button'
 import { ErrorMessage } from '../ui/ErrorMessage'
 

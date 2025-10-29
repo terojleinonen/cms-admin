@@ -6,7 +6,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon } from '../ui/Icons'
 import { Category } from '@/lib/types'
 import Button from '@/components/ui/Button'
 

@@ -272,11 +272,24 @@ async function handleTwoFactorSetup(
     data: { twoFactorSecret: secret }
   })
 
-  // Return setup information
+  const userEmail = (session as any)?.user?.email || 'user@example.com'
+  const otpauth = `otpauth://totp/CMS%20Admin:${userEmail}?secret=${secret}&issuer=CMS%20Admin`
+
+  // Return setup information with manual setup instructions
   return NextResponse.json({
     secret,
-    qrCodeUrl: `otpauth://totp/CMS%20Admin:${(session as any)?.user?.email}?secret=${secret}&issuer=CMS%20Admin`,
-    backupCodes: generateBackupCodes(), // Generate backup codes
+    otpauth,
+    backupCodes: generateBackupCodes(),
+    setupInstructions: [
+      '1. Open your authenticator app (Google Authenticator, Authy, etc.)',
+      '2. Select "Add account" or "+"',
+      '3. Choose "Enter a setup key" or "Manual entry"',
+      '4. Enter the following details:',
+      `   - Account: ${userEmail}`,
+      `   - Key: ${secret}`,
+      '   - Type: Time-based',
+      '5. Save the account in your authenticator app'
+    ]
   })
 }
 

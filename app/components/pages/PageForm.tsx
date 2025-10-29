@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import { Page } from '@/lib/types'
 import RichTextEditorWithMedia from '@/components/editor/RichTextEditorWithMedia'
 import TemplateSelector from './TemplateSelector'
-import { EyeIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, DocumentDuplicateIcon } from '../ui/Icons'
 
 interface PageFormData {
   title: string

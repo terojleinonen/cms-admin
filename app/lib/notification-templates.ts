@@ -1,5 +1,4 @@
 import { NotificationType } from '@prisma/client'
-import { prisma } from './db'
 
 export interface NotificationTemplateData {
   type: NotificationType
@@ -214,27 +213,41 @@ export const defaultNotificationTemplates: NotificationTemplateData[] = [
   }
 ]
 
-export async function seedNotificationTemplates(): Promise<void> {
-  console.log('Seeding notification templates...')
-  
-  for (const template of defaultNotificationTemplates) {
-    await prisma.notificationTemplate.upsert({
-      where: {
-        type_language: {
-          type: template.type,
-          language: template.language
-        }
-      },
-      update: {
-        subject: template.subject,
-        emailBody: template.emailBody,
-        inAppTitle: template.inAppTitle,
-        inAppBody: template.inAppBody,
-        variables: template.variables
-      },
-      create: template
+/**
+ * Get notification template by type and language
+ * Templates are now hardcoded for simplicity
+ */
+export function getNotificationTemplate(
+  type: NotificationType, 
+  language: string = 'en'
+): NotificationTemplateData | null {
+  return defaultNotificationTemplates.find(
+    template => template.type === type && template.language === language
+  ) || null
+}
+
+/**
+ * Replace template variables with actual values
+ */
+export function renderTemplate(
+  template: NotificationTemplateData,
+  variables: Record<string, string>
+): {
+  subject: string
+  emailBody?: string
+  inAppTitle: string
+  inAppBody: string
+} {
+  const replaceVariables = (text: string): string => {
+    return text.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+      return variables[key] || match
     })
   }
-  
-  console.log('Notification templates seeded successfully')
+
+  return {
+    subject: replaceVariables(template.subject),
+    emailBody: template.emailBody ? replaceVariables(template.emailBody) : undefined,
+    inAppTitle: replaceVariables(template.inAppTitle),
+    inAppBody: replaceVariables(template.inAppBody)
+  }
 }

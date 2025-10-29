@@ -25,7 +25,6 @@ import FormField from '@/components/ui/FormField'
 import Input from '@/components/ui/Input'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { validatePasswordStrength } from '@/lib/user-validation-schemas'
-import QRCode from 'qrcode'
 
 interface SecuritySettingsProps {
   userId: string
@@ -65,8 +64,9 @@ interface PasswordStrength {
 
 interface TwoFactorSetup {
   secret: string
-  qrCodeUrl: string
+  otpauth: string
   backupCodes: string[]
+  setupInstructions: string[]
 }
 
 interface FormErrors {
@@ -99,7 +99,6 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
   const [twoFactorSetup, setTwoFactorSetup] = useState<TwoFactorSetup | null>(null)
   const [twoFactorStep, setTwoFactorStep] = useState<'setup' | 'verify' | null>(null)
   const [verificationCode, setVerificationCode] = useState('')
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null)
 
   /**
    * Load security information from API
@@ -203,10 +202,6 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
       setTwoFactorSetup(data)
       setTwoFactorStep('setup')
 
-      // Generate QR code
-      const qrDataUrl = await QRCode.toDataURL(data.qrCodeUrl)
-      setQrCodeDataUrl(qrDataUrl)
-
     } catch (error) {
       console.error('Error setting up 2FA:', error)
       setErrorMessage('Failed to setup 2FA. Please try again.')
@@ -252,7 +247,6 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
       setTwoFactorStep(null)
       setTwoFactorSetup(null)
       setVerificationCode('')
-      setQrCodeDataUrl(null)
       
       // Reload security info
       await loadSecurityInfo()
@@ -693,17 +687,26 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
               <h4 className="text-sm font-medium text-gray-900">Set Up Two-Factor Authentication</h4>
               
               <div className="text-sm text-gray-600">
-                <p className="mb-2">Scan this QR code with your authenticator app:</p>
-                {qrCodeDataUrl && (
-                  <div className="flex justify-center mb-4">
-                    <Image src={qrCodeDataUrl} alt="2FA QR Code" className="border rounded" width={200} height={200} />
-                  </div>
-                )}
+                <p className="mb-3 font-medium">Manual Setup Instructions:</p>
+                <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                  <ol className="space-y-2">
+                    {twoFactorSetup.setupInstructions.map((instruction, index) => (
+                      <li key={index} className="text-sm">
+                        {instruction}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
                 
-                <p className="mb-2">Or enter this secret manually:</p>
-                <code className="bg-gray-100 px-2 py-1 rounded text-xs break-all">
-                  {twoFactorSetup.secret}
-                </code>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm font-medium text-blue-800 mb-2">Setup Key:</p>
+                  <code className="bg-white px-3 py-2 rounded text-xs break-all border block">
+                    {twoFactorSetup.secret}
+                  </code>
+                  <p className="text-xs text-blue-600 mt-2">
+                    Copy this key and paste it into your authenticator app when prompted for manual entry.
+                  </p>
+                </div>
               </div>
 
               <div className="border-t pt-4">
@@ -760,7 +763,6 @@ export default function SecuritySettings({ userId, className = '' }: SecuritySet
                     setTwoFactorStep(null)
                     setTwoFactorSetup(null)
                     setVerificationCode('')
-                    setQrCodeDataUrl(null)
                   }}
                 >
                   Cancel

@@ -5,7 +5,7 @@
 
 'use client'
 
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { ExclamationTriangleIcon } from '../ui/Icons'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
 

@@ -134,7 +134,14 @@ export class EnhancedPermissionCache {
   private async initializeRedis(redisUrl: string): Promise<void> {
     // Only initialize Redis on the server side
     if (typeof window !== 'undefined') {
-      console.warn('Redis not available in browser environment, using memory cache');
+      console.log('Browser environment detected, using in-memory cache');
+      this.redisClient = null;
+      return;
+    }
+
+    // Skip Redis initialization in development unless explicitly enabled
+    if (process.env.NODE_ENV === 'development' && !process.env.FORCE_REDIS) {
+      console.log('Development environment detected, using in-memory cache (set FORCE_REDIS=true to enable Redis)');
       this.redisClient = null;
       return;
     }
@@ -143,16 +150,29 @@ export class EnhancedPermissionCache {
       // Dynamic import for Redis to avoid bundling in client
       const redis = await import('redis').catch(() => null);
       if (!redis) {
-        console.warn('Redis package not available, falling back to memory cache');
+        console.log('Redis package not available, using in-memory cache');
         this.redisClient = null;
         return;
       }
       
-      this.redisClient = redis.createClient({ url: redisUrl });
+      this.redisClient = redis.createClient({ 
+        url: redisUrl,
+        socket: {
+          connectTimeout: 5000, // 5 second timeout
+          lazyConnect: true
+        }
+      });
+      
+      // Handle Redis connection errors gracefully
+      this.redisClient.on('error', (error: Error) => {
+        console.warn('Redis connection error, falling back to memory cache:', error.message);
+        this.redisClient = null;
+      });
+
       await this.redisClient.connect();
       console.log('Redis cache connected successfully');
     } catch (error) {
-      console.warn('Failed to connect to Redis, falling back to memory cache:', error);
+      console.log('Redis not available, using in-memory cache:', (error as Error).message);
       this.redisClient = null;
     }
   }
@@ -734,21 +754,58 @@ export const enhancedPermissionService = typeof window === 'undefined'
   ? new EnhancedPermissionService({
       ttl: process.env.PERMISSION_CACHE_TTL ? parseInt(process.env.PERMISSION_CACHE_TTL) : 5 * 60 * 1000,
       redisUrl: process.env.REDIS_URL,
-      enableDistributed: process.env.NODE_ENV === 'production'
+      // Only enable Redis in production and when REDIS_URL is available
+      enableDistributed: process.env.NODE_ENV === 'production' && !!process.env.REDIS_URL
     })
   : new PermissionService(); // Fallback to basic service on client side
 
 export const cacheInvalidationService = new CacheInvalidationService(enhancedPermissionService);
 
 // Create and export auditService instance for compatibility
+import { simpleAuditService, ESSENTIAL_AUDIT_ACTIONS } from './simple-audit-service';
+
 export const auditService = {
   logAction: async (userId: string, action: string, resource: string, resourceId: string | null, details: any) => {
-    // Placeholder implementation - replace with actual audit service
-    console.log('Audit log:', { userId, action, resource, resourceId, details });
+    // Map to essential audit actions only
+    const actionMap: Record<string, keyof typeof ESSENTIAL_AUDIT_ACTIONS> = {
+      'login': 'LOGIN',
+      'logout': 'LOGOUT',
+      'login_failed': 'LOGIN_FAILED',
+      'user_created': 'USER_CREATED',
+      'user_deleted': 'USER_DELETED',
+      'role_changed': 'ROLE_CHANGED',
+      'permission_denied': 'PERMISSION_DENIED',
+      'unauthorized_access': 'UNAUTHORIZED_ACCESS',
+      'settings_changed': 'SETTINGS_CHANGED',
+    };
+    
+    const mappedAction = actionMap[action];
+    if (mappedAction) {
+      await simpleAuditService.log({
+        userId,
+        action: ESSENTIAL_AUDIT_ACTIONS[mappedAction],
+        resource,
+        details: { ...details, resourceId },
+      });
+    }
   },
   logSecurityEvent: async (eventType: string, severity: string, userId?: string, details?: any) => {
-    // Placeholder implementation - replace with actual audit service
-    console.log('Security event:', { eventType, severity, userId, details });
+    if (userId && (eventType === 'permission_denied' || eventType === 'unauthorized_access')) {
+      const actionMap: Record<string, keyof typeof ESSENTIAL_AUDIT_ACTIONS> = {
+        'permission_denied': 'PERMISSION_DENIED',
+        'unauthorized_access': 'UNAUTHORIZED_ACCESS',
+      };
+      
+      const mappedAction = actionMap[eventType];
+      if (mappedAction) {
+        await simpleAuditService.log({
+          userId,
+          action: ESSENTIAL_AUDIT_ACTIONS[mappedAction],
+          resource: 'system',
+          details: { severity, ...details },
+        });
+      }
+    }
   }
 };
 

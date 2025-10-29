@@ -1,28 +1,24 @@
 import { Session } from 'next-auth';
-import { UserRole } from '@prisma/client';
+import { simplePermissionService } from './simple-permissions';
 
 type Permission = 'create' | 'read' | 'update' | 'delete' | 'preview';
-
-const rolePermissions: Record<UserRole, Permission[]> = {
-  ADMIN: ['create', 'read', 'update', 'delete', 'preview'],
-  EDITOR: ['create', 'read', 'update', 'preview'],
-  VIEWER: ['read'],
-};
 
 export function hasPermission(session: Session | null, permission: Permission): boolean {
   if (!session?.user) {
     return false;
   }
 
-  const userRole = (session.user as any).role as UserRole;
-  if (!userRole) {
-    return false;
-  }
+  const user = session.user as any;
+  
+  // Map legacy permissions to resource:action format
+  const resourceActionMap: Record<Permission, { resource: string; action: string }> = {
+    'create': { resource: 'products', action: 'create' },
+    'read': { resource: 'products', action: 'read' },
+    'update': { resource: 'products', action: 'update' },
+    'delete': { resource: 'products', action: 'delete' },
+    'preview': { resource: 'pages', action: 'read' },
+  };
 
-  const permissions = rolePermissions[userRole];
-  if (!permissions) {
-    return false;
-  }
-
-  return permissions.includes(permission);
+  const mapped = resourceActionMap[permission];
+  return simplePermissionService.hasPermission(user, mapped.resource, mapped.action);
 }

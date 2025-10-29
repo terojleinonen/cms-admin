@@ -11,11 +11,10 @@ import {
   PhotoIcon,
   PlusIcon,
   XMarkIcon,
+  EyeIcon,
   StarIcon,
   ArrowsUpDownIcon,
-  EyeIcon,
-} from '@heroicons/react/24/outline'
-import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
+} from '../ui/Icons'
 import clsx from 'clsx'
 import { Media, ProductMedia } from '@/lib/types'
 
@@ -270,7 +269,7 @@ export default function ProductImageGallery({
                     
                     {showPrimarySelector && productMedia.isPrimary && (
                       <div className="p-1 bg-yellow-500 rounded shadow-sm" title="Primary image">
-                        <StarIconSolid className="h-4 w-4 text-white" />
+                        <StarIcon className="h-4 w-4 text-white fill-current" />
                       </div>
                     )}
                     

@@ -16,6 +16,14 @@
 - PostgreSQL >= 14.0 (or Docker)
 - Git
 
+### Simplified Architecture Benefits
+The CMS has been streamlined to reduce complexity while maintaining all core functionality:
+- **Reduced Dependencies**: Fewer external packages to manage and update
+- **Custom UI Components**: Lightweight Tailwind-based components instead of heavy libraries
+- **Simplified Permissions**: Role-based access control instead of complex resource-action models
+- **Consolidated Testing**: Focused test structure with essential coverage
+- **Optional Redis**: In-memory caching with Redis as optional enhancement
+
 ### Quick Start
 
 1. **Clone the repository**

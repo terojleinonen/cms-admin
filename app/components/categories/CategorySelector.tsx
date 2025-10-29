@@ -6,7 +6,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { ChevronDownIcon, XMarkIcon } from '../ui/Icons'
 import { Category } from '@/lib/types'
 import { getCategoryIndentClass } from '@/utils/dynamic-styles'
 

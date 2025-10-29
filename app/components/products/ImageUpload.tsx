@@ -6,7 +6,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { CloudArrowUpIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline'
+import { CloudArrowUpIcon, XMarkIcon, PhotoIcon } from '../ui/Icons'
 import clsx from 'clsx'
 import Image from 'next/image'
 
@@ -41,7 +41,7 @@ export default function ImageUpload({
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const generateId = () => Math.random().toString(36).substr(2, 9)
+  // Use consolidated generateId from format-utils
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes'

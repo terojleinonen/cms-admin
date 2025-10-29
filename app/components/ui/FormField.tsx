@@ -6,7 +6,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
+import { ExclamationCircleIcon } from './Icons'
 
 interface FormFieldProps {
   label?: string

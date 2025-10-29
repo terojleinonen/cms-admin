@@ -6,8 +6,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { XMarkIcon, PhotoIcon, DocumentIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, PhotoIcon, DocumentIcon } from '../ui/Icons'
 import { Media } from '@/lib/types'
+import { formatFileSize } from '@/lib/format-utils'
 import Image from 'next/image'
 
 interface MediaPickerProps {
@@ -66,13 +67,7 @@ export default function MediaPicker({
     return <DocumentIcon className="h-8 w-8 text-gray-400" />
   }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
+  // Using consolidated formatFileSize from format-utils
 
   const isAllowedType = (mimeType: string) => {
     return allowedTypes.some(type => {

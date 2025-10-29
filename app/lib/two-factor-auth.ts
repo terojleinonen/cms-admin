@@ -1,6 +1,4 @@
 import { UserRole, PrismaClient } from '@prisma/client';
-import { authenticator } from 'otplib';
-import qrcode from 'qrcode';
 import crypto from 'crypto';
 
 const prisma = new PrismaClient();
@@ -9,16 +7,73 @@ export function isTwoFactorRequired(role: UserRole): boolean {
   return role === UserRole.ADMIN;
 }
 
+// Simple TOTP implementation without external dependencies
+function generateSecret(): string {
+  return crypto.randomBytes(20).toString('base64');
+}
+
+function generateTOTP(secret: string, timeStep?: number): string {
+  const time = timeStep || Math.floor(Date.now() / 30000);
+  const timeBuffer = Buffer.alloc(8);
+  timeBuffer.writeUInt32BE(0, 0);
+  timeBuffer.writeUInt32BE(time, 4);
+  
+  const hmac = crypto.createHmac('sha1', Buffer.from(secret, 'base64'));
+  hmac.update(timeBuffer);
+  const hash = hmac.digest();
+  
+  const offset = hash[hash.length - 1] & 0xf;
+  const code = ((hash[offset] & 0x7f) << 24) |
+               ((hash[offset + 1] & 0xff) << 16) |
+               ((hash[offset + 2] & 0xff) << 8) |
+               (hash[offset + 3] & 0xff);
+  
+  return (code % 1000000).toString().padStart(6, '0');
+}
+
+function verifyTOTP(secret: string, token: string): boolean {
+  const currentTime = Math.floor(Date.now() / 30000);
+  
+  // Check current time window and ±1 window for clock drift
+  for (let i = -1; i <= 1; i++) {
+    const expectedToken = generateTOTP(secret, currentTime + i);
+    if (expectedToken === token) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+function createOTPAuthURL(email: string, secret: string, issuer: string = 'Kin Workspace CMS'): string {
+  const encodedEmail = encodeURIComponent(email);
+  const encodedIssuer = encodeURIComponent(issuer);
+  return `otpauth://totp/${encodedIssuer}:${encodedEmail}?secret=${secret}&issuer=${encodedIssuer}`;
+}
+
 export async function generateTwoFactorSetup(userId: string, email: string) {
-  const secret = authenticator.generateSecret();
+  const secret = generateSecret();
   await prisma.user.update({
     where: { id: userId },
     data: { twoFactorSecret: secret },
   });
-  const otpauth = authenticator.keyuri(email, 'Kin Workspace CMS', secret);
-  const qrCodeDataUrl = await qrcode.toDataURL(otpauth);
+  const otpauth = createOTPAuthURL(email, secret);
   const backupCodes = await regenerateBackupCodes(userId);
-  return { secret, qrCodeDataUrl, backupCodes };
+  return { 
+    secret, 
+    otpauth,
+    backupCodes,
+    setupInstructions: [
+      '1. Open your authenticator app (Google Authenticator, Authy, etc.)',
+      '2. Select "Add account" or "+"',
+      '3. Choose "Enter a setup key" or "Manual entry"',
+      '4. Enter the following details:',
+      `   - Account: ${email}`,
+      `   - Key: ${secret}`,
+      '   - Type: Time-based',
+      '5. Save the account in your authenticator app'
+    ]
+  };
 }
 
 export async function enableTwoFactorAuth(userId: string, token: string) {
@@ -26,7 +81,7 @@ export async function enableTwoFactorAuth(userId: string, token: string) {
   if (!user || !user.twoFactorSecret) {
     return { success: false, message: '2FA not set up for this user.' };
   }
-  const isValid = authenticator.verify({ token, secret: user.twoFactorSecret });
+  const isValid = verifyTOTP(user.twoFactorSecret, token);
   if (!isValid) {
     return { success: false, message: 'Invalid 2FA token.' };
   }
@@ -50,7 +105,7 @@ export async function verifyTwoFactorToken(userId: string, token: string) {
     if (!user || !user.twoFactorSecret) {
         return false;
     }
-    return authenticator.verify({ token, secret: user.twoFactorSecret });
+    return verifyTOTP(user.twoFactorSecret, token);
 }
 
 export async function getRemainingBackupCodes(userId: string) {

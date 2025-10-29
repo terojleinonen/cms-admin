@@ -32,7 +32,7 @@ A modern, comprehensive Content Management System built with Next.js 15, TypeScr
 - **Authentication**: NextAuth.js with bcrypt password hashing
 - **Styling**: Tailwind CSS with Headless UI components
 - **File Processing**: Sharp.js for image optimization
-- **Search**: MiniSearch for client-side search
+- **Search**: PostgreSQL full-text search
 - **Caching**: Redis (optional)
 - **Testing**: Jest with Testing Library
 - **Deployment**: Docker with Nginx reverse proxy

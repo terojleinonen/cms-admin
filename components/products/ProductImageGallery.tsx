@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
-import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from '../../app/components/ui/Icons'
 
 interface ProductImage {
   id: string

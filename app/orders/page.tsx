@@ -4,7 +4,7 @@ import {
   ShoppingBagIcon, 
   PlusIcon,
   ChartBarIcon
-} from '@heroicons/react/24/outline'
+} from '../components/ui/Icons'
 
 export const metadata: Metadata = {
   title: 'Orders - Kin Workspace CMS',

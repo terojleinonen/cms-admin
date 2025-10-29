@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { registerSchema, RegisterFormData } from '@/lib/auth-schemas'
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, EyeSlashIcon } from '../ui/Icons'
 
 export default function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false)

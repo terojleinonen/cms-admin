@@ -16,15 +16,23 @@
 
 ## Architecture Overview
 
+### Simplified Architecture Philosophy
+The CMS follows a simplified architecture approach that prioritizes:
+- **Minimal Dependencies**: Reduced external package footprint for better security and maintenance
+- **Custom Components**: Lightweight, purpose-built UI components using Tailwind CSS
+- **Simple Permissions**: Role-based access control instead of complex permission hierarchies
+- **Direct Database Access**: PostgreSQL native features instead of heavy abstraction layers
+- **Focused Testing**: Essential test coverage without over-engineering
+
 ### Technology Stack
 - **Framework**: Next.js 15 with App Router
 - **Language**: TypeScript (strict mode)
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: NextAuth.js
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS with custom components
 - **File Processing**: Sharp.js for image optimization
-- **Search**: MiniSearch for client-side search
-- **Caching**: Redis (optional)
+- **Search**: PostgreSQL full-text search (native)
+- **Caching**: In-memory with optional Redis enhancement
 
 ### Project Structure
 ```

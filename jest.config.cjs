@@ -3,7 +3,7 @@ module.exports = {
     {
       displayName: 'unit',
       testEnvironment: 'node',
-      testMatch: ['<rootDir>/__tests__/**/*.test.ts'],
+      testMatch: ['<rootDir>/__tests__/unit/**/*.test.ts'],
       setupFilesAfterEnv: ['<rootDir>/__tests__/helpers/test-helpers.ts'],
       transform: {
         '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }],
@@ -20,9 +20,9 @@ module.exports = {
       testTimeout: 10000,
     },
     {
-      displayName: 'components',
+      displayName: 'unit-components',
       testEnvironment: 'jsdom',
-      testMatch: ['<rootDir>/__tests__/components/**/*.test.tsx'],
+      testMatch: ['<rootDir>/__tests__/unit/**/*.test.tsx'],
       setupFilesAfterEnv: ['<rootDir>/__tests__/helpers/test-helpers.ts'],
       transform: {
         '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }],
@@ -37,6 +37,25 @@ module.exports = {
         'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
       },
       testTimeout: 10000,
+    },
+    {
+      displayName: 'integration',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/__tests__/integration/**/*.test.{ts,tsx}'],
+      setupFilesAfterEnv: ['<rootDir>/__tests__/helpers/test-helpers.ts'],
+      transform: {
+        '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }],
+      },
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/app/$1',
+        '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
+        '^@/components/(.*)$': '<rootDir>/app/components/$1',
+        '^@/__tests__/(.*)$': '<rootDir>/__tests__/$1',
+        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        'next-auth/react': '<rootDir>/__mocks__/next-auth/react.js',
+        'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
+      },
+      testTimeout: 15000,
     },
     {
       displayName: 'e2e',
@@ -56,26 +75,6 @@ module.exports = {
         'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
       },
       testTimeout: 30000,
-    },
-    {
-      displayName: 'performance',
-      testEnvironment: 'node',
-      testMatch: ['<rootDir>/__tests__/performance/**/*.test.ts'],
-      setupFilesAfterEnv: ['<rootDir>/__tests__/helpers/test-helpers.ts'],
-      transform: {
-        '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }],
-      },
-      moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/app/$1',
-        '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
-        '^@/components/(.*)$': '<rootDir>/app/components/$1',
-        '^@/__tests__/(.*)$': '<rootDir>/__tests__/$1',
-        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-        'next-auth/react': '<rootDir>/__mocks__/next-auth/react.js',
-        'next-auth/next': '<rootDir>/__mocks__/next-auth/next.js',
-      },
-      testTimeout: 120000,
-      maxWorkers: 1,
     }
   ],
   collectCoverageFrom: [

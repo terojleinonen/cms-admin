@@ -1,101 +1,70 @@
 /**
  * Analytics API
- * Provides dashboard metrics, performance data, and reporting
+ * Provides basic dashboard metrics
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
-import { AnalyticsService } from '@/lib/analytics';
+import { withSimpleAuth, createSuccessResponse, createErrorResponse } from '@/lib/simple-api-middleware'
+import { prisma } from '@/lib/db'
 import { z } from 'zod';
 
-// Validation schemas
+// Simplified analytics query schema
 const analyticsQuerySchema = z.object({
-  type: z.enum(['metrics', 'performance', 'inventory', 'activity', 'trends', 'report']),
-  timeframe: z.enum(['7d', '30d', '90d', '1y']).optional().default('30d'),
-  limit: z.number().min(1).max(100).optional().default(10)
+  type: z.enum(['overview', 'products', 'users']).default('overview')
 });
 
-// GET /api/analytics - Get analytics data
-export const GET = withApiPermissions(
+// GET /api/analytics - Get basic analytics data
+export const GET = withSimpleAuth(
   async (request: NextRequest, { user }) => {
-    
-  try {
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    try {
+      const { searchParams } = new URL(request.url);
+      const type = searchParams.get('type') || 'overview';
+
+      // Validate query parameters
+      const validatedQuery = analyticsQuerySchema.parse({ type });
+
+      switch (validatedQuery.type) {
+        case 'overview':
+          const [userCount, productCount, categoryCount] = await Promise.all([
+            prisma.user.count(),
+            prisma.product.count(),
+            prisma.category.count()
+          ]);
+          
+          return createSuccessResponse({
+            users: userCount,
+            products: productCount,
+            categories: categoryCount
+          });
+
+        case 'products':
+          const productStats = await prisma.product.groupBy({
+            by: ['status'],
+            _count: { status: true }
+          });
+          
+          return createSuccessResponse({ productStats });
+
+        case 'users':
+          const userStats = await prisma.user.groupBy({
+            by: ['role'],
+            _count: { role: true }
+          });
+          
+          return createSuccessResponse({ userStats });
+
+        default:
+          return createErrorResponse('Invalid analytics type');
+      }
+
+    } catch (error) {
+      console.error('Analytics API error:', error);
+      return createErrorResponse('Failed to fetch analytics', 500);
     }
-
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') || 'metrics';
-    const timeframe = searchParams.get('timeframe') || '30d';
-    const limit = parseInt(searchParams.get('limit') || '10');
-
-    // Validate query parameters
-    const validatedQuery = analyticsQuerySchema.parse({
-      type,
-      timeframe,
-      limit
-    });
-
-    const timeframeData = AnalyticsService.getTimeframe(validatedQuery.timeframe);
-
-    switch (validatedQuery.type) {
-      case 'metrics':
-        const metrics = await AnalyticsService.getDashboardMetrics();
-        return createApiSuccessResponse( metrics );
-
-      case 'performance':
-        const performance = await AnalyticsService.getContentPerformance(
-          validatedQuery.limit,
-          timeframeData
-        );
-        return createApiSuccessResponse( performance );
-
-      case 'inventory':
-        const inventory = await AnalyticsService.getInventoryAlerts();
-        return createApiSuccessResponse( inventory );
-
-      case 'activity':
-        const activity = await AnalyticsService.getRecentActivity(validatedQuery.limit);
-        return createApiSuccessResponse( activity );
-
-      case 'trends':
-        const trends = await AnalyticsService.getContentTrends(timeframeData);
-        const storageGrowth = await AnalyticsService.getStorageGrowth(timeframeData);
-        return NextResponse.json({ 
-          trends: {
-            ...trends,
-            storageGrowth
-          }
-        });
-
-      case 'report':
-        const report = await AnalyticsService.generateReport(timeframeData);
-        return createApiSuccessResponse( report );
-
-      default:
-        return NextResponse.json(
-          { error: 'Invalid analytics type' },
-          { status: 400 }
-        );
-    }
-
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid query parameters', details: error.issues },
-        { status: 400 }
-      );
-    }
-
-    console.error('Analytics API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-
   },
   {
-  permissions: [{ resource: 'analytics', action: 'read', scope: 'all' }]
-}
+    resource: 'analytics',
+    action: 'read',
+    allowedMethods: ['GET']
+  }
 )

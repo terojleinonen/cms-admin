@@ -11,7 +11,7 @@ import { UserRole } from '@prisma/client'
 import { UserWithCount, UserProfile } from '../lib/types'
 import UserTable from '../components/users/UserTable'
 import UserModal from '../components/users/UserModal'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { PlusIcon } from '../components/ui/Icons'
 
 interface PaginationInfo {
   page: number

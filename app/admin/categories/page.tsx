@@ -6,7 +6,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, MagnifyingGlassIcon } from '@/components/ui/Icons'
 import CategoryTree from '@/components/categories/CategoryTree'
 import CategoryForm from '@/components/categories/CategoryForm'
 import { Category } from '@/lib/types'

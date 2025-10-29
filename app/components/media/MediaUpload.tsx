@@ -6,7 +6,8 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { XMarkIcon, CloudArrowUpIcon, DocumentIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, CloudArrowUpIcon, DocumentIcon } from '../ui/Icons'
+import { formatFileSize, generateId } from '@/lib/format-utils'
 import clsx from 'clsx'
 
 interface MediaUploadProps {
@@ -29,15 +30,9 @@ export default function MediaUpload({ onClose, onSuccess }: MediaUploadProps) {
   const [folder, setFolder] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const generateId = () => Math.random().toString(36).substr(2, 9)
+  // Use consolidated generateId from format-utils
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
+  // Using consolidated formatFileSize from format-utils
 
   const validateFile = (file: File): string | null => {
     // Check file size (10MB limit)

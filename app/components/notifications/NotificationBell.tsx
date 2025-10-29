@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { BellIcon } from '@heroicons/react/24/outline'
-import { BellIcon as BellSolidIcon } from '@heroicons/react/24/solid'
+import { BellIcon, BellSolidIcon } from '../ui/Icons'
 import { NotificationDropdown } from './NotificationDropdown'
 import { Notification } from '@/lib/types'
 

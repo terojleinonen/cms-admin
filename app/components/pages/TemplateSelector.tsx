@@ -6,8 +6,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { CheckIcon } from '@heroicons/react/24/solid'
-import { DocumentTextIcon, GlobeAltIcon, NewspaperIcon, ShoppingBagIcon, PhoneIcon } from '@heroicons/react/24/outline'
+import { CheckIcon, DocumentTextIcon, GlobeAltIcon, NewspaperIcon, ShoppingBagIcon, PhoneIcon } from '../ui/Icons'
 
 interface Template {
   id: string

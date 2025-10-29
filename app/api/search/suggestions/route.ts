@@ -40,7 +40,7 @@ export const GET = withApiPermissions(
     if (!validatedOptions.query.trim() || validatedOptions.type === 'popular') {
       // Return popular terms when no query or explicitly requested
       const searchService = getSearchService()
-      suggestions = searchService.getPopularTerms(validatedOptions.limit)
+      suggestions = await searchService.getPopularTerms(validatedOptions.limit)
       responseType = 'popular'
     } else {
       // Return query-based suggestions

@@ -98,120 +98,14 @@ export const POST = withApiPermissions(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Clear existing index
-    searchService.clearIndex()
-
-    // Index products
-    const products = await prisma.product.findMany({
-      include: {
-        categories: {
-          include: {
-            category: true
-          }
-        },
-        creator: {
-          select: {
-            name: true
-          }
-        }
-      }
-    })
-
-    const productDocuments = products.map(product => ({
-      id: product.id,
-      type: 'product' as const,
-      title: product.name,
-      content: [product.description, product.shortDescription].filter(Boolean).join(' '),
-      excerpt: product.shortDescription || '',
-      tags: [], // Products don't have tags in current schema
-      status: product.status,
-      category: product.categories[0]?.category.name || '',
-      createdAt: product.createdAt.toISOString(),
-      updatedAt: product.updatedAt.toISOString(),
-      url: `/admin/products/${product.id}`,
-      metadata: {
-        price: product.price,
-        sku: product.sku,
-        featured: product.featured,
-        creator: product.creator?.name
-      }
-    }))
-
-    // Index pages
-    const pages = await prisma.page.findMany({
-      include: {
-        creator: {
-          select: {
-            name: true
-          }
-        }
-      }
-    })
-
-    const pageDocuments = pages.map(page => ({
-      id: page.id,
-      type: 'page' as const,
-      title: page.title,
-      content: page.content || '',
-      excerpt: page.excerpt || '',
-      tags: [], // Pages don't have tags in current schema
-      status: page.status,
-      category: page.template,
-      createdAt: page.createdAt.toISOString(),
-      updatedAt: page.updatedAt.toISOString(),
-      url: `/admin/pages/${page.id}`,
-      metadata: {
-        template: page.template,
-        seoTitle: page.seoTitle,
-        seoDescription: page.seoDescription,
-        publishedAt: page.publishedAt?.toISOString(),
-        creator: page.creator?.name
-      }
-    }))
-
-    // Index media
-    const media = await prisma.media.findMany({
-      include: {
-        creator: {
-          select: {
-            name: true
-          }
-        }
-      }
-    })
-
-    const mediaDocuments = media.map(mediaItem => ({
-      id: mediaItem.id,
-      type: 'media' as const,
-      title: mediaItem.originalName,
-      content: mediaItem.altText || '',
-      excerpt: mediaItem.altText || '',
-      tags: [], // Media doesn't have tags in current schema
-      status: 'published', // Media is always considered published
-      category: mediaItem.mimeType.split('/')[0], // image, video, etc.
-      createdAt: mediaItem.createdAt.toISOString(),
-      updatedAt: mediaItem.createdAt.toISOString(), // Media doesn't have updatedAt
-      url: `/admin/media/${mediaItem.id}`,
-      metadata: {
-        filename: mediaItem.filename,
-        mimeType: mediaItem.mimeType,
-        fileSize: mediaItem.fileSize,
-        width: mediaItem.width,
-        height: mediaItem.height,
-        folder: mediaItem.folder,
-        creator: mediaItem.creator?.name
-      }
-    }))
-
-    // Add all documents to search index
-    const allDocuments = [...productDocuments, ...pageDocuments, ...mediaDocuments]
-    searchService.addDocuments(allDocuments)
-
-    // Get index statistics
-    const stats = searchService.getStats()
+    // No indexing needed for PostgreSQL-based search
+    // Content is automatically searchable when in database
+    
+    // Get search statistics
+    const stats = await searchService.getStats()
 
     return createApiSuccessResponse({
-      message: 'Search index rebuilt successfully',
+      message: 'Search system ready (PostgreSQL-based search)',
       stats
     })
 

@@ -1,21 +1,10 @@
 /**
  * Search Service
- * Handles search functionality, indexing, analytics, and suggestions
+ * Handles search functionality using PostgreSQL full-text search
  */
 
-import MiniSearch, { SearchResult as MiniSearchResult } from 'minisearch'
 import { prisma } from './db'
 import type { Prisma, Product, Page, ProductStatus, PageStatus } from '@prisma/client'
-
-interface MiniSearchDocumentResult extends MiniSearchResult {
-  type: 'product' | 'page' | 'media';
-  status: string;
-  category: string;
-  url: string;
-  excerpt: string;
-  metadata: Record<string, unknown>;
-  title: string;
-}
 
 // Enhanced interfaces for comprehensive search functionality
 export interface SearchOptions {
@@ -92,231 +81,471 @@ export interface SearchAnalytics {
   searchTrends: Array<{ date: string; count: number }>
 }
 
-// Main SearchService class with comprehensive functionality
+// Main SearchService class using PostgreSQL full-text search
 export class SearchService {
-  private searchIndex: MiniSearch
-  private documents: Map<string, SearchDocument> = new Map()
-
   constructor() {
-    this.searchIndex = new MiniSearch({
-      fields: ['title', 'content', 'excerpt', 'tags', 'category'],
-      storeFields: ['id', 'type', 'title', 'excerpt', 'url', 'metadata', 'status', 'category'],
-      searchOptions: {
-        boost: { 
-          title: 3, 
-          excerpt: 2, 
-          tags: 2,
-          category: 1.5,
-          content: 1 
-        },
-        fuzzy: 0.2,
-        prefix: true,
-        combineWith: 'AND'
-      }
-    })
+    // No initialization needed for PostgreSQL-based search
   }
 
-  // Add documents to search index
-  addDocuments(documents: SearchDocument[]): void {
-    documents.forEach(doc => {
-      this.documents.set(doc.id, doc)
-      this.searchIndex.add({
-        ...doc,
-        tags: Array.isArray(doc.tags) ? doc.tags.join(' ') : doc.tags
-      })
-    })
-  }
-
-  // Remove documents from search index
-  removeDocuments(documentIds: string[]): void {
-    documentIds.forEach(id => {
-      this.documents.delete(id)
-      if (this.searchIndex.has(id)) {
-        this.searchIndex.remove({ id })
-      }
-    })
-  }
-
-  // Clear entire search index
-  clearIndex(): void {
-    this.searchIndex.removeAll()
-    this.documents.clear()
-  }
-
-  // Main search method with comprehensive filtering and ranking
-  search(options: SearchOptions): { results: SearchResult[], totalCount: number, facets: Record<string, Record<string, number>> } {
+  // Main search method using PostgreSQL full-text search
+  async search(options: SearchOptions): Promise<{ results: SearchResult[], totalCount: number, facets: Record<string, Record<string, number>> }> {
     const { query, types, limit = 20, offset = 0, sortBy = 'relevance', sortOrder = 'desc', filters = {} } = options
 
-    // Perform search using MiniSearch
-    let searchResults = this.searchIndex.search(query, {
-      limit: limit + offset + 100, // Get more results for filtering
-      fuzzy: 0.2,
-      prefix: true
-    } as any)
-
-    // Apply type filters
-    if (types && types.length > 0) {
-      searchResults = searchResults.filter(result => types.includes(result.type as 'product' | 'page' | 'media'))
-    }
-
-    // Apply status filters
-    if (filters.status && filters.status.length > 0) {
-      searchResults = searchResults.filter(result => 
-        filters.status!.includes(result.status)
-      )
-    }
-
-    // Apply category filters
-    if (filters.category && filters.category.length > 0) {
-      searchResults = searchResults.filter(result => 
-        filters.category!.includes(result.category)
-      )
-    }
-
-    // Apply date range filters
-    if (filters.dateRange?.start || filters.dateRange?.end) {
-      searchResults = searchResults.filter(result => {
-        const doc = this.documents.get(result.id)
-        if (!doc) return false
-        
-        const createdAt = new Date(doc.createdAt)
-        if (filters.dateRange!.start && createdAt < new Date(filters.dateRange!.start)) {
-          return false
-        }
-        if (filters.dateRange!.end && createdAt > new Date(filters.dateRange!.end)) {
-          return false
-        }
-        return true
-      })
-    }
-
-    // Sort results
-    if (sortBy !== 'relevance') {
-      searchResults.sort((a, b) => {
-        const docA = this.documents.get(a.id)
-        const docB = this.documents.get(b.id)
-        if (!docA || !docB) return 0
-
-        let comparison = 0
-        switch (sortBy) {
-          case 'date':
-            comparison = new Date(docA.createdAt).getTime() - new Date(docB.createdAt).getTime()
-            break
-          case 'title':
-            comparison = docA.title.localeCompare(docB.title)
-            break
-        }
-        
-        return sortOrder === 'desc' ? -comparison : comparison
-      })
-    }
-
-    // Calculate facets
-    const facets = this.calculateFacets(searchResults as MiniSearchDocumentResult[])
-
-    // Apply pagination
-    const paginatedResults = searchResults.slice(offset, offset + limit)
-
-    // Transform to SearchResult format with highlights
-    const results: SearchResult[] = paginatedResults.map(result => {
-      const doc = this.documents.get(result.id)
-      return {
-        id: result.id,
-        title: result.title,
-        type: result.type as 'product' | 'page' | 'media',
-        excerpt: result.excerpt || '',
-        url: result.url,
-        score: result.score,
-        highlights: this.generateHighlights(query, doc),
-        metadata: result.metadata || {}
-      }
-    })
-
-    return {
-      results,
-      totalCount: searchResults.length,
-      facets
-    }
-  }
-
-  // Generate search suggestions and autocomplete
-  getSuggestions(query: string, limit: number = 5): string[] {
-    if (!query.trim()) {
-      return this.getPopularTerms(limit)
-    }
-
-    const suggestions = this.searchIndex.autoSuggest(query, {
-      limit: limit * 2 // Get more to filter duplicates
-    } as any)
-
-    // Extract unique suggestions
-    const uniqueSuggestions = Array.from(new Set(
-      suggestions.map(s => s.suggestion)
-    )).slice(0, limit)
-
-    return uniqueSuggestions
-  }
-
-  // Get popular search terms from analytics
-  getPopularTerms(limit: number = 5): string[] {
-    // This would typically come from search analytics
-    // For now, return some common terms
-    return [
-      'workspace',
-      'desk',
-      'chair',
-      'lighting',
-      'storage',
-      'ergonomic',
-      'standing desk',
-      'office setup'
-    ].slice(0, limit)
-  }
-
-  // Get search index statistics
-  getStats(): { totalDocuments: number, documentsByType: Record<string, number> } {
-    const documentsByType: Record<string, number> = {}
-    
-    this.documents.forEach(doc => {
-      documentsByType[doc.type] = (documentsByType[doc.type] || 0) + 1
-    })
-
-    return {
-      totalDocuments: this.documents.size,
-      documentsByType
-    }
-  }
-
-  // Private helper methods
-  private calculateFacets(results: MiniSearchDocumentResult[]): Record<string, Record<string, number>> {
+    const results: SearchResult[] = []
+    let totalCount = 0
     const facets: Record<string, Record<string, number>> = {
       types: {},
       statuses: {},
       categories: {}
     }
 
-    results.forEach(result => {
-      // Type facets
-      facets.types[result.type] = (facets.types[result.type] || 0) + 1
-      
-      // Status facets
-      if (result.status) {
-        facets.statuses[result.status] = (facets.statuses[result.status] || 0) + 1
-      }
-      
-      // Category facets
-      if (result.category) {
-        facets.categories[result.category] = (facets.categories[result.category] || 0) + 1
-      }
-    })
+    // Search products if included
+    if (!types || types.includes('product')) {
+      const productResults = await this.searchProducts(query, {
+        status: filters.status?.[0],
+        categoryId: filters.category?.[0],
+        limit: Math.ceil(limit / (types?.length || 3)),
+        offset: Math.floor(offset / (types?.length || 3)),
+        sortBy,
+        sortOrder,
+        dateRange: filters.dateRange
+      })
 
-    return facets
+      const productSearchResults: SearchResult[] = productResults.products.map(product => ({
+        id: product.id,
+        title: product.name,
+        type: 'product' as const,
+        excerpt: product.shortDescription || product.description?.substring(0, 200) || '',
+        url: `/admin/products/${product.id}`,
+        score: 1.0, // PostgreSQL doesn't provide relevance scores by default
+        highlights: this.generateHighlights(query, {
+          title: product.name,
+          content: product.description || ''
+        }),
+        metadata: {
+          price: product.price,
+          sku: product.sku,
+          status: product.status,
+          category: product.categories[0]?.category.name,
+          featured: product.featured,
+          createdAt: product.createdAt.toISOString(),
+          updatedAt: product.updatedAt.toISOString()
+        }
+      }))
+
+      results.push(...productSearchResults)
+      totalCount += productResults.total
+      facets.types.product = productResults.total
+      
+      // Add status facets for products
+      productResults.products.forEach(product => {
+        facets.statuses[product.status] = (facets.statuses[product.status] || 0) + 1
+        const categoryName = product.categories[0]?.category.name
+        if (categoryName) {
+          facets.categories[categoryName] = (facets.categories[categoryName] || 0) + 1
+        }
+      })
+    }
+
+    // Search pages if included
+    if (!types || types.includes('page')) {
+      const pageResults = await this.searchPages(query, {
+        status: filters.status?.[0],
+        template: filters.category?.[0],
+        limit: Math.ceil(limit / (types?.length || 3)),
+        offset: Math.floor(offset / (types?.length || 3)),
+        sortBy,
+        sortOrder,
+        dateRange: filters.dateRange
+      })
+
+      const pageSearchResults: SearchResult[] = pageResults.pages.map(page => ({
+        id: page.id,
+        title: page.title,
+        type: 'page' as const,
+        excerpt: page.excerpt || page.content?.substring(0, 200) || '',
+        url: `/admin/pages/${page.id}`,
+        score: 1.0,
+        highlights: this.generateHighlights(query, {
+          title: page.title,
+          content: page.content || ''
+        }),
+        metadata: {
+          status: page.status,
+          template: page.template,
+          category: page.template,
+          publishedAt: page.publishedAt?.toISOString(),
+          createdAt: page.createdAt.toISOString(),
+          updatedAt: page.updatedAt.toISOString()
+        }
+      }))
+
+      results.push(...pageSearchResults)
+      totalCount += pageResults.total
+      facets.types.page = pageResults.total
+
+      // Add status facets for pages
+      pageResults.pages.forEach(page => {
+        facets.statuses[page.status] = (facets.statuses[page.status] || 0) + 1
+        if (page.template) {
+          facets.categories[page.template] = (facets.categories[page.template] || 0) + 1
+        }
+      })
+    }
+
+    // Search media if included
+    if (!types || types.includes('media')) {
+      const mediaResults = await this.searchMedia(query, {
+        limit: Math.ceil(limit / (types?.length || 3)),
+        offset: Math.floor(offset / (types?.length || 3)),
+        sortBy,
+        sortOrder,
+        dateRange: filters.dateRange
+      })
+
+      const mediaSearchResults: SearchResult[] = mediaResults.media.map(media => ({
+        id: media.id,
+        title: media.originalName,
+        type: 'media' as const,
+        excerpt: media.altText || '',
+        url: `/admin/media/${media.id}`,
+        score: 1.0,
+        highlights: this.generateHighlights(query, {
+          title: media.originalName,
+          content: media.altText || ''
+        }),
+        metadata: {
+          filename: media.filename,
+          mimeType: media.mimeType,
+          fileSize: media.fileSize,
+          folder: media.folder,
+          category: media.mimeType.split('/')[0],
+          createdAt: media.createdAt.toISOString()
+        }
+      }))
+
+      results.push(...mediaSearchResults)
+      totalCount += mediaResults.total
+      facets.types.media = mediaResults.total
+
+      // Add category facets for media
+      mediaResults.media.forEach(media => {
+        const category = media.mimeType.split('/')[0]
+        facets.categories[category] = (facets.categories[category] || 0) + 1
+      })
+    }
+
+    // Sort results if not by relevance (PostgreSQL handles relevance sorting)
+    if (sortBy !== 'relevance') {
+      results.sort((a, b) => {
+        let comparison = 0
+        switch (sortBy) {
+          case 'date':
+            const dateA = new Date(a.metadata?.createdAt as string || 0)
+            const dateB = new Date(b.metadata?.createdAt as string || 0)
+            comparison = dateA.getTime() - dateB.getTime()
+            break
+          case 'title':
+            comparison = a.title.localeCompare(b.title)
+            break
+        }
+        return sortOrder === 'desc' ? -comparison : comparison
+      })
+    }
+
+    // Apply final pagination
+    const paginatedResults = results.slice(offset, offset + limit)
+
+    return {
+      results: paginatedResults,
+      totalCount,
+      facets
+    }
   }
 
-  private generateHighlights(query: string, doc?: SearchDocument): { title?: string, content?: string } {
-    if (!doc) return {}
+  // Search products using PostgreSQL full-text search
+  private async searchProducts(query: string, options: {
+    categoryId?: string
+    status?: string
+    limit?: number
+    offset?: number
+    sortBy?: string
+    sortOrder?: string
+    dateRange?: { start?: string, end?: string }
+  } = {}): Promise<{ products: (Product & { categories: { category: { name: string } }[] })[], total: number }> {
+    const {
+      categoryId,
+      status,
+      limit = 20,
+      offset = 0,
+      sortBy = 'relevance',
+      sortOrder = 'desc',
+      dateRange
+    } = options
 
-    const queryTerms = query.toLowerCase().split(/\s+/)
+    const whereConditions: Prisma.ProductWhereInput[] = []
+
+    // Add text search conditions using PostgreSQL full-text search
+    if (query.trim()) {
+      whereConditions.push({
+        OR: [
+          { name: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } },
+          { shortDescription: { contains: query, mode: 'insensitive' } },
+          { sku: { contains: query, mode: 'insensitive' } }
+        ]
+      })
+    }
+
+    // Add filter conditions
+    if (categoryId) {
+      whereConditions.push({ categories: { some: { categoryId } } })
+    }
+    if (status) {
+      whereConditions.push({ status: status as ProductStatus })
+    }
+    if (dateRange?.start) {
+      whereConditions.push({ createdAt: { gte: new Date(dateRange.start) } })
+    }
+    if (dateRange?.end) {
+      whereConditions.push({ createdAt: { lte: new Date(dateRange.end) } })
+    }
+
+    // Determine sort order
+    let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: 'desc' }
+    if (sortBy === 'title') {
+      orderBy = { name: sortOrder as 'asc' | 'desc' }
+    } else if (sortBy === 'date') {
+      orderBy = { createdAt: sortOrder as 'asc' | 'desc' }
+    }
+
+    const products = await prisma.product.findMany({
+      where: whereConditions.length > 0 ? { AND: whereConditions } : {},
+      include: {
+        categories: { include: { category: true } }
+      },
+      orderBy,
+      take: limit,
+      skip: offset
+    })
+
+    const total = await prisma.product.count({
+      where: whereConditions.length > 0 ? { AND: whereConditions } : {},
+    })
+
+    return { products, total }
+  }
+
+  // Search pages using PostgreSQL full-text search
+  private async searchPages(query: string, options: {
+    status?: string
+    template?: string
+    limit?: number
+    offset?: number
+    sortBy?: string
+    sortOrder?: string
+    dateRange?: { start?: string, end?: string }
+  } = {}): Promise<{ pages: Page[], total: number }> {
+    const {
+      status,
+      template,
+      limit = 20,
+      offset = 0,
+      sortBy = 'relevance',
+      sortOrder = 'desc',
+      dateRange
+    } = options
+
+    const whereConditions: Prisma.PageWhereInput[] = []
+
+    // Add text search conditions
+    if (query.trim()) {
+      whereConditions.push({
+        OR: [
+          { title: { contains: query, mode: 'insensitive' } },
+          { content: { contains: query, mode: 'insensitive' } },
+          { excerpt: { contains: query, mode: 'insensitive' } }
+        ]
+      })
+    }
+
+    // Add filter conditions
+    if (status) {
+      whereConditions.push({ status: status as PageStatus })
+    }
+    if (template) {
+      whereConditions.push({ template })
+    }
+    if (dateRange?.start) {
+      whereConditions.push({ createdAt: { gte: new Date(dateRange.start) } })
+    }
+    if (dateRange?.end) {
+      whereConditions.push({ createdAt: { lte: new Date(dateRange.end) } })
+    }
+
+    // Determine sort order
+    let orderBy: Prisma.PageOrderByWithRelationInput = { createdAt: 'desc' }
+    if (sortBy === 'title') {
+      orderBy = { title: sortOrder as 'asc' | 'desc' }
+    } else if (sortBy === 'date') {
+      orderBy = { createdAt: sortOrder as 'asc' | 'desc' }
+    }
+
+    const pages = await prisma.page.findMany({
+      where: whereConditions.length > 0 ? { AND: whereConditions } : {},
+      orderBy,
+      take: limit,
+      skip: offset
+    })
+
+    const total = await prisma.page.count({
+      where: whereConditions.length > 0 ? { AND: whereConditions } : {},
+    })
+
+    return { pages, total }
+  }
+
+  // Search media using PostgreSQL full-text search
+  private async searchMedia(query: string, options: {
+    limit?: number
+    offset?: number
+    sortBy?: string
+    sortOrder?: string
+    dateRange?: { start?: string, end?: string }
+  } = {}): Promise<{ media: any[], total: number }> {
+    const {
+      limit = 20,
+      offset = 0,
+      sortBy = 'relevance',
+      sortOrder = 'desc',
+      dateRange
+    } = options
+
+    const whereConditions: Prisma.MediaWhereInput[] = []
+
+    // Add text search conditions
+    if (query.trim()) {
+      whereConditions.push({
+        OR: [
+          { originalName: { contains: query, mode: 'insensitive' } },
+          { filename: { contains: query, mode: 'insensitive' } },
+          { altText: { contains: query, mode: 'insensitive' } }
+        ]
+      })
+    }
+
+    // Add date range filters
+    if (dateRange?.start) {
+      whereConditions.push({ createdAt: { gte: new Date(dateRange.start) } })
+    }
+    if (dateRange?.end) {
+      whereConditions.push({ createdAt: { lte: new Date(dateRange.end) } })
+    }
+
+    // Determine sort order
+    let orderBy: Prisma.MediaOrderByWithRelationInput = { createdAt: 'desc' }
+    if (sortBy === 'title') {
+      orderBy = { originalName: sortOrder as 'asc' | 'desc' }
+    } else if (sortBy === 'date') {
+      orderBy = { createdAt: sortOrder as 'asc' | 'desc' }
+    }
+
+    const media = await prisma.media.findMany({
+      where: whereConditions.length > 0 ? { AND: whereConditions } : {},
+      orderBy,
+      take: limit,
+      skip: offset
+    })
+
+    const total = await prisma.media.count({
+      where: whereConditions.length > 0 ? { AND: whereConditions } : {},
+    })
+
+    return { media, total }
+  }
+
+  // Generate search suggestions using database queries
+  async getSuggestions(query: string, limit: number = 5): Promise<string[]> {
+    if (!query.trim()) {
+      return this.getPopularTerms(limit)
+    }
+
+    // Get suggestions from product and page titles
+    const [products, pages] = await Promise.all([
+      prisma.product.findMany({
+        where: {
+          name: { contains: query, mode: 'insensitive' }
+        },
+        select: { name: true },
+        take: Math.ceil(limit / 2)
+      }),
+      prisma.page.findMany({
+        where: {
+          title: { contains: query, mode: 'insensitive' }
+        },
+        select: { title: true },
+        take: Math.ceil(limit / 2)
+      })
+    ])
+
+    const suggestions = [
+      ...products.map(p => p.name),
+      ...pages.map(p => p.title)
+    ]
+
+    return Array.from(new Set(suggestions)).slice(0, limit)
+  }
+
+  // Get popular search terms from analytics
+  async getPopularTerms(limit: number = 5): Promise<string[]> {
+    try {
+      const popularTerms = await prisma.searchEvent.groupBy({
+        by: ['query'],
+        _count: { query: true },
+        where: {
+          createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // Last 30 days
+        },
+        orderBy: { _count: { query: 'desc' } },
+        take: limit
+      })
+
+      return popularTerms.map(term => term.query)
+    } catch (error) {
+      // Fallback to hardcoded popular terms if SearchEvent table doesn't exist
+      return [
+        'workspace',
+        'desk',
+        'chair',
+        'lighting',
+        'storage',
+        'ergonomic',
+        'standing desk',
+        'office setup'
+      ].slice(0, limit)
+    }
+  }
+
+  // Get search statistics from database
+  async getStats(): Promise<{ totalDocuments: number, documentsByType: Record<string, number> }> {
+    const [productCount, pageCount, mediaCount] = await Promise.all([
+      prisma.product.count(),
+      prisma.page.count(),
+      prisma.media.count()
+    ])
+
+    return {
+      totalDocuments: productCount + pageCount + mediaCount,
+      documentsByType: {
+        product: productCount,
+        page: pageCount,
+        media: mediaCount
+      }
+    }
+  }
+
+  // Generate highlights for search results
+  private generateHighlights(query: string, doc: { title: string, content: string }): { title?: string, content?: string } {
+    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0)
     const highlights: { title?: string, content?: string } = {}
 
     // Highlight title
@@ -330,13 +559,15 @@ export class SearchService {
     }
 
     // Highlight content excerpt
-    let highlightedContent = doc.content
-    queryTerms.forEach(term => {
-      const regex = new RegExp(`(${term})`, 'gi')
-      highlightedContent = highlightedContent.replace(regex, '<mark>$1</mark>')
-    })
-    if (highlightedContent !== doc.content) {
-      highlights.content = highlightedContent.substring(0, 200) + '...'
+    if (doc.content) {
+      let highlightedContent = doc.content
+      queryTerms.forEach(term => {
+        const regex = new RegExp(`(${term})`, 'gi')
+        highlightedContent = highlightedContent.replace(regex, '<mark>$1</mark>')
+      })
+      if (highlightedContent !== doc.content) {
+        highlights.content = highlightedContent.substring(0, 200) + '...'
+      }
     }
 
     return highlights
@@ -353,7 +584,7 @@ export function getSearchService(): SearchService {
   return searchServiceInstance
 }
 
-// Database-specific search functions
+// Database-specific search functions using PostgreSQL full-text search
 export async function searchProducts(query: string, options: {
   categoryId?: string
   minPrice?: number
@@ -373,12 +604,13 @@ export async function searchProducts(query: string, options: {
 
   const whereConditions: Prisma.ProductWhereInput[] = []
 
-  // Add text search conditions
+  // Add PostgreSQL full-text search conditions
   if (query.trim()) {
     whereConditions.push({
       OR: [
         { name: { contains: query, mode: 'insensitive' } },
         { description: { contains: query, mode: 'insensitive' } },
+        { shortDescription: { contains: query, mode: 'insensitive' } },
         { sku: { contains: query, mode: 'insensitive' } }
       ]
     })
@@ -434,7 +666,7 @@ export async function searchPages(query: string, options: {
 
   const whereConditions: Prisma.PageWhereInput[] = []
 
-  // Add text search conditions
+  // Add PostgreSQL full-text search conditions
   if (query.trim()) {
     whereConditions.push({
       OR: [
@@ -501,26 +733,40 @@ export async function searchAll(query: string, options: {
   }
 }
 
-// Search suggestions and autocomplete
+// Search suggestions and autocomplete using PostgreSQL
 export async function getSuggestions(query: string, options: { limit?: number } = {}): Promise<string[]> {
   const { limit = 5 } = options
 
   if (!query.trim()) {
-    // Return popular search terms from analytics
-    const popularTerms = await prisma.searchEvent.groupBy({
-      by: ['query'],
-      _count: { query: true },
-      where: {
-        createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // Last 30 days
-      },
-      orderBy: { _count: { query: 'desc' } },
-      take: limit
-    })
+    try {
+      // Return popular search terms from analytics
+      const popularTerms = await prisma.searchEvent.groupBy({
+        by: ['query'],
+        _count: { query: true },
+        where: {
+          createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // Last 30 days
+        },
+        orderBy: { _count: { query: 'desc' } },
+        take: limit
+      })
 
-    return popularTerms.map(term => term.query)
+      return popularTerms.map(term => term.query)
+    } catch (error) {
+      // Fallback to hardcoded popular terms if SearchEvent table doesn't exist
+      return [
+        'workspace',
+        'desk',
+        'chair',
+        'lighting',
+        'storage',
+        'ergonomic',
+        'standing desk',
+        'office setup'
+      ].slice(0, limit)
+    }
   }
 
-  // Get suggestions from product and page titles
+  // Get suggestions from product and page titles using PostgreSQL search
   const [products, pages] = await Promise.all([
     prisma.product.findMany({
       where: {
@@ -632,62 +878,10 @@ export async function getSearchAnalytics(
   }
 }
 
-// Create and populate search index
+// Create and populate search index (no-op for PostgreSQL-based search)
 export async function createSearchIndex(): Promise<SearchService> {
   const searchService = getSearchService()
-  searchService.clearIndex()
-
-  // Index products
-  const products = await prisma.product.findMany({
-    where: { status: 'PUBLISHED' },
-    include: { categories: { include: { category: true } } }
-  })
-
-  // Index pages
-  const pages = await prisma.page.findMany({
-    where: { status: 'PUBLISHED' }
-  })
-
-  const documents: SearchDocument[] = [
-    ...products.map(product => ({
-      id: `product-${product.id}`,
-      type: 'product' as const,
-      title: product.name,
-      content: product.description || '',
-      excerpt: product.shortDescription || '',
-      tags: [],
-      status: product.status,
-      category: product.categories[0]?.category.name || '',
-      createdAt: product.createdAt.toISOString(),
-      updatedAt: product.updatedAt.toISOString(),
-      url: `/products/${product.slug}`,
-      metadata: {
-        price: product.price,
-        sku: product.sku,
-        featured: product.featured
-      }
-    })),
-    ...pages.map(page => ({
-      id: `page-${page.id}`,
-      type: 'page' as const,
-      title: page.title,
-      content: page.content || '',
-      excerpt: page.excerpt || '',
-      tags: [],
-      status: page.status,
-      category: page.template || '',
-      createdAt: page.createdAt.toISOString(),
-      updatedAt: page.updatedAt.toISOString(),
-      url: `/pages/${page.slug}`,
-      metadata: {
-        template: page.template,
-        seoTitle: page.seoTitle,
-        seoDescription: page.seoDescription
-      }
-    }))
-  ]
-
-  searchService.addDocuments(documents)
+  // No indexing needed for PostgreSQL-based search
   return searchService
 }
 
@@ -695,7 +889,7 @@ export async function createSearchIndex(): Promise<SearchService> {
 export const searchService = {
   async search(options: SearchOptions): Promise<{ results: SearchResult[], total: number }> {
     const service = getSearchService()
-    const result = service.search(options)
+    const result = await service.search(options)
     return {
       results: result.results,
       total: result.totalCount
@@ -712,45 +906,24 @@ export const searchService = {
   },
 
   async indexContent(contentType: string, contentId: string, data: Partial<SearchDocument>): Promise<boolean> {
-    // This would add/update a single document in the search index
-    const service = getSearchService()
-    
-    const document: SearchDocument = {
-      id: `${contentType}-${contentId}`,
-      type: contentType as 'product' | 'page' | 'media',
-      title: data.title || '',
-      content: data.content || '',
-      excerpt: data.excerpt || '',
-      tags: data.tags || [],
-      status: data.status || 'published',
-      category: data.category || '',
-      createdAt: data.createdAt || new Date().toISOString(),
-      updatedAt: data.updatedAt || new Date().toISOString(),
-      url: data.url || `/${contentType}s/${contentId}`,
-      metadata: data.metadata || {}
-    }
-
-    service.addDocuments([document])
+    // No-op for PostgreSQL-based search - content is automatically searchable when in database
     return true
   },
 
   async removeFromIndex(contentType: string, contentId: string): Promise<boolean> {
-    const service = getSearchService()
-    service.removeDocuments([`${contentType}-${contentId}`])
+    // No-op for PostgreSQL-based search - content is automatically removed when deleted from database
     return true
   },
 
   clearIndex(): void {
-    const service = getSearchService()
-    service.clearIndex()
+    // No-op for PostgreSQL-based search
   },
 
   addDocuments(documents: SearchDocument[]): void {
-    const service = getSearchService()
-    service.addDocuments(documents)
+    // No-op for PostgreSQL-based search
   },
 
-  getStats(): { totalDocuments: number, documentsByType: Record<string, number> } {
+  async getStats(): Promise<{ totalDocuments: number, documentsByType: Record<string, number> }> {
     const service = getSearchService()
     return service.getStats()
   }

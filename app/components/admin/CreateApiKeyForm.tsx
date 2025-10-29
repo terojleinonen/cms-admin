@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline'
+import { CheckIcon, ClipboardDocumentIcon } from '../ui/Icons'
 
 interface FormData {
   name: string

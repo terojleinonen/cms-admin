@@ -506,21 +506,7 @@ export const imageProcessingOptionsSchema = z.object({
 
 export type ValidatedImageProcessingOptions = z.infer<typeof imageProcessingOptionsSchema>
 
-/**
- * Get file size in human readable format
- */
-export function formatFileSize(bytes: number): string {
-  const units = ['B', 'KB', 'MB', 'GB']
-  let size = bytes
-  let unitIndex = 0
-
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024
-    unitIndex++
-  }
-
-  return `${size.toFixed(1)} ${units[unitIndex]}`
-}
+// Removed - use formatFileSize from format-utils.ts instead
 
 /**
  * Calculate compression ratio

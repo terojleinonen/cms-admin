@@ -6,7 +6,7 @@
  */
 
 import React from 'react'
-import { ShieldCheckIcon, UserIcon, LockClosedIcon } from '@heroicons/react/24/outline'
+import { ShieldCheckIcon, UserIcon, LockClosedIcon } from '../ui/Icons'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
 
 export interface PermissionLoadingStateProps {

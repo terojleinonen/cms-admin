@@ -34,7 +34,7 @@ const backupService = new BackupService(backupConfig.backupDir);
 
 // POST /api/admin/backup - Create new backup
 export const POST = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user: _user }) => {
     try {
       const body = await request.json();
     const validatedData = createBackupSchema.parse(body);
@@ -92,7 +92,7 @@ export const POST = withApiPermissions(
 
 // GET /api/admin/backup - List backups
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user: _user }) => {
     try {
       const { searchParams } = new URL(request.url);
     const queryParams = {
@@ -132,7 +132,7 @@ export const GET = withApiPermissions(
 
 // DELETE /api/admin/backup - Cleanup old backups
 export const DELETE = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user: _user }) => {
     try {
       const result = await backupService.cleanupOldBackups();
 

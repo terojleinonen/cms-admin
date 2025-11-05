@@ -64,7 +64,7 @@ export default function ProductImageGallery({
   })
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const dragCounter = useRef(0)
+  const dragCounter = useRef<number>(0)
 
   const sortedImages = [...images].sort((a, b) => a.sortOrder - b.sortOrder)
 
@@ -266,13 +266,15 @@ export default function ProductImageGallery({
 
       {/* Main Image Display */}
       <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-        <Image
-          src={getImageUrl(sortedImages[selectedImageIndex].media)}
-          alt={sortedImages[selectedImageIndex].media.altText || sortedImages[selectedImageIndex].media.originalName}
-          fill
-          className="object-cover cursor-pointer"
-          onClick={() => handleImageClick(sortedImages[selectedImageIndex].media, selectedImageIndex)}
-        />
+        {sortedImages[selectedImageIndex]?.media && (
+          <Image
+            src={getImageUrl(sortedImages[selectedImageIndex].media)}
+            alt={sortedImages[selectedImageIndex].media.altText || sortedImages[selectedImageIndex].media.originalName}
+            fill
+            className="object-cover cursor-pointer"
+            onClick={() => handleImageClick(sortedImages[selectedImageIndex].media, selectedImageIndex)}
+          />
+        )}
         
         {/* Navigation Arrows */}
         {sortedImages.length > 1 && (
@@ -302,7 +304,7 @@ export default function ProductImageGallery({
         )}
 
         {/* Remove Button */}
-        {editable && allowRemove && (
+        {editable && allowRemove && sortedImages[selectedImageIndex]?.media && (
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -478,13 +480,15 @@ export default function ProductImageGallery({
             </button>
             
             <div className="relative">
-              <Image
-                src={getFullImageUrl(sortedImages[selectedImageIndex].media)}
-                alt={sortedImages[selectedImageIndex].media.altText || sortedImages[selectedImageIndex].media.originalName}
-                width={800}
-                height={600}
-                className="max-w-full max-h-[80vh] object-contain"
-              />
+              {sortedImages[selectedImageIndex]?.media && (
+                <Image
+                  src={getFullImageUrl(sortedImages[selectedImageIndex].media)}
+                  alt={sortedImages[selectedImageIndex].media.altText || sortedImages[selectedImageIndex].media.originalName}
+                  width={800}
+                  height={600}
+                  className="max-w-full max-h-[80vh] object-contain"
+                />
+              )}
               
               {/* Modal Navigation */}
               {sortedImages.length > 1 && (

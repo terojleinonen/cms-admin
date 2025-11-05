@@ -134,10 +134,10 @@ export const UsersIcon = (props: SVGProps<SVGSVGElement>) => <Icon name="users" 
 export const ShoppingBagIcon = (props: SVGProps<SVGSVGElement>) => <Icon name="shopping-bag" {...props} />
 export const DocumentTextIcon = (props: SVGProps<SVGSVGElement>) => <Icon name="document-text" {...props} />
 export const PhotoIcon = (props: SVGProps<SVGSVGElement>) => <Icon name="photo" {...props} />
-export const TagIcon = (props: SVGProps<SVGSVGElement>) => <Icon name="tag" {...props} />
-export const CubeIcon = (props: SVGProps<SVGSVGElement>) => <Icon name="cube" {...props} />
-export const XMarkIcon = (props: SVGProps<SVGSVGElement>) => <Icon name="x-mark" {...props} />
-export const ChevronLeftIcon = (props: SVGProps<SVGSVGElement>) => <Icon name="chevron-left" {...props} />
-export const ChevronRightIcon = (props: SVGProps<SVGSVGElement>) => <Icon name="chevron-right" {...props} />
-export const ChevronDownIcon = (props: SVGProps<SVGSVGElement>) => <Icon name="chevron-down" {...props} />
-export const HomeIcon = (props: SVGProps<SVGSVGElement>) => <Icon name="home" {...props} />
+export const TagIcon = (props: SVGProps<SVGSVGElement>) => <Icon name={'tag' as IconName} {...props} />
+export const CubeIcon = (props: SVGProps<SVGSVGElement>) => <Icon name={'cube' as IconName} {...props} />
+export const XMarkIcon = (props: SVGProps<SVGSVGElement>) => <Icon name={'x-mark' as IconName} {...props} />
+export const ChevronLeftIcon = (props: SVGProps<SVGSVGElement>) => <Icon name={'chevron-left' as IconName} {...props} />
+export const ChevronRightIcon = (props: SVGProps<SVGSVGElement>) => <Icon name={'chevron-right' as IconName} {...props} />
+export const ChevronDownIcon = (props: SVGProps<SVGSVGElement>) => <Icon name={'chevron-down' as IconName} {...props} />
+export const HomeIcon = (props: SVGProps<SVGSVGElement>) => <Icon name={'home' as IconName} {...props} />

@@ -4,8 +4,7 @@
  */
 
 import { Metadata } from 'next'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/auth'
+import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { hasPermission } from '@/lib/permissions'
 import ProductionMonitoringDashboard from '@/components/admin/ProductionMonitoringDashboard'
@@ -16,14 +15,14 @@ export const metadata: Metadata = {
 }
 
 export default async function ProductionMonitoringPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
 
   if (!session?.user) {
     redirect('/auth/login')
   }
 
   // Check if user has system management permissions
-  if (!hasPermission(session.user, 'system', 'read')) {
+  if (session.user.role !== 'ADMIN') {
     redirect('/admin')
   }
 

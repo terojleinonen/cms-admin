@@ -50,6 +50,9 @@ function createPrismaClient(): PrismaClient {
  */
 export const prisma = globalThis.__prisma ?? createPrismaClient()
 
+// Export as 'db' for consistency with other imports
+export const db = prisma
+
 // In development, store the client globally to prevent hot reload issues
 if (process.env.NODE_ENV === 'development') {
   globalThis.__prisma = prisma
@@ -300,6 +303,5 @@ export class DatabaseConnectionManager {
   }
 }
 
-// Export Prisma client types for use in other files
-export type { PrismaClient } from '@prisma/client'
-export * from '@prisma/client'
+// Export specific Prisma types that are actually used
+export type { PrismaClient, Prisma } from '@prisma/client'

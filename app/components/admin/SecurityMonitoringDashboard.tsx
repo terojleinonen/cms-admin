@@ -6,8 +6,6 @@ import {
   ExclamationTriangleIcon,
   EyeIcon,
   ClockIcon,
-  UserIcon,
-  ComputerDesktopIcon,
   ChartBarIcon,
   CheckCircleIcon,
   XCircleIcon,
@@ -16,14 +14,12 @@ import {
   LockClosedIcon,
   ArrowPathIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
   DocumentTextIcon,
-  CogIcon,
   PlayIcon,
   PauseIcon
 } from '@heroicons/react/24/outline';
-import { Badge } from '../ui/Badge';
-import { Button } from '../ui/Button';
+import Badge from '../ui/Badge';
+import Button from '../ui/Button';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
 // Import sub-components (these will be created as separate components)

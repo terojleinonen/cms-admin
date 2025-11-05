@@ -15,17 +15,17 @@ import {
 } from '../../lib/secure-form-utils'
 import { ClientCSRFManager } from '../../lib/client-security'
 
-interface SecureFormProps {
-  schema: z.ZodSchema<any>
-  onSubmit: (data: any) => Promise<void> | void
+interface SecureFormProps<T = Record<string, unknown>> {
+  schema: z.ZodSchema<T>
+  onSubmit: (data: T) => Promise<void> | void
   config?: SecureFormConfig
   className?: string
   children: React.ReactNode
-  initialData?: Record<string, any>
+  initialData?: Partial<T>
   submitUrl?: string
   method?: string
   onValidationChange?: (isValid: boolean, errors: Record<string, string>) => void
-  onSecurityViolation?: (violation: string, details: any) => void
+  onSecurityViolation?: (violation: string, details: Record<string, unknown>) => void
 }
 
 interface SecureFormState {
@@ -37,7 +37,7 @@ interface SecureFormState {
   csrfToken?: string
 }
 
-export function SecureForm({
+export function SecureForm<T = Record<string, unknown>>({
   schema,
   onSubmit,
   config = {},
@@ -48,7 +48,7 @@ export function SecureForm({
   method = 'POST',
   onValidationChange,
   onSecurityViolation
-}: SecureFormProps) {
+}: SecureFormProps<T>) {
   const formRef = useRef<HTMLFormElement>(null)
   const formHandler = useRef<SecureFormHandler>()
   const formLoadTime = useRef<number>(Date.now())

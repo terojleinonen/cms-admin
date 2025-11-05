@@ -515,7 +515,7 @@ export const secureValidationSchemas = {
       },
       { message: 'Object contains invalid or dangerous content' }
     )
-    .transform(AdvancedInputSanitizer.sanitizeObject),
+    .transform((val) => AdvancedInputSanitizer.sanitizeObject(val)),
 }
 
 /**

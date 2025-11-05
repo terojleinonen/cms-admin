@@ -12,7 +12,7 @@ import {
   BellIcon,
   ChartBarIcon
 } from '@heroicons/react/24/outline'
-import { SystemHealthMetrics, SystemAlert } from '@/app/lib/system-health-monitor'
+import { SystemHealthMetrics, SystemAlert } from '@/lib/system-health-monitor'
 
 interface SystemHealthDashboardProps {
   className?: string

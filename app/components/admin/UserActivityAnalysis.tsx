@@ -15,8 +15,8 @@ import {
   ComputerDesktopIcon,
   CalendarDaysIcon,
 } from '@heroicons/react/24/outline'
-import { LoadingSpinner } from '@/app/components/ui/LoadingSpinner'
-import { ErrorMessage } from '@/app/components/ui/ErrorMessage'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { ErrorMessage } from '@/components/ui/ErrorMessage'
 
 interface UserActivityReport {
   userId: string

@@ -22,8 +22,8 @@ import {
   BellIcon,
   CpuChipIcon,
   MapIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   UsersIcon,
   LockClosedIcon,
   ExclamationCircleIcon,
@@ -272,8 +272,8 @@ export default function UserActivityDashboard() {
   // Get trend icon
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'increasing': return <TrendingUpIcon className="h-4 w-4 text-green-500" />
-      case 'decreasing': return <TrendingDownIcon className="h-4 w-4 text-red-500" />
+      case 'increasing': return <ArrowTrendingUpIcon className="h-4 w-4 text-green-500" />
+      case 'decreasing': return <ArrowTrendingDownIcon className="h-4 w-4 text-red-500" />
       default: return <div className="h-4 w-4 bg-gray-300 rounded-full" />
     }
   }

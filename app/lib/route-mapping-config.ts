@@ -3,7 +3,7 @@
  * Comprehensive configuration for all application routes with their permission requirements
  */
 
-import { Permission } from './permissions';
+import { Permission } from './types';
 import { RoutePermissionConfig } from './route-permissions';
 
 /**

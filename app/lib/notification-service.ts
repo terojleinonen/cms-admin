@@ -1,6 +1,6 @@
 import { prisma } from './db'
 import { NotificationType, EmailStatus } from '@prisma/client'
-import { NotificationSettings } from '@/lib/types'
+import { NotificationSettings } from './types'
 import nodemailer from 'nodemailer'
 
 export interface NotificationData {

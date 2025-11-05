@@ -315,14 +315,32 @@ export function withCRUDValidation<
   return (
     handler: (request: NextRequest, data: ValidatedRequestData) => Promise<NextResponse>
   ) => {
-    return withInputValidation(handler, {
-      bodySchema: getSchemaForMethod(schemas),
+    return withInputValidation((request, data) => {
+      return handler(request, data)
+    }, {
+      bodySchema: getSchemaForMethod(schemas, 'POST'), // Default to create schema
       querySchema: schemas.query,
       paramsSchema: schemas.params,
       allowedMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
       sanitizeInputs: true,
       checkSQLInjection: true,
       checkXSS: true,
+      customValidation: async (request, data) => {
+        // Dynamically validate based on method
+        const method = request.method
+        if (method === 'POST' && schemas.create) {
+          const result = schemas.create.safeParse(data.body)
+          if (!result.success) {
+            return `Create validation failed: ${result.error.message}`
+          }
+        } else if (['PUT', 'PATCH'].includes(method) && schemas.update) {
+          const result = schemas.update.safeParse(data.body)
+          if (!result.success) {
+            return `Update validation failed: ${result.error.message}`
+          }
+        }
+        return true
+      }
     })
   }
 }
@@ -410,12 +428,14 @@ export function withSearchValidation<T>(querySchema: z.ZodSchema<T>) {
 function getSchemaForMethod(schemas: {
   create?: z.ZodSchema<any>
   update?: z.ZodSchema<any>
-}) {
-  return z.any().transform((_, ctx) => {
-    const method = ctx.path[0] // This won't work as expected, need different approach
-    // This is a simplified version - in practice, you'd determine method differently
-    return schemas.create || schemas.update
-  })
+}, method?: string) {
+  if (method === 'POST' && schemas.create) {
+    return schemas.create
+  }
+  if (['PUT', 'PATCH'].includes(method || '') && schemas.update) {
+    return schemas.update
+  }
+  return schemas.create || schemas.update
 }
 
 /**
@@ -470,7 +490,7 @@ export const validationUtils = {
    */
   searchQuery: () => z.object({
     q: z.string().min(1).max(255).optional(),
-    filters: z.record(z.string()).optional(),
+    filters: z.record(z.string(), z.string()).optional(),
   }),
 
   /**

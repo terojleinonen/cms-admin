@@ -45,17 +45,17 @@ function isAuthenticatedRoute(pathname: string): boolean {
  * Simplified security logging
  */
 async function logSecurityEvent(
-  token: any,
+  token: { sub?: string; email?: string | null; role?: string } | null,
   pathname: string,
   result: 'SUCCESS' | 'UNAUTHORIZED' | 'FORBIDDEN' | 'RATE_LIMITED' | 'BLOCKED',
   reason?: string,
   ipAddress?: string,
   userAgent?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   try {
     const logData = {
-      userId: token?.id || 'anonymous',
+      userId: token?.sub || 'anonymous',
       userRole: token?.role || 'none',
       pathname,
       result,
@@ -228,7 +228,7 @@ export async function middleware(request: NextRequest) {
   // Check if route only requires authentication
   if (isAuthenticatedRoute(pathname)) {
     await logSecurityEvent(
-      token, 
+      { sub: token.sub, email: token.email, role: token.role }, 
       pathname, 
       'SUCCESS', 
       'authenticated_route', 
@@ -263,7 +263,7 @@ export async function middleware(request: NextRequest) {
     const reason = 'Insufficient permissions for ' + pathname + '. User role: ' + token.role
     const isEscalation = pathname.includes('/admin/') && token.role !== 'ADMIN'
     await logSecurityEvent(
-      token, 
+      { sub: token.sub, email: token.email, role: token.role }, 
       pathname, 
       'FORBIDDEN', 
       reason, 
@@ -280,7 +280,7 @@ export async function middleware(request: NextRequest) {
 
   // Access granted
   await logSecurityEvent(
-    token, 
+    { sub: token.sub, email: token.email, role: token.role }, 
     pathname, 
     'SUCCESS', 
     'permission_granted', 

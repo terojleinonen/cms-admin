@@ -23,7 +23,7 @@ export class MigrationError extends Error {
  * @param b - Second value to compare
  * @returns true if values are deeply equal, false otherwise
  */
-export function isDeepEqual(a: any, b: any): boolean {
+export function isDeepEqual(a: unknown, b: unknown): boolean {
   try {
     // Use Node.js native deep strict equal comparison
     return isDeepStrictEqual(a, b);
@@ -38,7 +38,7 @@ export function isDeepEqual(a: any, b: any): boolean {
  * Fallback deep equality implementation for edge cases where native function fails
  * This is a simplified version that handles most common cases
  */
-function fallbackDeepEqual(a: any, b: any): boolean {
+function fallbackDeepEqual(a: unknown, b: unknown): boolean {
   // Handle primitive types and null/undefined
   if (a === b) return true;
   if (a == null || b == null) return a === b;
@@ -94,7 +94,7 @@ export function createDOMException(message: string, name?: string): DOMException
  * Creates an Error-like object that mimics DOMException behavior
  */
 function createFallbackDOMException(message: string, name?: string): DOMException {
-  const error = new Error(message) as any;
+  const error = new Error(message) as Error & { name: string; code: number };
   error.name = name || 'DOMException';
   error.code = getDOMExceptionCode(name);
   
@@ -149,7 +149,7 @@ function getDOMExceptionCode(name?: string): number {
  * @param validator - Optional validation function to ensure compatibility
  * @returns Wrapped function that uses new implementation with validation
  */
-export function safeReplace<T extends (...args: any[]) => any>(
+export function safeReplace<T extends (...args: unknown[]) => unknown>(
   oldFunction: T,
   newFunction: T,
   validator?: (oldResult: ReturnType<T>, newResult: ReturnType<T>, ...args: Parameters<T>) => boolean
@@ -195,7 +195,7 @@ export function safeReplace<T extends (...args: any[]) => any>(
  * @param iterations - Number of iterations for performance testing
  * @returns Performance comparison results
  */
-export function comparePerformance<T extends (...args: any[]) => any>(
+export function comparePerformance<T extends (...args: unknown[]) => unknown>(
   oldFunction: T,
   newFunction: T,
   testArgs: Parameters<T>[],
@@ -214,7 +214,7 @@ export function comparePerformance<T extends (...args: any[]) => any>(
     for (const args of testArgs) {
       try {
         const result = oldFunction(...args);
-        if (i === 0) results.push({ old: result, new: undefined as any, args });
+        if (i === 0) results.push({ old: result, new: undefined as ReturnType<T>, args });
       } catch (error) {
         // Ignore errors during performance testing
       }

@@ -9,7 +9,7 @@ import {
   TrashIcon,
   PencilIcon
 } from '@heroicons/react/24/outline'
-import { AlertNotificationConfig, AlertRule } from '@/app/lib/system-alert-service'
+import { AlertNotificationConfig, AlertRule } from '@/lib/system-alert-service'
 
 interface AlertConfigurationPanelProps {
   className?: string

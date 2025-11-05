@@ -5,18 +5,7 @@
 
 import { UserRole } from '@prisma/client';
 import { User } from './types';
-
-// Permission model interfaces
-export interface Permission {
-  resource: string;    // 'products', 'users', 'analytics', etc.
-  action: string;      // 'create', 'read', 'update', 'delete', 'manage'
-  scope?: string;      // 'own', 'all', 'team'
-}
-
-export interface RolePermission {
-  role: UserRole;
-  permissions: Permission[];
-}
+import { Permission, RolePermission } from './types';
 
 // Role-based permission definitions
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -273,21 +262,4 @@ export class ClientPermissionService {
 // Singleton instance for client-side use
 export const permissionService = new ClientPermissionService();
 
-// Legacy compatibility - maintain existing hasPermission function
-export function hasPermission(session: { user?: User } | null, permission: string): boolean {
-  if (!session?.user) return false;
-  
-  // Map legacy permission strings to new permission model
-  const permissionMap: Record<string, Permission> = {
-    'create': { resource: 'products', action: 'create' },
-    'read': { resource: 'products', action: 'read' },
-    'update': { resource: 'products', action: 'update' },
-    'delete': { resource: 'products', action: 'delete' },
-    'preview': { resource: 'pages', action: 'read' },
-  };
-  
-  const mappedPermission = permissionMap[permission];
-  if (!mappedPermission) return false;
-  
-  return permissionService.hasPermission(session.user, mappedPermission);
-}
+// Legacy compatibility functions are now consolidated in permissions.ts

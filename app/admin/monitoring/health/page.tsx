@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
-import { getServerSession } from 'next-auth'
+import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/auth'
 import { hasPermission } from '@/lib/permissions'
 import SystemHealthDashboard from '@/components/admin/SystemHealthDashboard'
 import AlertConfigurationPanel from '@/components/admin/AlertConfigurationPanel'
@@ -14,18 +13,18 @@ export const metadata: Metadata = {
 }
 
 export default async function SystemHealthPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
 
   if (!session?.user) {
     redirect('/auth/login')
   }
 
   // Check if user has permission to view system health monitoring
-  if (!hasPermission(session.user, 'monitoring', 'read')) {
+  if (session.user.role !== 'ADMIN') {
     redirect('/admin?error=insufficient_permissions')
   }
 
-  const canManageAlerts = hasPermission(session.user, 'monitoring', 'manage')
+  const canManageAlerts = session.user.role === 'ADMIN'
 
   return (
     <div className="space-y-6">

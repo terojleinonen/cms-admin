@@ -5,7 +5,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { SecurityEventDB } from './permission-db';
-import { AuditService } from './audit-service';
+import { db } from './db';
 
 // Security event types
 export const SECURITY_EVENT_TYPES = {
@@ -195,15 +195,13 @@ const DEFAULT_ALERT_CONFIGS: Record<SecurityEventType, SecurityAlertConfig> = {
  */
 export class SecurityMonitoringService {
   private prisma: PrismaClient;
-  private auditService: AuditService;
   private alertConfigs: Record<SecurityEventType, SecurityAlertConfig>;
   private blockedIPs: Set<string> = new Set();
   private rateLimitCache: Map<string, { count: number; resetTime: number }> = new Map();
   private cleanupInterval: NodeJS.Timeout;
 
-  constructor(prisma: PrismaClient, auditService: AuditService) {
-    this.prisma = prisma;
-    this.auditService = auditService;
+  constructor(prisma?: PrismaClient) {
+    this.prisma = prisma || db;
     this.alertConfigs = { ...DEFAULT_ALERT_CONFIGS };
     
     // Set up periodic cleanup to prevent memory leaks
@@ -267,20 +265,23 @@ export class SecurityMonitoringService {
         }
       });
 
-      // Log to audit trail
+      // Log to audit trail using AuditLog directly
       if (eventData.userId) {
-        await this.auditService.logSecurity(
-          eventData.userId,
-          'SUSPICIOUS_ACTIVITY',
-          {
-            securityEventId: eventId,
-            type: eventData.type,
-            severity: eventData.severity,
-            ...eventData.details
-          },
-          eventData.ipAddress,
-          eventData.userAgent
-        );
+        await this.prisma.auditLog.create({
+          data: {
+            userId: eventData.userId,
+            action: 'SECURITY_LOG',
+            resource: 'security',
+            details: {
+              securityEventId: eventId,
+              type: eventData.type,
+              severity: eventData.severity,
+              ...eventData.details
+            },
+            ipAddress: eventData.ipAddress,
+            userAgent: eventData.userAgent
+          }
+        });
       }
 
       // Check for alert conditions
@@ -335,11 +336,11 @@ export class SecurityMonitoringService {
     if (!config.enabled) return;
 
     try {
-      // Count recent events of the same type
+      // Count recent events of the same type using AuditLog
       const timeWindow = new Date(Date.now() - (config.timeWindow * 60 * 1000));
-      const recentEvents = await this.prisma.securityEvent.count({
+      const recentEvents = await this.prisma.auditLog.count({
         where: {
-          type: eventData.type,
+          action: `SECURITY_EVENT_${eventData.type}`,
           createdAt: { gte: timeWindow },
           ...(eventData.userId && { userId: eventData.userId }),
           ...(eventData.ipAddress && { ipAddress: eventData.ipAddress })
@@ -534,16 +535,16 @@ export class SecurityMonitoringService {
   }
 
   /**
-   * Analyze user behavior patterns
+   * Analyze user behavior patterns using AuditLog
    */
   private async analyzeUserBehavior(userId: string, eventData: SecurityEventData): Promise<void> {
     const oneHourAgo = new Date(Date.now() - (60 * 60 * 1000));
 
     // Check for multiple failed attempts
-    const failedAttempts = await this.prisma.securityEvent.count({
+    const failedAttempts = await this.prisma.auditLog.count({
       where: {
         userId,
-        type: SECURITY_EVENT_TYPES.FAILED_AUTHENTICATION,
+        action: `SECURITY_EVENT_${SECURITY_EVENT_TYPES.FAILED_AUTHENTICATION}`,
         createdAt: { gte: oneHourAgo }
       }
     });
@@ -563,7 +564,7 @@ export class SecurityMonitoringService {
     }
 
     // Check for multiple IP addresses
-    const recentIPs = await this.prisma.securityEvent.findMany({
+    const recentIPs = await this.prisma.auditLog.findMany({
       where: {
         userId,
         createdAt: { gte: oneHourAgo },
@@ -589,17 +590,18 @@ export class SecurityMonitoringService {
   }
 
   /**
-   * Analyze IP behavior patterns
+   * Analyze IP behavior patterns using AuditLog
    */
   private async analyzeIPBehavior(ipAddress: string, eventData: SecurityEventData): Promise<void> {
     const oneHourAgo = new Date(Date.now() - (60 * 60 * 1000));
 
     // Check for multiple users from same IP
-    const usersFromIP = await this.prisma.securityEvent.findMany({
+    const usersFromIP = await this.prisma.auditLog.findMany({
       where: {
         ipAddress,
         createdAt: { gte: oneHourAgo },
-        userId: { not: null }
+        userId: { not: null },
+        action: { startsWith: 'SECURITY_EVENT_' }
       },
       select: { userId: true },
       distinct: ['userId']
@@ -619,10 +621,11 @@ export class SecurityMonitoringService {
     }
 
     // Check request rate
-    const recentRequests = await this.prisma.securityEvent.count({
+    const recentRequests = await this.prisma.auditLog.count({
       where: {
         ipAddress,
-        createdAt: { gte: new Date(Date.now() - (5 * 60 * 1000)) } // Last 5 minutes
+        createdAt: { gte: new Date(Date.now() - (5 * 60 * 1000)) }, // Last 5 minutes
+        action: { startsWith: 'SECURITY_EVENT_' }
       }
     });
 
@@ -641,15 +644,15 @@ export class SecurityMonitoringService {
   }
 
   /**
-   * Check for coordinated attacks
+   * Check for coordinated attacks using AuditLog
    */
   private async checkCoordinatedAttacks(eventData: SecurityEventData): Promise<void> {
     const fiveMinutesAgo = new Date(Date.now() - (5 * 60 * 1000));
 
     // Check for similar events from multiple IPs
-    const similarEvents = await this.prisma.securityEvent.findMany({
+    const similarEvents = await this.prisma.auditLog.findMany({
       where: {
-        type: eventData.type,
+        action: `SECURITY_EVENT_${eventData.type}`,
         createdAt: { gte: fiveMinutesAgo },
         ipAddress: { not: null }
       },
@@ -706,11 +709,12 @@ export class SecurityMonitoringService {
         })
       ]);
 
-      // Get timeline data
+      // Get timeline data from AuditLog
       const timeline = await this.prisma.$queryRaw<Array<{ date: string; count: bigint }>>`
         SELECT DATE(created_at) as date, COUNT(*) as count
-        FROM security_events
+        FROM audit_logs
         WHERE created_at >= ${startDate}
+        AND action LIKE 'SECURITY_EVENT_%'
         GROUP BY DATE(created_at)
         ORDER BY date DESC
         LIMIT 30
@@ -764,19 +768,54 @@ export class SecurityMonitoringService {
   }
 
   /**
-   * Get security incidents summary
+   * Get security incidents summary using AuditLog
    */
   async getSecurityIncidents(days: number = 7) {
-    return await this.auditService.getSecurityIncidents(days);
+    const startDate = new Date(Date.now() - (days * 24 * 60 * 60 * 1000));
+    
+    const incidents = await this.prisma.auditLog.findMany({
+      where: {
+        action: { startsWith: 'SECURITY_EVENT_' },
+        createdAt: { gte: startDate }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    return {
+      total: incidents.length,
+      incidents: incidents.map(incident => ({
+        id: incident.id,
+        type: incident.action.replace('SECURITY_EVENT_', ''),
+        severity: (incident.details as any)?.severity || 'MEDIUM',
+        userId: incident.userId,
+        user: incident.user,
+        details: incident.details,
+        createdAt: incident.createdAt,
+        ipAddress: incident.ipAddress,
+        userAgent: incident.userAgent
+      }))
+    };
   }
 }
 
 // Export singleton instance
 let securityMonitoringService: SecurityMonitoringService;
 
-export function getSecurityMonitoringService(prisma?: PrismaClient, auditService?: AuditService): SecurityMonitoringService {
-  if (!securityMonitoringService && prisma && auditService) {
-    securityMonitoringService = new SecurityMonitoringService(prisma, auditService);
+export function getSecurityMonitoringService(prisma?: PrismaClient): SecurityMonitoringService {
+  if (!securityMonitoringService) {
+    securityMonitoringService = new SecurityMonitoringService(prisma);
   }
   return securityMonitoringService;
 }

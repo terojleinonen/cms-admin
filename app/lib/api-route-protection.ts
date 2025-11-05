@@ -5,9 +5,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { Permission, PermissionService } from './permissions';
+import { Permission } from './types';
+import { PermissionService } from './permissions';
 import { routePermissionResolver } from './route-permissions';
 import { User } from './types';
+import { isString, isUserRole } from './type-guards';
 
 /**
  * API Error Response interface
@@ -98,11 +100,15 @@ export class ApiRouteProtectionService {
       };
     }
 
-    const user = token ? {
-      id: token.id as string,
-      email: token.email as string,
-      name: token.name as string,
-      role: token.role as any,
+    const user = token && 
+      isString(token.id) && 
+      isString(token.email) && 
+      isString(token.name) && 
+      isUserRole(token.role) ? {
+      id: token.id,
+      email: token.email,
+      name: token.name,
+      role: token.role,
     } as User : null;
 
     // Skip permission check if specified
@@ -198,10 +204,10 @@ export class ApiRouteProtectionService {
  * Higher-order function to protect API route handlers
  */
 export function withApiProtection(
-  handler: (request: NextRequest, context: { user: User | null; params?: any }) => Promise<NextResponse>,
+  handler: (request: NextRequest, context: { user: User | null; params?: Record<string, string> }) => Promise<NextResponse>,
   options: RouteProtectionOptions = {}
 ) {
-  return async (request: NextRequest, context: { params?: any } = {}) => {
+  return async (request: NextRequest, context: { params?: Record<string, string> } = {}) => {
     const protectionService = new ApiRouteProtectionService(new PermissionService());
     
     const { user, error } = await protectionService.protectRoute(request, options);
@@ -214,10 +220,16 @@ export function withApiProtection(
       return await handler(request, { user, params: context.params });
     } catch (error) {
       console.error('API route handler error:', error);
-      return protectionService.createErrorResponse(
-        'INTERNAL_ERROR',
-        'Internal server error',
-        500
+      return NextResponse.json(
+        {
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Internal server error',
+            timestamp: new Date().toISOString(),
+          },
+          success: false,
+        },
+        { status: 500 }
       );
     }
   };
@@ -228,7 +240,7 @@ export function withApiProtection(
  */
 export function requirePermissions(...permissions: Permission[]) {
   return function(
-    target: any,
+    target: object,
     propertyKey: string,
     descriptor: PropertyDescriptor
   ) {
@@ -244,7 +256,7 @@ export function requirePermissions(...permissions: Permission[]) {
  * Decorator for requiring authentication only
  */
 export function requireAuth(
-  target: any,
+  target: object,
   propertyKey: string,
   descriptor: PropertyDescriptor
 ) {
@@ -260,7 +272,7 @@ export function requireAuth(
  */
 export function allowMethods(...methods: string[]) {
   return function(
-    target: any,
+    target: object,
     propertyKey: string,
     descriptor: PropertyDescriptor
   ) {
@@ -310,7 +322,7 @@ export class ApiPermissionUtils {
    */
   async validateRequestBody<T>(
     request: NextRequest,
-    validator: (data: any) => T | Promise<T>
+    validator: (data: unknown) => T | Promise<T>
   ): Promise<{ data: T | null; error: string | null }> {
     try {
       const body = await request.json();
@@ -329,10 +341,10 @@ export class ApiPermissionUtils {
    */
   validateQueryParams(
     request: NextRequest,
-    schema: Record<string, { required?: boolean; type?: string; default?: any }>
-  ): { params: Record<string, any>; errors: string[] } {
+    schema: Record<string, { required?: boolean; type?: string; default?: unknown }>
+  ): { params: Record<string, unknown>; errors: string[] } {
     const url = new URL(request.url);
-    const params: Record<string, any> = {};
+    const params: Record<string, unknown> = {};
     const errors: string[] = [];
 
     for (const [key, config] of Object.entries(schema)) {

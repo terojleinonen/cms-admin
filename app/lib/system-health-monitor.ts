@@ -1,5 +1,5 @@
 import { db } from './db'
-import { cache } from './cache'
+import { CacheService } from './cache'
 
 export interface SystemHealthMetrics {
   timestamp: Date

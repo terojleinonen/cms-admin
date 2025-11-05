@@ -23,7 +23,7 @@ const reactivationSchema = z.object({
 })
 
 // Check access permissions
-async function requireUserAccess(userId: string, requireAdmin = false) {
+async function requireUserAccess(userId: string, requireAdmin: boolean = false): Promise<NextResponse | null> {
   const session = await auth()
   
   if (!session?.user) {

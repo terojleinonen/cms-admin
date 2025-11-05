@@ -95,7 +95,7 @@ class SecureFormHandler {
       } else {
         return {
           isValid: false,
-          error: result.error.errors[0]?.message || 'Invalid value',
+          error: result.error.issues[0]?.message || 'Invalid value',
           sanitizedValue
         }
       }
@@ -130,9 +130,9 @@ class SecureFormHandler {
         }
       } else {
         const errors: Record<string, string> = {}
-        result.error.errors.forEach(error => {
-          const path = error.path.join('.')
-          errors[path] = error.message
+        result.error.issues.forEach(issue => {
+          const path = issue.path.join('.')
+          errors[path] = issue.message
         })
 
         return {
@@ -494,10 +494,13 @@ class FormSecurityMonitor {
 
 // Export utilities
 export {
-  SecureFormConfig,
-  FieldValidationResult,
-  FormValidationResult,
   SecureFormHandler,
   SecureFormInputUtils,
   FormSecurityMonitor
+}
+
+export type {
+  SecureFormConfig,
+  FieldValidationResult,
+  FormValidationResult
 }

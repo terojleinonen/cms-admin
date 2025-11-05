@@ -4,20 +4,8 @@
  */
 
 import { UserRole } from '@prisma/client';
-import { User } from './types';
+import { User, Permission, RolePermission } from './types';
 import { permissionPerformanceMonitor } from './permission-performance-monitor';
-
-// Permission model interfaces
-export interface Permission {
-  resource: string;    // 'products', 'users', 'analytics', etc.
-  action: string;      // 'create', 'read', 'update', 'delete', 'manage'
-  scope?: string;      // 'own', 'all', 'team'
-}
-
-export interface RolePermission {
-  role: UserRole;
-  permissions: Permission[];
-}
 
 // Cache interface
 interface PermissionCacheEntry {

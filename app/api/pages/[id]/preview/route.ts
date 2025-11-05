@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { hasPermission } from '@/lib/has-permission'
+import { hasPermission } from '@/lib/permissions'
 
 const previewSchema = z.object({
   content: z.string().optional(),

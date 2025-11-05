@@ -136,24 +136,7 @@ export class SimplePermissionService {
 // Singleton instance
 export const simplePermissionService = new SimplePermissionService();
 
-// Legacy compatibility functions
-export function hasPermission(session: { user?: User } | null, permission: string): boolean {
-  if (!session?.user) return false;
-  
-  // Map legacy permission strings to resource:action format
-  const permissionMap: Record<string, { resource: string; action: string }> = {
-    'create': { resource: 'products', action: 'create' },
-    'read': { resource: 'products', action: 'read' },
-    'update': { resource: 'products', action: 'update' },
-    'delete': { resource: 'products', action: 'delete' },
-    'preview': { resource: 'pages', action: 'read' },
-  };
-  
-  const mapped = permissionMap[permission];
-  if (!mapped) return false;
-  
-  return simplePermissionService.hasPermission(session.user, mapped.resource, mapped.action);
-}
+// Legacy compatibility functions are now consolidated in permissions.ts
 
 /**
  * Simple route permission checker for middleware

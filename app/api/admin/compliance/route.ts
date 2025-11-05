@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { ComplianceService } from '@/lib/compliance-service'
 import { prisma as db } from '@/lib/db'
-import { hasPermission } from '@/lib/has-permission'
+import { hasPermission } from '@/lib/permissions'
 
 const complianceService = new ComplianceService(db)
 

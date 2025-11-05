@@ -39,7 +39,7 @@ export const userSchemas = {
     limit: z.string().transform(Number).pipe(secureValidationSchemas.secureInteger.positive().max(100)).default(10),
     search: secureValidationSchemas.secureString(255).optional(),
     role: z.nativeEnum(UserRole).optional(),
-    isActive: z.string().transform(val => val === 'true').pipe(secureValidationSchemas.secureBoolean).optional(),
+    isActive: z.string().transform(val => val === 'true').optional(),
     sortBy: z.enum(['name', 'email', 'role', 'createdAt', 'updatedAt']).default('createdAt'),
     sortOrder: z.enum(['asc', 'desc']).default('desc'),
   }),
@@ -279,7 +279,9 @@ export const authSchemas = {
     email: commonSchemas.email,
     password: commonSchemas.password,
     confirmPassword: z.string().min(1, 'Password confirmation is required'),
-    acceptTerms: z.literal(true, { errorMap: () => ({ message: 'You must accept the terms and conditions' }) }),
+    acceptTerms: z.literal(true).refine(val => val === true, {
+      message: 'You must accept the terms and conditions'
+    }),
   }).refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
@@ -408,7 +410,7 @@ export const searchSchemas = {
     type: z.enum(['products', 'pages', 'users', 'all']).default('all'),
     page: z.string().transform(Number).pipe(z.number().int().positive()).default(1),
     limit: z.string().transform(Number).pipe(z.number().int().positive().max(100)).default(10),
-    filters: z.record(z.string()).optional(),
+    filters: z.record(z.string(), z.string()).optional(),
   }),
 
   analytics: z.object({

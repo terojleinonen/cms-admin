@@ -5,7 +5,8 @@
 
 import { UserRole } from '@prisma/client'
 import { User, Product, Category, Page, Media } from './types'
-import { Permission, permissionService } from './permissions'
+import { Permission } from './types'
+import { permissionService } from './permissions'
 
 // ============================================================================
 // Common Permission Pattern Utilities

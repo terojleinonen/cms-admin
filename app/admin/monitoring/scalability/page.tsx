@@ -4,10 +4,9 @@
  */
 
 import { Metadata } from 'next';
-import { getServerSession } from 'next-auth';
+import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
-import { authOptions } from '@/lib/auth-utils';
-import { hasPermission } from '@/lib/has-permission';
+import { hasPermission } from '@/lib/permissions';
 import ScalabilityMonitoringDashboard from '@/components/admin/ScalabilityMonitoringDashboard';
 
 export const metadata: Metadata = {
@@ -16,14 +15,14 @@ export const metadata: Metadata = {
 };
 
 export default async function ScalabilityMonitoringPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user) {
     redirect('/auth/login');
   }
 
   // Check monitoring permissions
-  if (!hasPermission(session.user, { resource: 'monitoring', action: 'read', scope: 'all' })) {
+  if (session.user.role !== 'ADMIN') {
     redirect('/admin?error=insufficient_permissions');
   }
 

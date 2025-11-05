@@ -334,7 +334,7 @@ sudo ufw deny from <suspicious-ip>
 docker-compose -f docker-compose.production.yml logs app | grep -i "security\|unauthorized\|failed"
 
 # Review audit logs in database
-docker-compose -f docker-compose.production.yml exec db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT * FROM \"AuditLog\" WHERE \"timestamp\" > NOW() - INTERVAL '1 hour';"
+docker-compose -f docker-compose.production.yml exec db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT * FROM \"AuditLog\" WHERE \"createdAt\" > NOW() - INTERVAL '1 hour';"
 ```
 
 ## Support and Documentation

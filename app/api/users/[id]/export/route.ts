@@ -73,7 +73,7 @@ const exportQuerySchema = z.object({
 })
 
 // Check access permissions
-async function requireUserAccess(userId: string) {
+async function requireUserAccess(userId: string): Promise<NextResponse | null> {
   const session = await auth()
   
   if (!session?.user) {

@@ -14,7 +14,7 @@ import {
   ServerIcon,
   ShieldCheckIcon,
   CpuChipIcon,
-  DatabaseIcon
+  CircleStackIcon
 } from '@heroicons/react/24/outline'
 
 interface HealthMetric {
@@ -265,7 +265,7 @@ export default function ProductionMonitoringDashboard() {
 
           <div className="bg-white shadow rounded-lg p-6">
             <div className="flex items-center">
-              <DatabaseIcon className="h-8 w-8 text-indigo-500" />
+              <CircleStackIcon className="h-8 w-8 text-indigo-500" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Last Check</p>
                 <p className="text-lg font-semibold text-gray-900">

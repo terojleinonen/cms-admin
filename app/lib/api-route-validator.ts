@@ -14,7 +14,28 @@ import { secureValidationSchemas } from './input-validation'
 /**
  * Combined validation and security options
  */
-export interface APIRouteOptions extends ValidationMiddlewareOptions, SecurityValidationOptions {
+export interface APIRouteOptions {
+  // Validation options
+  bodySchema?: z.ZodSchema<any>
+  querySchema?: z.ZodSchema<any>
+  paramsSchema?: z.ZodSchema<any>
+  requireBody?: boolean
+  sanitizeInputs?: boolean
+  checkSQLInjection?: boolean
+  checkXSS?: boolean
+  maxBodySize?: number
+  allowedMethods?: string[]
+  
+  // Security options
+  requireCSRF?: boolean
+  maxRequestSize?: number
+  skipRateLimit?: boolean
+  rateLimitConfig?: { limit: number; windowMs: number }
+  
+  // Combined custom validation
+  customValidation?: (request: NextRequest, data?: any) => Promise<boolean | string>
+  
+  // Permission options
   permissions?: {
     resource: string
     action: string
@@ -50,22 +71,32 @@ export function createSecureAPIRoute(
   )
 
   // Apply security middleware
-  const secureHandler = withAPISecurity(validatedHandler, {
-    requireCSRF: options.requireCSRF,
-    maxRequestSize: options.maxRequestSize,
-    allowedMethods: options.allowedMethods,
-    customValidation: options.customValidation,
-    skipRateLimit: options.skipRateLimit,
-    rateLimitConfig: options.rateLimit || options.rateLimitConfig,
-  })
+  const secureHandler = withAPISecurity(
+    async (request: NextRequest) => {
+      // The validation middleware will handle the data extraction
+      return validatedHandler(request, { params: undefined })
+    },
+    {
+      requireCSRF: options.requireCSRF,
+      maxRequestSize: options.maxRequestSize || options.maxBodySize,
+      allowedMethods: options.allowedMethods,
+      customValidation: options.customValidation,
+      skipRateLimit: options.skipRateLimit,
+      rateLimitConfig: options.rateLimitConfig,
+    }
+  )
 
   // Apply permission middleware if specified
   if (options.permissions) {
     return withApiPermissions(
       secureHandler,
-      options.permissions.resource,
-      options.permissions.action,
-      options.permissions.scope
+      {
+        permissions: [{
+          resource: options.permissions.resource,
+          action: options.permissions.action,
+          scope: options.permissions.scope || 'all'
+        }]
+      }
     )
   }
 
@@ -348,7 +379,7 @@ export const schemaBuilders = {
    */
   searchQuery: (additionalFields?: z.ZodRawShape) => z.object({
     q: secureValidationSchemas.secureString(255).optional(),
-    filters: z.record(secureValidationSchemas.secureString(100)).optional(),
+    filters: z.record(z.string(), secureValidationSchemas.secureString(100)).optional(),
     ...additionalFields
   }),
 
@@ -365,7 +396,7 @@ export const schemaBuilders = {
   bulkOperation: <T>(itemSchema: z.ZodSchema<T>) => z.object({
     items: z.array(itemSchema).min(1).max(100),
     operation: secureValidationSchemas.secureString(50),
-    options: z.record(z.any()).optional()
+    options: z.record(z.string(), z.any()).optional()
   }),
 
   /**

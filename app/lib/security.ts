@@ -4,7 +4,7 @@
  */
 
 import { Prisma, PrismaClient } from '@prisma/client'
-import crypto from 'crypto'
+import { randomUUID, randomBytes, createHmac, timingSafeEqual } from 'crypto'
 
 export interface SecurityEvent {
   id: string
@@ -37,12 +37,17 @@ export type SecurityEventType =
   | 'blocked_request'
   | 'csrf_violation'
   | 'input_validation_failed'
+  | 'input_validation_success'
+  | 'input_validation_error'
   | 'file_upload_blocked'
   | 'api_key_created'
   | 'api_key_revoked'
   | 'admin_action'
   | 'data_export'
   | 'bulk_operation'
+  | 'api_request'
+  | 'security_scan'
+  | 'unauthorized_access'
   | 'security_scan'
   | 'intrusion_detected'
 
@@ -118,7 +123,7 @@ export class SecurityService {
     userAgent?: string
   ): Promise<SecurityEvent> {
     const event: SecurityEvent = {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       type,
       severity,
       message,
@@ -506,10 +511,9 @@ export class SecurityService {
    * Generate CSRF token
    */
   generateCSRFToken(sessionId: string): string {
-    const token = crypto.randomBytes(32).toString('hex')
+    const token = randomBytes(32).toString('hex')
     const timestamp = Date.now()
-    const signature = crypto
-      .createHmac('sha256', process.env.NEXTAUTH_SECRET || 'fallback-secret')
+    const signature = createHmac('sha256', process.env.NEXTAUTH_SECRET || 'fallback-secret')
       .update(`${sessionId}:${token}:${timestamp}`)
       .digest('hex')
     
@@ -535,12 +539,11 @@ export class SecurityService {
         return false
       }
 
-      const expectedSignature = crypto
-        .createHmac('sha256', process.env.NEXTAUTH_SECRET || 'fallback-secret')
+      const expectedSignature = createHmac('sha256', process.env.NEXTAUTH_SECRET || 'fallback-secret')
         .update(`${sessionId}:${tokenPart}:${timestamp}`)
         .digest('hex')
 
-      return crypto.timingSafeEqual(
+      return timingSafeEqual(
         Buffer.from(signaturePart, 'hex'),
         Buffer.from(expectedSignature, 'hex')
       )

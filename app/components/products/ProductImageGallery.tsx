@@ -57,7 +57,7 @@ export default function ProductImageGallery({
     dragOverIndex: null,
   })
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null)
-  const dragCounter = useRef(0)
+  const dragCounter = useRef<number>(0)
 
   const sortedImages = [...images].sort((a, b) => a.sortOrder - b.sortOrder)
 

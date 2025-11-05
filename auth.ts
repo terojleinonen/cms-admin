@@ -1,17 +1,14 @@
-import NextAuth from "next-auth"
+import NextAuth, { NextAuthOptions, SessionStrategy } from "next-auth"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import { PrismaClient, UserRole } from "@prisma/client"
+import { UserRole } from "@prisma/client"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from 'bcryptjs'
+import { db } from './app/lib/db'
+import { JWT } from "next-auth/jwt"
+import { NextRequest } from "next/server"
 
-// Use singleton pattern for Prisma client
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
-
-const prisma = globalForPrisma.prisma ?? new PrismaClient()
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// Use the centralized database client
+const prisma = db
 
 // Ensure environment variables are available
 if (!process.env.NEXTAUTH_SECRET) {
@@ -21,7 +18,7 @@ if (!process.env.NEXTAUTH_SECRET) {
 console.log('🔧 NextAuth v4 config - NEXTAUTH_SECRET exists:', !!process.env.NEXTAUTH_SECRET)
 console.log('🔧 NextAuth v4 config - NEXTAUTH_URL:', process.env.NEXTAUTH_URL)
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   // adapter: PrismaAdapter(prisma), // Temporarily disabled
   providers: [
     CredentialsProvider({
@@ -98,14 +95,14 @@ export const authOptions = {
     }),
   ],
   session: {
-    strategy: 'jwt',
+    strategy: 'jwt' as SessionStrategy,
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }): Promise<JWT> {
       console.log('🔄 JWT callback called:', { hasUser: !!user, tokenSub: token.sub })
       // Include user role in JWT token
       if (user) {
-        token.role = user.role
+        token.role = user.role as UserRole
         token.id = user.id
         console.log('🔄 Updated token with user data:', { id: user.id, role: user.role })
       }
@@ -115,8 +112,8 @@ export const authOptions = {
       console.log('🔄 Session callback called:', { hasToken: !!token, hasUser: !!session.user })
       // Include user role and id in session
       if (token && session.user) {
-        (session.user as any).id = token.id as string;
-        (session.user as any).role = token.role as UserRole;
+        session.user.id = token.id as string
+        session.user.role = token.role as UserRole
         console.log('🔄 Updated session with token data:', { id: token.id, role: token.role })
       }
       return session
@@ -129,10 +126,18 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 }
 
-export default NextAuth(authOptions)
+const handler = NextAuth(authOptions)
+
+export default handler
+
+// Export auth function for server components
+export const auth = async () => {
+  const { getServerSession } = await import('next-auth')
+  return await getServerSession(authOptions)
+}
 
 // Helper function for middleware (NextAuth v4 compatible)
-export async function getServerSession(req: any) {
+export async function getServerSession(req: Request | NextRequest) {
   const { getToken } = await import('next-auth/jwt')
   return await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
 }

@@ -3,7 +3,7 @@
  * Provides helper functions for user authentication and authorization
  */
 
-import { auth } from '@/auth'
+import { auth } from '../../auth'
 import { UserRole } from '@prisma/client'
 import { hashPassword as hashPasswordUtil, verifyPassword as verifyPasswordUtil, validatePassword as validatePasswordUtil } from './password-utils'
 import { prisma } from './db'

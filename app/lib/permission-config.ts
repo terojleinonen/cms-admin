@@ -4,7 +4,7 @@
  */
 
 import { UserRole } from '@prisma/client';
-import { Permission, RolePermission } from './permissions';
+import { Permission, RolePermission } from './types';
 
 /**
  * Configuration interfaces

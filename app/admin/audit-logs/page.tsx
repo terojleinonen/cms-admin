@@ -6,7 +6,7 @@
 import { Metadata } from 'next'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { hasPermission } from '@/lib/has-permission'
+import { hasPermission } from '@/lib/permissions'
 import AuditLogAnalytics from '@/components/admin/AuditLogAnalytics'
 import AuditLogViewer from '@/components/admin/AuditLogViewer'
 import ComplianceReportingInterface from '@/components/admin/ComplianceReportingInterface'
@@ -25,7 +25,7 @@ export default async function AuditLogsPage() {
   }
 
   // Check if user has permission to view audit logs
-  if (!await hasPermission(session.user, 'system', 'read')) {
+  if (session.user.role !== 'ADMIN') {
     redirect('/admin')
   }
 

@@ -178,15 +178,15 @@ CREATE OR REPLACE FUNCTION audit_trigger_function()
 RETURNS TRIGGER AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
-        INSERT INTO "AuditLog" (id, "userId", action, resource, details, "timestamp")
+        INSERT INTO "AuditLog" (id, "userId", action, resource, details, "createdAt")
         VALUES (uuid_generate_v4(), current_setting('app.current_user_id', true), 'CREATE', TG_TABLE_NAME, row_to_json(NEW), NOW());
         RETURN NEW;
     ELSIF TG_OP = 'UPDATE' THEN
-        INSERT INTO "AuditLog" (id, "userId", action, resource, details, "timestamp")
+        INSERT INTO "AuditLog" (id, "userId", action, resource, details, "createdAt")
         VALUES (uuid_generate_v4(), current_setting('app.current_user_id', true), 'UPDATE', TG_TABLE_NAME, row_to_json(NEW), NOW());
         RETURN NEW;
     ELSIF TG_OP = 'DELETE' THEN
-        INSERT INTO "AuditLog" (id, "userId", action, resource, details, "timestamp")
+        INSERT INTO "AuditLog" (id, "userId", action, resource, details, "createdAt")
         VALUES (uuid_generate_v4(), current_setting('app.current_user_id', true), 'DELETE', TG_TABLE_NAME, row_to_json(OLD), NOW());
         RETURN OLD;
     END IF;
@@ -276,8 +276,7 @@ EOF
 
 # Keep audit logs for 90 days
 docker-compose -f docker-compose.production.yml exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "
-DELETE FROM \"AuditLog\" WHERE \"timestamp\" < NOW() - INTERVAL '90 days';
-DELETE FROM \"SecurityEvent\" WHERE \"timestamp\" < NOW() - INTERVAL '90 days';
+DELETE FROM \"AuditLog\" WHERE \"createdAt\" < NOW() - INTERVAL '90 days';
 "
 
 # Vacuum tables to reclaim space

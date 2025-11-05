@@ -10,9 +10,9 @@ import { UserRole } from '@prisma/client'
 import { 
   profilePictureService, 
   fileToBuffer, 
-  PROFILE_PICTURE_CONFIG,
-  formatFileSize
+  PROFILE_PICTURE_CONFIG
 } from '@/lib/profile-image-utils'
+import { formatFileSize } from '@/lib/format-utils'
 import { getAuditService } from '@/lib/audit-service'
 
 // Check if user has access to avatar operations

@@ -4,15 +4,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/auth'
+import { auth } from '@/auth'
 import { permissionConfigManager } from '@/lib/permission-config'
 import { UserRole } from '@prisma/client'
 
 // GET /api/admin/roles - Get all roles and their configurations
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user || session.user.role !== UserRole.ADMIN) {
       return NextResponse.json(
@@ -43,7 +42,7 @@ export async function GET() {
 // POST /api/admin/roles - Create a new custom role
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user || session.user.role !== UserRole.ADMIN) {
       return NextResponse.json(
@@ -111,7 +110,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/roles - Update role configuration
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user || session.user.role !== UserRole.ADMIN) {
       return NextResponse.json(
@@ -182,7 +181,7 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/roles - Delete a custom role
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user || session.user.role !== UserRole.ADMIN) {
       return NextResponse.json(

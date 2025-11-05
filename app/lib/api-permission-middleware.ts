@@ -5,10 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { Permission, PermissionService } from './permissions';
+import { Permission } from './types';
+import { PermissionService } from './permissions';
 import { RoutePermissionResolver, ROUTE_PERMISSION_MAPPINGS } from './route-permissions';
 import { User } from './types';
+import { isString, isUserRole } from './type-guards';
 import { auditService } from './audit-service';
+import { SecurityEventType } from './security';
 
 /**
  * API Error Response interface
@@ -98,7 +101,7 @@ export class ApiPermissionMiddleware {
         { allowedMethods }
       );
       
-      await this.logSecurityEvent(null, 'METHOD_NOT_ALLOWED', {
+      await this.logSecurityEvent(null, 'blocked_request', {
         method,
         pathname,
         allowedMethods
@@ -127,7 +130,7 @@ export class ApiPermissionMiddleware {
         401
       );
 
-      await this.logSecurityEvent(null, 'TOKEN_ERROR', {
+      await this.logSecurityEvent(null, 'login_failed', {
         pathname,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -148,7 +151,7 @@ export class ApiPermissionMiddleware {
         401
       );
 
-      await this.logSecurityEvent(null, 'UNAUTHORIZED_ACCESS', {
+      await this.logSecurityEvent(null, 'unauthorized_access', {
         pathname,
         method
       });
@@ -161,11 +164,15 @@ export class ApiPermissionMiddleware {
       };
     }
 
-    const user = token ? {
-      id: token.id as string,
-      email: token.email as string,
-      name: token.name as string,
-      role: token.role as any,
+    const user = token && 
+      isString(token.id) && 
+      isString(token.email) && 
+      isString(token.name) && 
+      isUserRole(token.role) ? {
+      id: token.id,
+      email: token.email,
+      name: token.name,
+      role: token.role,
     } as User : null;
 
     // Skip permission check if specified
@@ -226,7 +233,7 @@ export class ApiPermissionMiddleware {
           }
         );
 
-        await this.logSecurityEvent(user, 'PERMISSION_DENIED', {
+        await this.logSecurityEvent(user, 'permission_denied', {
           pathname,
           method,
           requiredPermissions,
@@ -253,7 +260,7 @@ export class ApiPermissionMiddleware {
             403
           );
 
-          await this.logSecurityEvent(user, 'CUSTOM_VALIDATION_FAILED', {
+          await this.logSecurityEvent(user, 'input_validation_failed', {
             pathname,
             method
           });
@@ -273,7 +280,7 @@ export class ApiPermissionMiddleware {
           500
         );
 
-        await this.logSecurityEvent(user, 'VALIDATION_ERROR', {
+        await this.logSecurityEvent(user, 'input_validation_error', {
           pathname,
           method,
           error: error instanceof Error ? error.message : 'Unknown error'
@@ -399,7 +406,7 @@ export class ApiPermissionMiddleware {
     result: 'SUCCESS' | 'FAILURE'
   ): Promise<void> {
     try {
-      await auditService.logAction(
+      await auditService.log(
         user?.id || 'anonymous',
         'API_ACCESS',
         'api',
@@ -421,14 +428,13 @@ export class ApiPermissionMiddleware {
    */
   private async logSecurityEvent(
     user: User | null,
-    eventType: string,
+    eventType: SecurityEventType,
     details: Record<string, any>
   ): Promise<void> {
     try {
-      await auditService.logSecurityEvent(
-        eventType,
-        'MEDIUM',
+      await auditService.logSecurity(
         user?.id,
+        eventType,
         {
           ...details,
           timestamp: new Date().toISOString()
@@ -444,10 +450,10 @@ export class ApiPermissionMiddleware {
  * Higher-order function to protect API route handlers
  */
 export function withApiPermissions(
-  handler: (request: NextRequest, context: { user: User | null; params?: any }) => Promise<NextResponse>,
+  handler: (request: NextRequest, context: { user: User | null; params?: Record<string, string> }) => Promise<NextResponse>,
   options: PermissionValidationOptions = {}
 ) {
-  return async (request: NextRequest, context: { params?: any } = {}) => {
+  return async (request: NextRequest, context: { params?: Record<string, string> } = {}) => {
     const middleware = new ApiPermissionMiddleware();
     
     const { user, error, isAuthorized } = await middleware.validatePermissions(request, options);
@@ -457,10 +463,16 @@ export function withApiPermissions(
     }
 
     if (!isAuthorized) {
-      return middleware.createErrorResponse(
-        'FORBIDDEN',
-        'Access denied',
-        403
+      return NextResponse.json(
+        {
+          error: {
+            code: 'FORBIDDEN',
+            message: 'Access denied',
+            timestamp: new Date().toISOString(),
+          },
+          success: false,
+        },
+        { status: 403 }
       );
     }
 
@@ -468,11 +480,17 @@ export function withApiPermissions(
       return await handler(request, { user, params: context.params });
     } catch (error) {
       console.error('API route handler error:', error);
-      return middleware.createErrorResponse(
-        'INTERNAL_ERROR',
-        'Internal server error',
-        500,
-        { error: error instanceof Error ? error.message : 'Unknown error' }
+      return NextResponse.json(
+        {
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Internal server error',
+            details: { error: error instanceof Error ? error.message : 'Unknown error' },
+            timestamp: new Date().toISOString(),
+          },
+          success: false,
+        },
+        { status: 500 }
       );
     }
   };
@@ -488,7 +506,7 @@ export function withApiPermissions(
 export function requirePermissions(...permissions: Permission[]) {
   return function(options: Omit<PermissionValidationOptions, 'permissions'> = {}) {
     return (
-      handler: (request: NextRequest, context: { user: User | null; params?: any }) => Promise<NextResponse>
+      handler: (request: NextRequest, context: { user: User | null; params?: Record<string, string> }) => Promise<NextResponse>
     ) => withApiPermissions(handler, { ...options, permissions });
   };
 }
@@ -498,7 +516,7 @@ export function requirePermissions(...permissions: Permission[]) {
  */
 export function requireAuth(options: Omit<PermissionValidationOptions, 'requireAuth'> = {}) {
   return (
-    handler: (request: NextRequest, context: { user: User | null; params?: any }) => Promise<NextResponse>
+    handler: (request: NextRequest, context: { user: User | null; params?: Record<string, string> }) => Promise<NextResponse>
   ) => withApiPermissions(handler, { ...options, requireAuth: true });
 }
 
@@ -508,7 +526,7 @@ export function requireAuth(options: Omit<PermissionValidationOptions, 'requireA
 export function allowMethods(...methods: string[]) {
   return function(options: Omit<PermissionValidationOptions, 'allowedMethods'> = {}) {
     return (
-      handler: (request: NextRequest, context: { user: User | null; params?: any }) => Promise<NextResponse>
+      handler: (request: NextRequest, context: { user: User | null; params?: Record<string, string> }) => Promise<NextResponse>
     ) => withApiPermissions(handler, { ...options, allowedMethods: methods });
   };
 }
@@ -518,7 +536,7 @@ export function allowMethods(...methods: string[]) {
  */
 export function requireAdmin(options: PermissionValidationOptions = {}) {
   return (
-    handler: (request: NextRequest, context: { user: User | null; params?: any }) => Promise<NextResponse>
+    handler: (request: NextRequest, context: { user: User | null; params?: Record<string, string> }) => Promise<NextResponse>
   ) => withApiPermissions(handler, {
     ...options,
     permissions: [{ resource: '*', action: 'manage', scope: 'all' }]
@@ -530,7 +548,7 @@ export function requireAdmin(options: PermissionValidationOptions = {}) {
  */
 export function requireEditor(options: PermissionValidationOptions = {}) {
   return (
-    handler: (request: NextRequest, context: { user: User | null; params?: any }) => Promise<NextResponse>
+    handler: (request: NextRequest, context: { user: User | null; params?: Record<string, string> }) => Promise<NextResponse>
   ) => withApiPermissions(handler, {
     ...options,
     customValidator: async (user) => {
@@ -549,7 +567,7 @@ export function allowOwnerOrAdmin(
 ) {
   return function(options: PermissionValidationOptions = {}) {
     return (
-      handler: (request: NextRequest, context: { user: User | null; params?: any }) => Promise<NextResponse>
+      handler: (request: NextRequest, context: { user: User | null; params?: Record<string, string> }) => Promise<NextResponse>
     ) => withApiPermissions(handler, {
       ...options,
       allowOwnerAccess: true,

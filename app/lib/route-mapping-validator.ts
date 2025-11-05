@@ -5,7 +5,7 @@
 
 import { RoutePermissionResolver, RoutePermissionConfig } from './route-permissions';
 import { COMPREHENSIVE_ROUTE_MAPPING, ExtendedRouteConfig, RouteCategory } from './route-mapping-config';
-import { Permission } from './permissions';
+import { Permission } from './types';
 
 /**
  * Validation result interface

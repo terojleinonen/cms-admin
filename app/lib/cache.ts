@@ -2,8 +2,9 @@
  * Comprehensive Cache service for improved performance
  */
 
-import { Prisma, PrismaClient } from '@prisma/client'
-import { Product, Category } from '@/lib/types'
+import { Prisma, PrismaClient, ProductStatus } from '@prisma/client'
+import { Product, Category } from './types'
+import { isProductStatus } from './type-guards'
 
 export interface CacheEntry<T = unknown> {
   key: string
@@ -192,7 +193,7 @@ export class DatabaseCache {
     const skip = (page - 1) * limit
 
     const where: Prisma.ProductWhereInput = {}
-    if (status) where.status = status as any
+    if (status && isProductStatus(status)) where.status = status
     if (categoryId) where.categories = { some: { categoryId } }
     if (search) {
       where.OR = [

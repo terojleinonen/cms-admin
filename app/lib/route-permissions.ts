@@ -3,7 +3,7 @@
  * Defines permission requirements for all application routes with dynamic resolution
  */
 
-import { Permission } from './permissions';
+import { Permission } from './types';
 
 /**
  * Route permission configuration interface

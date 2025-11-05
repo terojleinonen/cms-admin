@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../api/auth/[...nextauth]/route';
+import { auth } from '@/auth';
 import { permissionService } from '../../../lib/permissions';
 import { redirect } from 'next/navigation';
 import PermissionPerformanceDashboard from '../../../components/admin/PermissionPerformanceDashboard';
@@ -11,14 +10,14 @@ export const metadata: Metadata = {
 };
 
 export default async function PermissionPerformancePage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user) {
     redirect('/auth/login');
   }
 
   // Check if user has permission to view performance monitoring
-  if (!permissionService.hasResourceAccess(session.user, 'monitoring', 'read')) {
+  if (session.user.role !== 'ADMIN') {
     redirect('/admin');
   }
 

@@ -22,9 +22,22 @@ interface OptimizationConfig {
   enableIndexHints: boolean
 }
 
+interface UserPermissionData {
+  id: string
+  role: UserRole
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+interface CacheEntry<T = unknown> {
+  result: T
+  timestamp: number
+}
+
 export class PermissionQueryOptimizer {
   private config: OptimizationConfig
-  private queryCache = new Map<string, { result: any; timestamp: number }>()
+  private queryCache = new Map<string, CacheEntry>()
   private queryStats: QueryStats[] = []
 
   constructor(config?: Partial<OptimizationConfig>) {
@@ -40,12 +53,12 @@ export class PermissionQueryOptimizer {
   /**
    * Optimized user permission lookup
    */
-  async getUserPermissions(userId: string): Promise<any> {
+  async getUserPermissions(userId: string): Promise<UserPermissionData | null> {
     const cacheKey = `user_permissions_${userId}`
     
     // Check cache first
     if (this.config.enableQueryCache) {
-      const cached = this.getCachedResult(cacheKey)
+      const cached = this.getCachedResult<UserPermissionData>(cacheKey)
       if (cached) {
         this.recordQueryStats('getUserPermissions (cached)', 0, 1, true)
         return cached
@@ -87,7 +100,7 @@ export class PermissionQueryOptimizer {
   /**
    * Batch permission checks for multiple users
    */
-  async batchUserPermissions(userIds: string[]): Promise<Map<string, any>> {
+  async batchUserPermissions(userIds: string[]): Promise<Map<string, UserPermissionData>> {
     const startTime = Date.now()
     const results = new Map<string, any>()
 
@@ -132,7 +145,7 @@ export class PermissionQueryOptimizer {
     const cacheKey = `accessible_resources_${userId}_${resourceType}`
     
     if (this.config.enableQueryCache) {
-      const cached = this.getCachedResult(cacheKey)
+      const cached = this.getCachedResult<string[]>(cacheKey)
       if (cached) {
         this.recordQueryStats('getAccessibleResources (cached)', 0, cached.length, true)
         return cached
@@ -193,29 +206,19 @@ export class PermissionQueryOptimizer {
 
   /**
    * Optimized permission cache lookup
+   * Note: permissionCache model doesn't exist in schema, using in-memory cache
    */
   async getCachedPermission(userId: string, resource: string, action: string): Promise<boolean | null> {
     const startTime = Date.now()
 
     try {
-      const result = await db.permissionCache.findFirst({
-        where: {
-          userId,
-          resource,
-          action,
-          expiresAt: {
-            gt: new Date()
-          }
-        },
-        select: {
-          result: true
-        }
-      })
+      const cacheKey = `permission_${userId}_${resource}_${action}`
+      const cached = this.getCachedResult<boolean>(cacheKey)
 
       const executionTime = Date.now() - startTime
-      this.recordQueryStats('getCachedPermission', executionTime, result ? 1 : 0, false)
+      this.recordQueryStats('getCachedPermission', executionTime, cached !== null ? 1 : 0, cached !== null)
 
-      return result?.result ?? null
+      return cached
     } catch (error) {
       const executionTime = Date.now() - startTime
       this.recordQueryStats('getCachedPermission (error)', executionTime, 0, false)
@@ -225,6 +228,7 @@ export class PermissionQueryOptimizer {
 
   /**
    * Batch insert permission cache entries
+   * Note: permissionCache model doesn't exist in schema, using in-memory cache
    */
   async batchSetCachedPermissions(entries: Array<{
     userId: string
@@ -236,10 +240,10 @@ export class PermissionQueryOptimizer {
     const startTime = Date.now()
 
     try {
-      // Use batch insert for better performance
-      await db.permissionCache.createMany({
-        data: entries,
-        skipDuplicates: true
+      // Store in in-memory cache since permissionCache model doesn't exist
+      entries.forEach(entry => {
+        const cacheKey = `permission_${entry.userId}_${entry.resource}_${entry.action}`
+        this.setCachedResult(cacheKey, entry.result)
       })
 
       const executionTime = Date.now() - startTime
@@ -253,23 +257,27 @@ export class PermissionQueryOptimizer {
 
   /**
    * Clean up expired cache entries
+   * Note: permissionCache model doesn't exist in schema, cleaning in-memory cache
    */
   async cleanupExpiredCache(): Promise<number> {
     const startTime = Date.now()
 
     try {
-      const result = await db.permissionCache.deleteMany({
-        where: {
-          expiresAt: {
-            lt: new Date()
-          }
+      let cleanedCount = 0
+      const now = Date.now()
+      
+      // Clean up expired entries from in-memory cache
+      for (const [key, entry] of this.queryCache.entries()) {
+        if (now - entry.timestamp > this.config.cacheTimeout) {
+          this.queryCache.delete(key)
+          cleanedCount++
         }
-      })
+      }
 
       const executionTime = Date.now() - startTime
-      this.recordQueryStats('cleanupExpiredCache', executionTime, result.count, false)
+      this.recordQueryStats('cleanupExpiredCache', executionTime, cleanedCount, false)
 
-      return result.count
+      return cleanedCount
     } catch (error) {
       const executionTime = Date.now() - startTime
       this.recordQueryStats('cleanupExpiredCache (error)', executionTime, 0, false)
@@ -335,7 +343,7 @@ export class PermissionQueryOptimizer {
     }
   }
 
-  private getCachedResult(key: string): any | null {
+  private getCachedResult<T = unknown>(key: string): T | null {
     const cached = this.queryCache.get(key)
     if (!cached) return null
     
@@ -348,7 +356,7 @@ export class PermissionQueryOptimizer {
     return cached.result
   }
 
-  private setCachedResult(key: string, result: any): void {
+  private setCachedResult<T = unknown>(key: string, result: T): void {
     this.queryCache.set(key, {
       result,
       timestamp: Date.now()
@@ -390,7 +398,7 @@ export const queryOptimizationUtils = {
   /**
    * Create optimized query builder
    */
-  createOptimizedQuery: (baseQuery: any) => {
+  createOptimizedQuery: <T = unknown>(baseQuery: T): T => {
     // Add query optimization hints and configurations
     return baseQuery
   },

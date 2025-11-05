@@ -370,3 +370,15 @@ export interface Notification {
   createdAt: Date
   data?: Record<string, unknown>
 }
+
+// Permission system types
+export interface Permission {
+  resource: string;    // 'products', 'users', 'analytics', etc.
+  action: string;      // 'create', 'read', 'update', 'delete', 'manage'
+  scope?: string;      // 'own', 'all', 'team'
+}
+
+export interface RolePermission {
+  role: UserRole;
+  permissions: Permission[];
+}

@@ -1,28 +1,22 @@
 /**
  * Database service for permission system
- * Handles database operations for permission cache, security events, and role changes
+ * Handles database operations using existing Prisma models
  */
 
-import { PrismaClient } from '@prisma/client';
-import { Permission } from './permissions';
-
-// Initialize Prisma client
-let prisma: PrismaClient;
-
-// Allow injection of Prisma client for testing
-export function setPrismaClient(client: PrismaClient) {
-  prisma = client;
-}
-
-// Initialize default Prisma client
-if (!prisma) {
-  prisma = new PrismaClient();
-}
+import { db } from './db';
+import { isAuditLogDetails, safeExtract, isString } from './type-guards';
 
 /**
  * Permission Cache Database Service
+ * Uses in-memory cache since permissionCache model doesn't exist
  */
 export class PermissionCacheDB {
+  private static cache = new Map<string, { result: boolean; expiresAt: Date }>();
+
+  private static getCacheKey(userId: string, resource: string, action: string, scope?: string): string {
+    return `${userId}:${resource}:${action}:${scope || ''}`;
+  }
+
   /**
    * Get cached permission result
    */
@@ -33,23 +27,14 @@ export class PermissionCacheDB {
     scope?: string
   ): Promise<boolean | null> {
     try {
-      const cached = await prisma.permissionCache.findUnique({
-        where: {
-          userId_resource_action_scope: {
-            userId,
-            resource,
-            action,
-            scope: scope || null
-          }
-        }
-      });
+      const key = this.getCacheKey(userId, resource, action, scope);
+      const cached = this.cache.get(key);
 
       if (!cached) return null;
 
       // Check if expired
       if (cached.expiresAt < new Date()) {
-        // Delete expired entry
-        await this.delete(userId, resource, action, scope);
+        this.cache.delete(key);
         return null;
       }
 
@@ -72,31 +57,10 @@ export class PermissionCacheDB {
     scope?: string
   ): Promise<void> {
     try {
+      const key = this.getCacheKey(userId, resource, action, scope);
       const expiresAt = new Date(Date.now() + ttlMs);
 
-      await prisma.permissionCache.upsert({
-        where: {
-          userId_resource_action_scope: {
-            userId,
-            resource,
-            action,
-            scope: scope || null
-          }
-        },
-        update: {
-          result,
-          expiresAt,
-          createdAt: new Date()
-        },
-        create: {
-          userId,
-          resource,
-          action,
-          scope: scope || null,
-          result,
-          expiresAt
-        }
-      });
+      this.cache.set(key, { result, expiresAt });
     } catch (error) {
       console.error('Error setting permission cache:', error);
     }
@@ -112,21 +76,10 @@ export class PermissionCacheDB {
     scope?: string
   ): Promise<void> {
     try {
-      await prisma.permissionCache.delete({
-        where: {
-          userId_resource_action_scope: {
-            userId,
-            resource,
-            action,
-            scope: scope || null
-          }
-        }
-      });
+      const key = this.getCacheKey(userId, resource, action, scope);
+      this.cache.delete(key);
     } catch (error) {
-      // Ignore not found errors
-      if (error instanceof Error && !error.message.includes('Record to delete does not exist')) {
-        console.error('Error deleting permission cache:', error);
-      }
+      console.error('Error deleting permission cache:', error);
     }
   }
 
@@ -135,9 +88,11 @@ export class PermissionCacheDB {
    */
   static async invalidateUser(userId: string): Promise<void> {
     try {
-      await prisma.permissionCache.deleteMany({
-        where: { userId }
-      });
+      for (const [key] of this.cache) {
+        if (key.startsWith(`${userId}:`)) {
+          this.cache.delete(key);
+        }
+      }
     } catch (error) {
       console.error('Error invalidating user cache:', error);
     }
@@ -148,9 +103,12 @@ export class PermissionCacheDB {
    */
   static async invalidateResource(resource: string): Promise<void> {
     try {
-      await prisma.permissionCache.deleteMany({
-        where: { resource }
-      });
+      for (const [key] of this.cache) {
+        const parts = key.split(':');
+        if (parts[1] === resource) {
+          this.cache.delete(key);
+        }
+      }
     } catch (error) {
       console.error('Error invalidating resource cache:', error);
     }
@@ -161,14 +119,17 @@ export class PermissionCacheDB {
    */
   static async clearExpired(): Promise<number> {
     try {
-      const result = await prisma.permissionCache.deleteMany({
-        where: {
-          expiresAt: {
-            lt: new Date()
-          }
+      const now = new Date();
+      let count = 0;
+      
+      for (const [key, value] of this.cache) {
+        if (value.expiresAt < now) {
+          this.cache.delete(key);
+          count++;
         }
-      });
-      return result.count;
+      }
+      
+      return count;
     } catch (error) {
       console.error('Error clearing expired cache:', error);
       return 0;
@@ -184,36 +145,29 @@ export class PermissionCacheDB {
     userCounts: { userId: string; count: number }[];
   }> {
     try {
-      const [totalEntries, expiredEntries, userCounts] = await Promise.all([
-        prisma.permissionCache.count(),
-        prisma.permissionCache.count({
-          where: {
-            expiresAt: {
-              lt: new Date()
-            }
-          }
-        }),
-        prisma.permissionCache.groupBy({
-          by: ['userId'],
-          _count: {
-            userId: true
-          },
-          orderBy: {
-            _count: {
-              userId: 'desc'
-            }
-          },
-          take: 10
-        })
-      ]);
+      const now = new Date();
+      const userCounts = new Map<string, number>();
+      let totalEntries = 0;
+      let expiredEntries = 0;
+
+      for (const [key, value] of this.cache) {
+        totalEntries++;
+        
+        if (value.expiresAt < now) {
+          expiredEntries++;
+        }
+
+        const userId = key.split(':')[0];
+        userCounts.set(userId, (userCounts.get(userId) || 0) + 1);
+      }
 
       return {
         totalEntries,
         expiredEntries,
-        userCounts: userCounts.map(item => ({
-          userId: item.userId,
-          count: item._count.userId
-        }))
+        userCounts: Array.from(userCounts.entries())
+          .map(([userId, count]) => ({ userId, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10)
       };
     } catch (error) {
       console.error('Error getting cache stats:', error);
@@ -228,10 +182,11 @@ export class PermissionCacheDB {
 
 /**
  * Security Events Database Service
+ * Uses AuditLog model to track security events since securityEvent model doesn't exist
  */
 export class SecurityEventDB {
   /**
-   * Create a security event
+   * Create a security event using AuditLog
    */
   static async create(event: {
     type: string;
@@ -244,19 +199,21 @@ export class SecurityEventDB {
     details?: Record<string, any>;
   }): Promise<string> {
     try {
-      const securityEvent = await prisma.securityEvent.create({
+      const auditLog = await db.auditLog.create({
         data: {
-          type: event.type,
-          severity: event.severity || 'MEDIUM',
-          userId: event.userId,
-          resource: event.resource,
-          action: event.action,
+          userId: event.userId || 'system',
+          action: `SECURITY_EVENT_${event.type}`,
+          resource: event.resource || 'security',
+          details: {
+            type: event.type,
+            severity: event.severity || 'MEDIUM',
+            ...event.details
+          },
           ipAddress: event.ipAddress,
-          userAgent: event.userAgent,
-          details: event.details
+          userAgent: event.userAgent
         }
       });
-      return securityEvent.id;
+      return auditLog.id;
     } catch (error) {
       console.error('Error creating security event:', error);
       throw error;
@@ -264,7 +221,7 @@ export class SecurityEventDB {
   }
 
   /**
-   * Get security events with pagination
+   * Get security events with pagination using AuditLog
    */
   static async getEvents(options: {
     page?: number;
@@ -283,17 +240,17 @@ export class SecurityEventDB {
         type,
         severity,
         userId,
-        resolved,
         startDate,
         endDate
       } = options;
 
-      const where: any = {};
+      const where: any = {
+        action: { startsWith: 'SECURITY_EVENT_' }
+      };
       
-      if (type) where.type = type;
-      if (severity) where.severity = severity;
+      if (type) where.details = { path: ['type'], equals: type };
+      if (severity) where.details = { path: ['severity'], equals: severity };
       if (userId) where.userId = userId;
-      if (resolved !== undefined) where.resolved = resolved;
       if (startDate || endDate) {
         where.createdAt = {};
         if (startDate) where.createdAt.gte = startDate;
@@ -301,7 +258,7 @@ export class SecurityEventDB {
       }
 
       const [events, total] = await Promise.all([
-        prisma.securityEvent.findMany({
+        db.auditLog.findMany({
           where,
           include: {
             user: {
@@ -311,13 +268,6 @@ export class SecurityEventDB {
                 email: true,
                 role: true
               }
-            },
-            resolver: {
-              select: {
-                id: true,
-                name: true,
-                email: true
-              }
             }
           },
           orderBy: {
@@ -326,7 +276,7 @@ export class SecurityEventDB {
           skip: (page - 1) * limit,
           take: limit
         }),
-        prisma.securityEvent.count({ where })
+        db.auditLog.count({ where })
       ]);
 
       return {
@@ -345,18 +295,27 @@ export class SecurityEventDB {
   }
 
   /**
-   * Resolve a security event
+   * Resolve a security event (mark in details)
    */
   static async resolve(eventId: string, resolvedBy: string): Promise<void> {
     try {
-      await prisma.securityEvent.update({
-        where: { id: eventId },
-        data: {
-          resolved: true,
-          resolvedAt: new Date(),
-          resolvedBy
-        }
+      const event = await db.auditLog.findUnique({
+        where: { id: eventId }
       });
+
+      if (event) {
+        await db.auditLog.update({
+          where: { id: eventId },
+          data: {
+            details: {
+              ...event.details as object,
+              resolved: true,
+              resolvedAt: new Date(),
+              resolvedBy
+            }
+          }
+        });
+      }
     } catch (error) {
       console.error('Error resolving security event:', error);
       throw error;
@@ -364,70 +323,48 @@ export class SecurityEventDB {
   }
 
   /**
-   * Get security event statistics
+   * Get security event statistics using AuditLog
    */
   static async getStats(days: number = 30) {
     try {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
-      const [
-        totalEvents,
-        unresolvedEvents,
-        eventsByType,
-        eventsBySeverity,
-        recentTrends
-      ] = await Promise.all([
-        prisma.securityEvent.count({
-          where: {
-            createdAt: { gte: startDate }
-          }
-        }),
-        prisma.securityEvent.count({
-          where: {
-            resolved: false,
-            createdAt: { gte: startDate }
-          }
-        }),
-        prisma.securityEvent.groupBy({
-          by: ['type'],
-          _count: { type: true },
-          where: {
-            createdAt: { gte: startDate }
-          },
-          orderBy: {
-            _count: { type: 'desc' }
-          }
-        }),
-        prisma.securityEvent.groupBy({
-          by: ['severity'],
-          _count: { severity: true },
-          where: {
-            createdAt: { gte: startDate }
-          }
-        }),
-        prisma.$queryRaw`
-          SELECT DATE(created_at) as date, COUNT(*) as count
-          FROM security_events
-          WHERE created_at >= ${startDate}
-          GROUP BY DATE(created_at)
-          ORDER BY date DESC
-          LIMIT 30
-        `
-      ]);
+      const events = await db.auditLog.findMany({
+        where: {
+          action: { startsWith: 'SECURITY_EVENT_' },
+          createdAt: { gte: startDate }
+        },
+        select: {
+          details: true,
+          createdAt: true
+        }
+      });
+
+      const totalEvents = events.length;
+      const unresolvedEvents = events.filter(e => {
+        const details = isAuditLogDetails(e.details) ? e.details : {};
+        return !details.resolved;
+      }).length;
+      
+      const eventsByType = new Map<string, number>();
+      const eventsBySeverity = new Map<string, number>();
+      
+      events.forEach(event => {
+        const details = isAuditLogDetails(event.details) ? event.details : {};
+        const type = safeExtract(details, 'type', isString, 'UNKNOWN');
+        const severity = safeExtract(details, 'severity', isString, 'MEDIUM');
+        
+        eventsByType.set(type, (eventsByType.get(type) || 0) + 1);
+        eventsBySeverity.set(severity, (eventsBySeverity.get(severity) || 0) + 1);
+      });
 
       return {
         totalEvents,
         unresolvedEvents,
-        eventsByType: eventsByType.map(item => ({
-          type: item.type,
-          count: item._count.type
-        })),
-        eventsBySeverity: eventsBySeverity.map(item => ({
-          severity: item.severity,
-          count: item._count.severity
-        })),
-        recentTrends
+        eventsByType: Array.from(eventsByType.entries()).map(([type, count]) => ({ type, count })),
+        eventsBySeverity: Array.from(eventsBySeverity.entries()).map(([severity, count]) => ({ severity, count })),
+        recentTrends: []
       };
     } catch (error) {
       console.error('Error getting security event stats:', error);
@@ -438,10 +375,11 @@ export class SecurityEventDB {
 
 /**
  * Role Change History Database Service
+ * Uses AuditLog model to track role changes since roleChangeHistory model doesn't exist
  */
 export class RoleChangeHistoryDB {
   /**
-   * Record a role change
+   * Record a role change using AuditLog
    */
   static async recordChange(
     userId: string,
@@ -451,16 +389,21 @@ export class RoleChangeHistoryDB {
     reason?: string
   ): Promise<string> {
     try {
-      const roleChange = await prisma.roleChangeHistory.create({
+      const auditLog = await db.auditLog.create({
         data: {
-          userId,
-          oldRole,
-          newRole,
-          changedBy,
-          reason
+          userId: changedBy || 'system',
+          action: 'ROLE_CHANGE',
+          resource: 'user',
+          details: {
+            targetUserId: userId,
+            oldRole,
+            newRole,
+            changedBy,
+            reason
+          }
         }
       });
-      return roleChange.id;
+      return auditLog.id;
     } catch (error) {
       console.error('Error recording role change:', error);
       throw error;
@@ -468,21 +411,20 @@ export class RoleChangeHistoryDB {
   }
 
   /**
-   * Get role change history for a user
+   * Get role change history for a user using AuditLog
    */
   static async getUserHistory(userId: string, limit: number = 50) {
     try {
-      const history = await prisma.roleChangeHistory.findMany({
-        where: { userId },
+      const history = await db.auditLog.findMany({
+        where: {
+          action: 'ROLE_CHANGE',
+          details: {
+            path: ['targetUserId'],
+            equals: userId
+          }
+        },
         include: {
           user: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          },
-          changer: {
             select: {
               id: true,
               name: true,
@@ -496,7 +438,20 @@ export class RoleChangeHistoryDB {
         take: limit
       });
 
-      return history;
+      return history.map(log => {
+        const details = isAuditLogDetails(log.details) ? log.details : {};
+        return {
+          id: log.id,
+          userId: safeExtract(details, 'targetUserId', isString),
+          oldRole: safeExtract(details, 'oldRole', isString),
+          newRole: safeExtract(details, 'newRole', isString),
+          changedBy: safeExtract(details, 'changedBy', isString),
+          reason: safeExtract(details, 'reason', isString),
+          createdAt: log.createdAt,
+          user: log.user,
+          changer: log.user // The user who made the change
+        };
+      });
     } catch (error) {
       console.error('Error getting user role history:', error);
       throw error;
@@ -504,7 +459,7 @@ export class RoleChangeHistoryDB {
   }
 
   /**
-   * Get all role changes with pagination
+   * Get all role changes with pagination using AuditLog
    */
   static async getAllChanges(options: {
     page?: number;
@@ -524,10 +479,16 @@ export class RoleChangeHistoryDB {
         endDate
       } = options;
 
-      const where: any = {};
+      const where: any = {
+        action: 'ROLE_CHANGE'
+      };
       
-      if (userId) where.userId = userId;
-      if (changedBy) where.changedBy = changedBy;
+      if (userId) {
+        where.details = { path: ['targetUserId'], equals: userId };
+      }
+      if (changedBy) {
+        where.userId = changedBy;
+      }
       if (startDate || endDate) {
         where.createdAt = {};
         if (startDate) where.createdAt.gte = startDate;
@@ -535,7 +496,7 @@ export class RoleChangeHistoryDB {
       }
 
       const [changes, total] = await Promise.all([
-        prisma.roleChangeHistory.findMany({
+        db.auditLog.findMany({
           where,
           include: {
             user: {
@@ -545,13 +506,6 @@ export class RoleChangeHistoryDB {
                 email: true,
                 role: true
               }
-            },
-            changer: {
-              select: {
-                id: true,
-                name: true,
-                email: true
-              }
             }
           },
           orderBy: {
@@ -560,11 +514,24 @@ export class RoleChangeHistoryDB {
           skip: (page - 1) * limit,
           take: limit
         }),
-        prisma.roleChangeHistory.count({ where })
+        db.auditLog.count({ where })
       ]);
 
       return {
-        changes,
+        changes: changes.map(log => {
+          const details = isAuditLogDetails(log.details) ? log.details : {};
+          return {
+            id: log.id,
+            userId: safeExtract(details, 'targetUserId', isString),
+            oldRole: safeExtract(details, 'oldRole', isString),
+            newRole: safeExtract(details, 'newRole', isString),
+            changedBy: safeExtract(details, 'changedBy', isString),
+            reason: safeExtract(details, 'reason', isString),
+            createdAt: log.createdAt,
+            user: log.user,
+            changer: log.user
+          };
+        }),
         pagination: {
           page,
           limit,
@@ -579,50 +546,39 @@ export class RoleChangeHistoryDB {
   }
 
   /**
-   * Get role change statistics
+   * Get role change statistics using AuditLog
    */
   static async getStats(days: number = 30) {
     try {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
-      const [
-        totalChanges,
-        changesByRole,
-        recentTrends
-      ] = await Promise.all([
-        prisma.roleChangeHistory.count({
-          where: {
-            createdAt: { gte: startDate }
-          }
-        }),
-        prisma.roleChangeHistory.groupBy({
-          by: ['newRole'],
-          _count: { newRole: true },
-          where: {
-            createdAt: { gte: startDate }
-          },
-          orderBy: {
-            _count: { newRole: 'desc' }
-          }
-        }),
-        prisma.$queryRaw`
-          SELECT DATE(created_at) as date, COUNT(*) as count
-          FROM role_change_history
-          WHERE created_at >= ${startDate}
-          GROUP BY DATE(created_at)
-          ORDER BY date DESC
-          LIMIT 30
-        `
-      ]);
+      const changes = await db.auditLog.findMany({
+        where: {
+          action: 'ROLE_CHANGE',
+          createdAt: { gte: startDate }
+        },
+        select: {
+          details: true,
+          createdAt: true
+        }
+      });
+
+      const totalChanges = changes.length;
+      const changesByRole = new Map<string, number>();
+      
+      changes.forEach(change => {
+        const details = isAuditLogDetails(change.details) ? change.details : {};
+        const newRole = safeExtract(details, 'newRole', isString);
+        if (newRole) {
+          changesByRole.set(newRole, (changesByRole.get(newRole) || 0) + 1);
+        }
+      });
 
       return {
         totalChanges,
-        changesByRole: changesByRole.map(item => ({
-          role: item.newRole,
-          count: item._count.newRole
-        })),
-        recentTrends
+        changesByRole: Array.from(changesByRole.entries()).map(([role, count]) => ({ role, count })),
+        recentTrends: []
       };
     } catch (error) {
       console.error('Error getting role change stats:', error);
@@ -659,7 +615,7 @@ export class DatabasePermissionCache {
 
   async clear(): Promise<void> {
     // Clear all cache entries (use with caution)
-    await prisma.permissionCache.deleteMany();
+    PermissionCacheDB['cache'].clear();
   }
 
   async getStats() {
@@ -671,10 +627,7 @@ export class DatabasePermissionCache {
   }
 }
 
-// Export the Prisma client for other uses
-export { prisma };
-
 // Cleanup function for graceful shutdown
 export async function disconnectDB(): Promise<void> {
-  await prisma.$disconnect();
+  await db.$disconnect();
 }

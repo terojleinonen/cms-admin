@@ -1,585 +1,205 @@
-# Testing Infrastructure Fix Design Document
+# Design Document
 
 ## Overview
 
-This design document outlines the systematic approach to fixing the comprehensive testing infrastructure issues in the Kin Workspace CMS. The solution addresses critical failures in test configuration, missing components, incomplete mocks, and database integration issues through a phased implementation strategy that prioritizes infrastructure fixes before component implementation.
+This design addresses the schema drift between the Prisma schema definition and the actual database migrations. The solution involves creating a new migration that adds all missing columns and tables to bring the database in sync with the current schema, ensuring the CI pipeline can successfully seed the database.
 
 ## Architecture
 
-### Testing Architecture Overview
+### Migration Strategy
 
-```mermaid
-graph TB
-    subgraph "Test Execution Layer"
-        A[Jest Test Runner] --> B[Node Environment]
-        A --> C[JSDOM Environment]
-    end
-    
-    subgraph "Test Types"
-        D[Unit Tests] --> E[Mocked Dependencies]
-        F[Integration Tests] --> G[Test Database]
-        H[Component Tests] --> I[React Testing Library]
-        J[E2E Tests] --> K[Full Application]
-    end
-    
-    subgraph "Mock Layer"
-        L[Prisma Mock] --> M[Database Operations]
-        N[NextAuth Mock] --> O[Authentication]
-        P[Service Mocks] --> Q[External Dependencies]
-    end
-    
-    subgraph "Test Database"
-        R[PostgreSQL Test DB] --> S[Isolated Transactions]
-        S --> T[Automatic Cleanup]
-    end
-    
-    B --> D
-    B --> F
-    C --> H
-    C --> J
-    
-    E --> L
-    E --> N
-    E --> P
-    
-    G --> R
-```
+We'll use Prisma's migration system to generate a new migration that captures all schema changes since the initial migration. The approach:
 
-### Test Environment Separation Strategy
+1. **Generate Migration**: Use `prisma migrate dev` to create a new migration file
+2. **Review SQL**: Ensure the generated SQL properly adds all missing fields and tables
+3. **Test Locally**: Verify the migration works on a clean database
+4. **Deploy to CI**: Let the CI pipeline apply the migration automatically
 
-**Unit Tests (Mocked)**
-- Environment: Node.js
-- Database: Fully mocked Prisma client
-- Authentication: Mocked NextAuth sessions
-- External Services: Mocked implementations
-- Execution: Fast, isolated, no external dependencies
+### Schema Changes Required
 
-**Integration Tests (Real Database)**
-- Environment: Node.js
-- Database: Real PostgreSQL test database with transactions
-- Authentication: Real auth flow with test users
-- External Services: Mocked or test implementations
-- Execution: Slower, validates complete workflows
+The migration needs to add the following to the `users` table:
+- `profile_picture` (VARCHAR(500), nullable)
+- `email_verified` (TIMESTAMP, nullable)
+- `two_factor_secret` (VARCHAR(255), nullable)
+- `two_factor_enabled` (BOOLEAN, default false)
+- `last_login_at` (TIMESTAMP, nullable)
 
-**Component Tests (JSDOM)**
-- Environment: JSDOM (browser simulation)
-- Database: Mocked Prisma client
-- Authentication: Mocked sessions
-- External Services: Mocked implementations
-- Execution: Fast, validates UI interactions
+New tables to create:
+- `user_preferences` - User customization settings
+- `audit_logs` - Security and action tracking
+- `sessions` - User session management
+- `backup_codes` - Two-factor authentication backup codes
+- `password_reset_tokens` - Secure password reset flow
+- `notifications` - User notification system
+- `email_logs` - Email delivery tracking
 
-**E2E Tests (Full Application)**
-- Environment: JSDOM with full app context
-- Database: Real test database
-- Authentication: Real auth flow
-- External Services: Real or test implementations
-- Execution: Slowest, validates complete user journeys
+New enums to create:
+- `Theme` (LIGHT, DARK, SYSTEM)
+- `NotificationType` (various notification types)
+- `EmailStatus` (PENDING, SENT, FAILED, BOUNCED)
 
 ## Components and Interfaces
 
-### 1. Test Configuration Layer
+### Migration File Structure
 
-#### Jest Configuration Enhancement
-```typescript
-interface JestConfig {
-  projects: TestProject[]
-  globalSetup: string
-  globalTeardown: string
-  setupFilesAfterEnv: string[]
-  moduleNameMapper: Record<string, string>
-  transformIgnorePatterns: string[]
-  coverageThreshold: CoverageThreshold
-}
+```sql
+-- Add missing enums
+CREATE TYPE "Theme" AS ENUM ('LIGHT', 'DARK', 'SYSTEM');
+CREATE TYPE "NotificationType" AS ENUM (...);
+CREATE TYPE "EmailStatus" AS ENUM ('PENDING', 'SENT', 'FAILED', 'BOUNCED');
 
-interface TestProject {
-  displayName: string
-  testEnvironment: 'node' | 'jsdom'
-  testMatch: string[]
-  setupFilesAfterEnv: string[]
-  moduleNameMapper: Record<string, string>
-}
+-- Add missing columns to users table
+ALTER TABLE "users" ADD COLUMN "profile_picture" VARCHAR(500);
+ALTER TABLE "users" ADD COLUMN "email_verified" TIMESTAMP(3);
+ALTER TABLE "users" ADD COLUMN "two_factor_secret" VARCHAR(255);
+ALTER TABLE "users" ADD COLUMN "two_factor_enabled" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "users" ADD COLUMN "last_login_at" TIMESTAMP(3);
+
+-- Create new tables
+CREATE TABLE "user_preferences" (...);
+CREATE TABLE "audit_logs" (...);
+CREATE TABLE "sessions" (...);
+CREATE TABLE "backup_codes" (...);
+CREATE TABLE "password_reset_tokens" (...);
+CREATE TABLE "notifications" (...);
+CREATE TABLE "email_logs" (...);
+
+-- Add foreign keys and indexes
+ALTER TABLE "user_preferences" ADD CONSTRAINT ...;
+CREATE INDEX ...;
 ```
 
-#### Module Resolution Strategy
-- Fix deprecated `testPathPattern` usage
-- Implement proper path mapping for `@/` imports
-- Configure ES module transformation for NextAuth dependencies
-- Add proper TypeScript compilation for test files
+### Seed Script Compatibility
 
-### 2. Database Testing Layer
-
-#### Mock Database Implementation
-```typescript
-interface MockPrismaClient {
-  user: MockUserOperations
-  product: MockProductOperations
-  category: MockCategoryOperations
-  media: MockMediaOperations
-  // ... other models
-}
-
-interface MockUserOperations {
-  create: jest.MockedFunction<any>
-  findUnique: jest.MockedFunction<any>
-  findMany: jest.MockedFunction<any>
-  update: jest.MockedFunction<any>
-  delete: jest.MockedFunction<any>
-}
-```
-
-#### Test Database Management
-```typescript
-interface TestDatabaseManager {
-  setup(): Promise<void>
-  cleanup(): Promise<void>
-  createTransaction(): Promise<PrismaTransaction>
-  rollbackTransaction(tx: PrismaTransaction): Promise<void>
-  seedTestData(): Promise<TestDataSet>
-}
-
-interface TestDataSet {
-  users: TestUser[]
-  products: TestProduct[]
-  categories: TestCategory[]
-  media: TestMedia[]
-}
-```
-
-### 3. Authentication Mock Layer
-
-#### NextAuth Mock Implementation
-```typescript
-interface MockNextAuth {
-  getServerSession: jest.MockedFunction<any>
-  getSession: jest.MockedFunction<any>
-  signIn: jest.MockedFunction<any>
-  signOut: jest.MockedFunction<any>
-}
-
-interface MockSession {
-  user: {
-    id: string
-    email: string
-    name: string
-    role: UserRole
-  }
-  expires: string
-}
-
-interface AuthTestHelpers {
-  createMockSession(role: UserRole): MockSession
-  mockAuthenticatedRequest(session: MockSession): NextRequest
-  mockUnauthenticatedRequest(): NextRequest
-}
-```
-
-### 4. Missing API Routes Implementation
-
-#### Authentication Routes
-```typescript
-// /api/auth/login/route.ts
-interface LoginRequest {
-  email: string
-  password: string
-}
-
-interface LoginResponse {
-  success: boolean
-  user?: UserProfile
-  token?: string
-  error?: string
-}
-
-// /api/auth/me/route.ts
-interface ProfileResponse {
-  user: UserProfile
-  permissions: string[]
-}
-```
-
-#### Public API Routes
-```typescript
-// /api/public/products/route.ts
-interface PublicProductsResponse {
-  products: PublicProduct[]
-  pagination: PaginationInfo
-  filters: FilterOptions
-}
-
-// /api/public/categories/route.ts
-interface PublicCategoriesResponse {
-  categories: PublicCategory[]
-  hierarchy: CategoryTree
-}
-```
-
-#### Workflow and Analytics Routes
-```typescript
-// /api/workflow/route.ts
-interface WorkflowRequest {
-  contentId: string
-  action: 'submit' | 'approve' | 'reject' | 'publish'
-  comment?: string
-}
-
-// /api/analytics/route.ts
-interface AnalyticsResponse {
-  overview: AnalyticsOverview
-  metrics: AnalyticsMetrics
-  trends: AnalyticsTrends
-}
-```
-
-### 5. Missing Components Implementation
-
-#### Product Components
-```typescript
-// ProductImageGallery Component
-interface ProductImageGalleryProps {
-  images: MediaFile[]
-  onImageSelect: (image: MediaFile) => void
-  onImageReorder: (images: MediaFile[]) => void
-  onImageRemove: (imageId: string) => void
-}
-
-// MediaPicker Component
-interface MediaPickerProps {
-  onSelect: (media: MediaFile[]) => void
-  multiple?: boolean
-  accept?: string[]
-  folder?: string
-}
-```
-
-#### Page Management Components
-```typescript
-// PageList Component
-interface PageListProps {
-  pages: Page[]
-  onEdit: (page: Page) => void
-  onDelete: (pageId: string) => void
-  onStatusChange: (pageId: string, status: PageStatus) => void
-}
-
-// PageForm Component
-interface PageFormProps {
-  page?: Page
-  onSave: (pageData: PageFormData) => void
-  onCancel: () => void
-}
-
-// TemplateSelector Component
-interface TemplateSelectorProps {
-  templates: PageTemplate[]
-  selected?: string
-  onSelect: (templateId: string) => void
-}
-```
-
-#### Media Management Components
-```typescript
-// MediaFolderTree Component
-interface MediaFolderTreeProps {
-  folders: MediaFolder[]
-  selectedFolder?: string
-  onFolderSelect: (folderId: string) => void
-  onFolderCreate: (parentId: string, name: string) => void
-}
-
-// MediaBulkActions Component
-interface MediaBulkActionsProps {
-  selectedMedia: string[]
-  onMove: (folderId: string) => void
-  onDelete: () => void
-  onTag: (tags: string[]) => void
-}
-
-// MediaMetadataEditor Component
-interface MediaMetadataEditorProps {
-  media: MediaFile
-  onSave: (metadata: MediaMetadata) => void
-  onCancel: () => void
-}
-```
-
-### 6. Service Layer Implementation
-
-#### Cache Service Implementation
-```typescript
-interface CacheService {
-  getInstance(config: CacheConfig): CacheService
-  get<T>(key: string): Promise<T | null>
-  set<T>(key: string, value: T, ttl?: number): Promise<void>
-  delete(key: string): Promise<void>
-  clear(): Promise<void>
-  getStats(): CacheStats
-}
-
-interface DatabaseCache {
-  getProducts(params: ProductQueryParams): Promise<ProductsResult>
-  getProduct(id: string): Promise<Product | null>
-  getCategories(params: CategoryQueryParams): Promise<Category[]>
-  invalidateProduct(id: string): Promise<void>
-  invalidateProducts(): Promise<void>
-}
-
-interface ImageCache {
-  cacheImageMetadata(originalPath: string, processedPath: string, metadata: ImageMetadata): Promise<void>
-  getCachedImageMetadata(originalPath: string, options: ImageOptions): Promise<CachedImage | null>
-  invalidateImageCache(path: string): Promise<void>
-}
-```
+The seed script currently creates users with minimal fields. After the migration:
+- Existing seed logic will work without changes
+- Optional fields (two_factor_enabled, etc.) will use default values
+- No changes needed to seed.ts
 
 ## Data Models
 
-### Test Data Models
+### Updated User Model
 
-#### Test User Model
 ```typescript
-interface TestUser {
-  id: string
-  email: string
-  name: string
-  role: UserRole
-  passwordHash: string
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  passwordHash     String
+  name             String
+  role             UserRole  @default(EDITOR)
+  isActive         Boolean   @default(true)
+  profilePicture   String?   // NEW
+  emailVerified    DateTime? // NEW
+  twoFactorSecret  String?   // NEW
+  twoFactorEnabled Boolean   @default(false) // NEW
+  lastLoginAt      DateTime? // NEW
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  
+  // Relations
+  preferences      UserPreferences? // NEW
+  sessions         Session[] // NEW
+  auditLogs        AuditLog[] // NEW
+  backupCodes      BackupCode[] // NEW
+  passwordResetTokens PasswordResetToken[] // NEW
+  notifications    Notification[] // NEW
+  emailLogs        EmailLog[] // NEW
+  // ... existing relations
 }
 ```
 
-#### Test Product Model
-```typescript
-interface TestProduct {
-  id: string
-  name: string
-  slug: string
-  description: string
-  price: number
-  status: ProductStatus
-  categoryIds: string[]
-  mediaIds: string[]
-  createdBy: string
-}
-```
+### New Models
 
-#### Test Session Model
-```typescript
-interface TestSession {
-  user: {
-    id: string
-    email: string
-    name: string
-    role: UserRole
-  }
-  expires: string
-  accessToken?: string
-}
-```
+All new models follow the existing patterns:
+- UUID primary keys
+- Timestamps (createdAt, updatedAt where applicable)
+- Foreign key relationships with cascade deletes where appropriate
+- Indexes on frequently queried fields
 
 ## Error Handling
 
-### Test Error Categories
+### Migration Failures
 
-#### Configuration Errors
-- Jest configuration validation
-- Module resolution failures
-- Environment setup issues
-- Dependency compatibility problems
+If the migration fails:
+1. Prisma will automatically rollback the transaction
+2. CI pipeline will fail with clear error message
+3. Developer can review migration SQL and fix issues
+4. Re-run migration after fixes
 
-#### Database Errors
-- Connection failures
-- Transaction rollback issues
-- Data cleanup failures
-- Unique constraint violations
+### Seed Script Failures
 
-#### Mock Errors
-- Mock setup failures
-- Mock expectation mismatches
-- Mock reset issues
-- Mock data inconsistencies
+Current error handling in seed.ts:
+```typescript
+main()
+  .catch((e) => {
+    console.error('❌ Seeding failed:', e)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
+```
 
-#### Component Errors
-- Rendering failures
-- Event handling issues
-- Props validation errors
-- State management problems
-
-### Error Recovery Strategies
-
-#### Automatic Recovery
-- Database transaction rollback on test failure
-- Mock state reset between tests
-- Temporary file cleanup
-- Connection pool management
-
-#### Manual Recovery
-- Test database recreation
-- Cache invalidation
-- Mock factory reset
-- Component unmounting
+This will continue to work after migration.
 
 ## Testing Strategy
 
-### Test Organization Structure
+### Local Testing
 
-```
-tests/
-├── unit/                    # Unit tests with mocks
-│   ├── lib/                # Library function tests
-│   ├── utils/              # Utility function tests
-│   └── services/           # Service layer tests
-├── integration/            # Integration tests with real DB
-│   ├── api/               # API endpoint tests
-│   ├── auth/              # Authentication flow tests
-│   └── workflows/         # Complete workflow tests
-├── components/            # Component tests with JSDOM
-│   ├── forms/             # Form component tests
-│   ├── tables/            # Table component tests
-│   └── ui/                # UI component tests
-├── e2e/                   # End-to-end tests
-│   ├── admin/             # Admin workflow tests
-│   └── public/            # Public API tests
-├── fixtures/              # Test data fixtures
-├── helpers/               # Test helper functions
-└── setup/                 # Test setup and configuration
+1. Reset local database: `npx prisma migrate reset`
+2. Apply all migrations: `npx prisma migrate deploy`
+3. Run seed script: `npm run db:seed`
+4. Verify all tables and columns exist
+
+### CI Testing
+
+The GitHub Actions workflow already includes:
+```yaml
+- npx prisma generate
+- npx prisma migrate deploy
+- npm run db:seed
 ```
 
-### Test Execution Strategy
+After the migration is committed, the CI pipeline should:
+1. Generate Prisma Client with new schema
+2. Apply all migrations including the new one
+3. Successfully seed the database
+4. Run tests against the seeded database
 
-#### Phase 1: Unit Tests
-- Execute fastest tests first
-- Use mocked dependencies
-- Validate individual function behavior
-- Target: <30 seconds execution time
+### Verification Steps
 
-#### Phase 2: Component Tests
-- Test UI component behavior
-- Validate user interactions
-- Test component integration
-- Target: <60 seconds execution time
+1. Check that users table has all new columns
+2. Verify new tables exist with correct structure
+3. Confirm foreign keys are properly set up
+4. Ensure indexes are created
+5. Validate that seed script completes successfully
 
-#### Phase 3: Integration Tests
-- Test API endpoints with real database
-- Validate complete workflows
-- Test data persistence
-- Target: <120 seconds execution time
+## Implementation Notes
 
-#### Phase 4: E2E Tests
-- Test complete user journeys
-- Validate cross-component interactions
-- Test authentication flows
-- Target: <180 seconds execution time
+### Migration Generation
 
-### Coverage Strategy
+To generate the migration locally:
+```bash
+npx prisma migrate dev --name add_auth_and_user_features
+```
 
-#### Coverage Targets
-- **Branches**: 80% minimum
-- **Functions**: 80% minimum
-- **Lines**: 80% minimum
-- **Statements**: 80% minimum
+This will:
+- Compare schema.prisma with current database state
+- Generate SQL to add missing elements
+- Create a new migration file in prisma/migrations/
+- Apply the migration to the local database
 
-#### Coverage Exclusions
-- Layout components (`layout.tsx`)
-- Page components (`page.tsx`)
-- Type definition files (`*.d.ts`)
-- Configuration files
-- Test files themselves
+### Backward Compatibility
 
-#### Coverage Reporting
-- Generate HTML coverage reports
-- Export LCOV format for CI integration
-- Track coverage trends over time
-- Fail builds on coverage regression
+The migration is backward compatible:
+- All new columns are nullable or have defaults
+- Existing data is preserved
+- No breaking changes to existing queries
+- Seed script works with or without new fields populated
 
-## Implementation Phases
+### Foreign Key Constraints
 
-### Phase 1: Infrastructure Foundation (Priority 1)
-1. **Jest Configuration Fix**
-   - Update deprecated options
-   - Fix module resolution
-   - Configure test environments
-   - Add missing dependencies
-
-2. **Database Mock Implementation**
-   - Create comprehensive Prisma mocks
-   - Implement mock reset functionality
-   - Add mock data factories
-   - Configure test database isolation
-
-3. **Authentication Mock Setup**
-   - Mock NextAuth functionality
-   - Create session test helpers
-   - Fix ES module compatibility
-   - Implement role-based testing
-
-### Phase 2: Missing Implementation (Priority 2)
-1. **API Routes Creation**
-   - Implement authentication routes
-   - Create public API endpoints
-   - Add workflow management routes
-   - Build analytics endpoints
-
-2. **Component Implementation**
-   - Create product management components
-   - Build page management components
-   - Implement media management components
-   - Add shared utility components
-
-3. **Service Layer Completion**
-   - Implement cache services
-   - Complete search service
-   - Add image processing services
-   - Create database utilities
-
-### Phase 3: Test Enhancement (Priority 3)
-1. **Test Quality Improvement**
-   - Fix failing assertions
-   - Improve test descriptions
-   - Add edge case coverage
-   - Enhance error testing
-
-2. **Integration Test Fixes**
-   - Fix database cleanup issues
-   - Improve test isolation
-   - Add transaction management
-   - Enhance data seeding
-
-3. **Performance Optimization**
-   - Optimize test execution speed
-   - Improve parallel test execution
-   - Reduce test dependencies
-   - Enhance mock performance
-
-### Phase 4: CI/CD Integration (Priority 4)
-1. **Continuous Integration Setup**
-   - Configure GitHub Actions
-   - Add automated test execution
-   - Implement coverage reporting
-   - Set up failure notifications
-
-2. **Quality Gates**
-   - Require tests to pass for deployment
-   - Enforce coverage thresholds
-   - Add performance benchmarks
-   - Implement security scanning
-
-## Success Metrics
-
-### Immediate Success Criteria
-- ✅ All 427+ tests execute without configuration errors
-- ✅ Zero test failures due to missing dependencies
-- ✅ Proper separation of unit vs integration tests
-- ✅ All mocks function correctly without real dependencies
-
-### Quality Success Criteria
-- ✅ 80%+ test coverage across all metrics
-- ✅ Tests execute in under 5 minutes total
-- ✅ Zero flaky or inconsistent test results
-- ✅ Comprehensive error handling and edge case coverage
-
-### Long-term Success Criteria
-- ✅ CI/CD pipeline integration with automated testing
-- ✅ Developer productivity improvement through reliable tests
-- ✅ Regression prevention through comprehensive coverage
-- ✅ Maintainable test suite with clear documentation
+All new tables with foreign keys to users:
+- Use `onDelete: Cascade` for dependent data (sessions, backup codes)
+- Use `onDelete: SetNull` for audit trails (created_by references)
+- Ensures data integrity while preserving audit history

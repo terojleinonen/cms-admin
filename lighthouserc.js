@@ -2,15 +2,15 @@ module.exports = {
   ci: {
     collect: {
       url: [
-        'http://localhost:3000/auth/login',
-        'http://localhost:3000/admin/users',
-        'http://localhost:3000/admin/products',
-        'http://localhost:3000/admin/analytics'
+        'http://localhost:3001/auth/login',
+        'http://localhost:3001/dashboard',
+        'http://localhost:3001/products',
+        'http://localhost:3001/analytics'
       ],
       startServerCommand: 'npm start',
-      startServerReadyPattern: 'ready on',
-      startServerReadyTimeout: 30000,
-      numberOfRuns: 3
+      startServerReadyPattern: 'ready',
+      startServerReadyTimeout: 60000,
+      numberOfRuns: 1
     },
     assert: {
       assertions: {

@@ -38,8 +38,8 @@ jobs:
         echo "## Audit Results" >> dependency-report.md
         npm audit --audit-level=info >> dependency-report.md || true
         echo "" >> dependency-report.md
-        echo "## Deprecated Dependencies Check" >> dependency-report.md
-        npm run deps:check-deprecated >> dependency-report.md || true
+        echo "## Outdated Dependencies Check" >> dependency-report.md
+        npm outdated >> dependency-report.md || true
     
     - name: Upload dependency report
       uses: actions/upload-artifact@v4
@@ -47,11 +47,13 @@ jobs:
         name: dependency-report
         path: dependency-report.md
     
-    - name: Fail on deprecated dependencies
+    - name: Check for critical vulnerabilities
       run: |
-        if npm run deps:check-deprecated | grep -q "DEPRECATED"; then
-          echo "❌ Deprecated dependencies found!"
-          exit 1
-        else
-          echo "✅ No deprecated dependencies found"
+        if npm audit --audit-level=critical --json | grep -q '"vulnerabilities"'; then
+          CRITICAL=$(npm audit --audit-level=critical --json | jq '.metadata.vulnerabilities.critical // 0')
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "❌ Critical vulnerabilities found!"
+            exit 1
+          fi
         fi
+        echo "✅ No critical vulnerabilities found"

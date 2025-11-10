@@ -219,7 +219,7 @@ jobs:
           npm audit --audit-level=moderate || true
 
       - name: Run Snyk security scan
-        if: ${{ secrets.SNYK_TOKEN != '' }}
+        if: ${{ env.SNYK_TOKEN != '' }}
         run: |
           npx snyk test --json > snyk-results.json || true
           npx snyk test

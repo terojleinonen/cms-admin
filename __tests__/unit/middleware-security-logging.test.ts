@@ -22,11 +22,11 @@ jest.mock('next-auth/jwt', () => ({
   getToken: jest.fn()
 }))
 
-jest.mock('../app/lib/preferences-middleware', () => ({
+jest.mock('@/lib/preferences-middleware', () => ({
   applyUserPreferences: jest.fn((req, res) => res)
 }))
 
-jest.mock('../app/lib/route-permissions', () => ({
+jest.mock('@/lib/route-permissions', () => ({
   routePermissionResolver: {
     getRoutePermissions: jest.fn(() => []),
     isPublicRoute: jest.fn(() => false),
@@ -34,7 +34,7 @@ jest.mock('../app/lib/route-permissions', () => ({
   }
 }))
 
-jest.mock('../app/lib/rate-limit', () => ({
+jest.mock('@/lib/rate-limit', () => ({
   rateLimit: jest.fn(() => Promise.resolve({
     success: true,
     limit: 100,

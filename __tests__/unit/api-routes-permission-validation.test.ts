@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { UserRole } from '@prisma/client'
-import { ApiPermissionMiddleware, withApiPermissions } from '../app/lib/api-permission-middleware'
+import { ApiPermissionMiddleware, withApiPermissions } from '@/lib/api-permission-middleware'
 import { getToken } from 'next-auth/jwt'
 
 // Mock dependencies
@@ -14,7 +14,7 @@ jest.mock('next-auth/jwt', () => ({
   getToken: jest.fn()
 }))
 
-jest.mock('../app/lib/permissions', () => ({
+jest.mock('@/lib/permissions', () => ({
   PermissionService: jest.fn().mockImplementation(() => ({
     hasPermission: jest.fn(),
     hasResourceAccess: jest.fn(),
@@ -22,7 +22,7 @@ jest.mock('../app/lib/permissions', () => ({
   }))
 }))
 
-jest.mock('../app/lib/route-permissions', () => ({
+jest.mock('@/lib/route-permissions', () => ({
   RoutePermissionResolver: jest.fn().mockImplementation(() => ({
     getRoutePermissions: jest.fn().mockReturnValue([]),
     isPublicRoute: jest.fn().mockReturnValue(false)
@@ -30,7 +30,7 @@ jest.mock('../app/lib/route-permissions', () => ({
   ROUTE_PERMISSION_MAPPINGS: []
 }))
 
-jest.mock('../app/lib/audit-service', () => ({
+jest.mock('@/lib/audit-service', () => ({
   auditService: {
     logAction: jest.fn(),
     logSecurityEvent: jest.fn()

@@ -12,11 +12,11 @@ jest.mock('next-auth/jwt', () => ({
 }))
 
 // Mock middleware dependencies
-jest.mock('../app/lib/preferences-middleware', () => ({
+jest.mock('@/lib/preferences-middleware', () => ({
   applyUserPreferences: jest.fn((req, res) => res),
 }))
 
-jest.mock('../app/lib/rate-limit', () => ({
+jest.mock('@/lib/rate-limit', () => ({
   rateLimit: jest.fn().mockResolvedValue({ success: true }),
   rateLimitConfigs: {
     auth: { windowMs: 900000, max: 5 },

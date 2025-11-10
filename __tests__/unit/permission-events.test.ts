@@ -1,6 +1,7 @@
 /**
  * Permission Events Tests
  * Tests for permission event broadcasting and real-time updates
+ * @jest-environment jsdom
  */
 
 import { 

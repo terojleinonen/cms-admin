@@ -631,3 +631,21 @@ export class DatabasePermissionCache {
 export async function disconnectDB(): Promise<void> {
   await db.$disconnect();
 }
+
+/*
+*
+ * Set custom Prisma client (for testing)
+ */
+let customPrismaClient: any = null;
+
+export function setPrismaClient(client: any): void {
+  customPrismaClient = client;
+}
+
+export function getPrismaClient(): any {
+  return customPrismaClient || db;
+}
+
+export function resetPrismaClient(): void {
+  customPrismaClient = null;
+}

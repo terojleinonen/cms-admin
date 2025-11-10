@@ -4,11 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals'
-import { ProductionHealthMonitor } from '../../app/lib/production-health-monitor'
-import { BackupRecoverySystem } from '../../app/lib/backup-recovery-system'
-import { MaintenanceProcedures } from '../../app/lib/maintenance-procedures'
 
-// Mock Prisma
+// Mock Prisma BEFORE importing modules that use it
 const mockPrisma = {
   $queryRaw: jest.fn(),
   $executeRaw: jest.fn(),
@@ -38,6 +35,11 @@ const mockPrisma = {
 jest.mock('@prisma/client', () => ({
   PrismaClient: jest.fn(() => mockPrisma)
 }))
+
+// Import AFTER mocking
+import { ProductionHealthMonitor } from '../../app/lib/production-health-monitor'
+import { BackupRecoverySystem } from '../../app/lib/backup-recovery-system'
+import { MaintenanceProcedures } from '../../app/lib/maintenance-procedures'
 
 describe('ProductionHealthMonitor', () => {
   let healthMonitor: ProductionHealthMonitor

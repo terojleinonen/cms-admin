@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UserRole } from '@prisma/client'
 import { getToken } from 'next-auth/jwt'
-import { middleware } from '../middleware'
+import { middleware } from '../../middleware'
 import { ApiPermissionMiddleware } from '@/lib/api-permission-middleware'
 
 // Mock dependencies
@@ -15,11 +15,11 @@ jest.mock('next-auth/jwt', () => ({
   getToken: jest.fn(),
 }))
 
-jest.mock('../app/lib/preferences-middleware', () => ({
+jest.mock('@/lib/preferences-middleware', () => ({
   applyUserPreferences: jest.fn((req, res) => res),
 }))
 
-jest.mock('../app/lib/rate-limit', () => ({
+jest.mock('@/lib/rate-limit', () => ({
   rateLimit: jest.fn(),
   rateLimitConfigs: {
     auth: { windowMs: 900000, max: 5 },
@@ -30,7 +30,7 @@ jest.mock('../app/lib/rate-limit', () => ({
 }))
 
 const mockGetToken = getToken as jest.MockedFunction<typeof getToken>
-const mockRateLimit = require('../app/lib/rate-limit').rateLimit
+const mockRateLimit = require('@/lib/rate-limit').rateLimit
 
 describe('Comprehensive Security Scenarios Tests', () => {
   let consoleLogSpy: jest.SpyInstance

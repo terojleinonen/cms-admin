@@ -33,7 +33,7 @@ export const GET = withApiPermissions(
     const userId = params.id
     
     // Check if user can access this resource
-    if (session.user.id !== userId && session.user.role !== 'ADMIN') {
+    if (user?.id || '' !== userId && user?.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -67,18 +67,18 @@ export const GET = withApiPermissions(
       remainingBackupCodes = await getRemainingBackupCodes(userId)
     }
     
-    const isRequired = await isTwoFactorRequired(user.role)
+    const isRequired = await isTwoFactorRequired(user?.role)
     
     return NextResponse.json({
       enabled: user.twoFactorEnabled,
       required: isRequired,
-      canDisable: !isRequired || session.user.role === 'ADMIN',
+      canDisable: !isRequired || user?.role === 'ADMIN',
       remainingBackupCodes,
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
+        id: user?.id || '',
+        email: user?.email || '',
+        name: user?.name || '',
+        role: user?.role
       }
     })
     

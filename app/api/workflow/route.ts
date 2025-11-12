@@ -39,7 +39,7 @@ export const POST = withApiPermissions(
     const validatedData = workflowActionSchema.parse(body);
 
     // Check user permissions for workflow actions
-    if (!user.role || !['ADMIN', 'EDITOR'].includes(user.role)) {
+    if (!user?.role || !['ADMIN', 'EDITOR'].includes(user?.role)) {
       return NextResponse.json(
         { error: 'Insufficient permissions for workflow actions' },
         { status: 403 }
@@ -51,7 +51,7 @@ export const POST = withApiPermissions(
       contentType: validatedData.contentType,
       contentId: validatedData.contentId,
       action: validatedData.action,
-      userId: session.user.id,
+      userId: user?.id || '',
       comment: validatedData.comment,
       scheduledFor: validatedData.scheduledFor ? new Date(validatedData.scheduledFor) : undefined
     };
@@ -183,7 +183,7 @@ export const PUT = withApiPermissions(
     }
 
     // Check user permissions for bulk workflow actions
-    if (!user.role || !['ADMIN', 'EDITOR'].includes(user.role)) {
+    if (!user?.role || !['ADMIN', 'EDITOR'].includes(user?.role)) {
       return NextResponse.json(
         { error: 'Insufficient permissions for bulk workflow actions' },
         { status: 403 }
@@ -207,7 +207,7 @@ export const PUT = withApiPermissions(
           contentType: validatedData.contentType,
           contentId,
           action: validatedData.action,
-          userId: session.user.id,
+          userId: user?.id || '',
           comment: validatedData.comment
         };
         return WorkflowService.executeWorkflowAction(workflowAction);

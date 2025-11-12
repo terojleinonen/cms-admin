@@ -93,7 +93,7 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    const { slug } = params
+    const { slug } = await params || {}
     const { searchParams } = new URL(request.url)
     
     // Validate query parameters

@@ -26,8 +26,8 @@ async function requireAvatarAccess(userId: string) {
     )
   }
 
-  const isOwnProfile = session.user.id === userId
-  const isAdmin = session.user.role === UserRole.ADMIN
+  const isOwnProfile = user?.id || '' === userId
+  const isAdmin = user?.role === UserRole.ADMIN
 
   if (!isAdmin && !isOwnProfile) {
     return NextResponse.json(
@@ -222,7 +222,7 @@ export const DELETE = withApiPermissions(
       message: 'Profile picture removed successfully',
       defaultAvatar: {
         url: profilePictureService.getDefaultAvatarUrl(),
-        initials: profilePictureService.generateInitials(user.name),
+        initials: profilePictureService.generateInitials(user?.name || ''),
         backgroundColor: profilePictureService.generateAvatarColor(resolvedParams.id),
       }
     })
@@ -287,7 +287,7 @@ export const GET = withApiPermissions(
         hasAvatar: false,
         defaultAvatar: {
           url: profilePictureService.getDefaultAvatarUrl(),
-          initials: profilePictureService.generateInitials(user.name),
+          initials: profilePictureService.generateInitials(user?.name || ''),
           backgroundColor: profilePictureService.generateAvatarColor(resolvedParams.id),
         }
       })

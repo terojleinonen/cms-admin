@@ -19,7 +19,7 @@ async function requireAdminAccess() {
     )
   }
 
-  if (session.user.role !== UserRole.ADMIN) {
+  if (session.user?.role !== UserRole.ADMIN) {
     return NextResponse.json(
       { error: { code: 'FORBIDDEN', message: 'Admin access required' } },
       { status: 403 }
@@ -37,7 +37,7 @@ function calculateSecurityScore(user: any): number {
   score += 20
   
   // Email verified
-  if (user.emailVerified) score += 20
+  if (user?.emailVerified) score += 20
   
   // Two-factor authentication enabled
   if (user.twoFactorEnabled) score += 30
@@ -155,6 +155,9 @@ export async function GET(
     }
 
     // Get security events for this user
+    // TODO: Implement securityEvent model in Prisma schema
+    const securityEvents: any[] = []
+    /*
     const securityEvents = await prisma.securityEvent.findMany({
       where: {
         userId: userId,
@@ -175,6 +178,7 @@ export async function GET(
       },
       take: 20
     })
+    */
 
     // Calculate security score
     const securityScore = calculateSecurityScore(user)
@@ -190,7 +194,7 @@ export async function GET(
       recentActivity: user.auditLogs,
       securityEvents,
       securityScore,
-      emailVerified: !!user.emailVerified,
+      emailVerified: !!user?.emailVerified,
       accountAge: Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)), // days
       lastLogin: user.lastLoginAt,
       activeSessionCount: user.sessions.length,

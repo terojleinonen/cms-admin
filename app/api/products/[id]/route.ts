@@ -55,7 +55,7 @@ export const GET = withApiPermissions(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params || {}
 
     const product = await prisma.product.findUnique({
       where: { id },
@@ -124,7 +124,7 @@ export const PUT = withApiPermissions(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params || {}
     const body = await request.json()
     const validatedData = updateProductSchema.parse(body)
 
@@ -306,7 +306,7 @@ export const DELETE = withApiPermissions(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params || {}
 
     // Check if product exists
     const product = await prisma.product.findUnique({

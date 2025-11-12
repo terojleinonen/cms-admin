@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { ComplianceService } from '@/lib/compliance-service'
 import { prisma as db } from '@/lib/db'
-import { hasPermission } from '@/lib/permissions'
+import { hasPermission } from '@/lib/has-permission'
 
 const complianceService = new ComplianceService(db)
 
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check admin permissions for compliance reports
-    if (!await hasPermission(session.user, 'system', 'manage')) {
+    if (!hasPermission({ ...session.user, isActive: true }, 'system:manage')) {
       return NextResponse.json(
         { error: 'Insufficient permissions for compliance reports' },
         { status: 403 }
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check admin permissions for compliance exports
-    if (!await hasPermission(session.user, 'system', 'manage')) {
+    if (!hasPermission({ ...session.user, isActive: true }, 'system:manage')) {
       return NextResponse.json(
         { error: 'Insufficient permissions for compliance exports' },
         { status: 403 }
@@ -160,9 +160,9 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || 'unknown'
 
     // This would be logged via the audit service
-    // await auditService.logSecurity(session.user.id, 'DATA_EXPORT', { ... })
+    // await auditService.logSecurity(user?.id || '', 'DATA_EXPORT', { ... })
 
-    return new NextResponse(exportResult.data, {
+    return new NextResponse(exportResult.data as any, {
       headers: {
         'Content-Type': exportResult.contentType,
         'Content-Disposition': `attachment; filename="${exportResult.filename}"`,

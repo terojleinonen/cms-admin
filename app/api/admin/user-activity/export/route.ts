@@ -71,7 +71,7 @@ export const POST = withApiPermissions(
       // Log the export action
       await prisma.auditLog.create({
         data: {
-          userId: user.id,
+          userId: user?.id || '',
           action: 'data.export',
           resource: 'user_activity',
           details: {
@@ -79,7 +79,7 @@ export const POST = withApiPermissions(
             format,
             timeRange,
             recordCount: Array.isArray(exportData) ? exportData.length : 1,
-            exportedBy: user.name || user.email,
+            exportedBy: user?.name || '' || user?.email || '',
           },
           ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
           userAgent: request.headers.get('user-agent') || 'unknown',
@@ -299,10 +299,10 @@ async function exportBehavior(startDate: Date, endDate: Date, userId?: string) {
                        riskScore >= 30 ? 'medium' : 'low'
 
       return {
-        userId: user.id,
-        userName: user.name || 'Unknown',
-        userEmail: user.email || 'Unknown',
-        userRole: user.role,
+        userId: user?.id || '',
+        userName: user?.name || '' || 'Unknown',
+        userEmail: user?.email || '' || 'Unknown',
+        userRole: user?.role,
         totalActions: activity._count.id,
         loginCount,
         failedLoginCount,

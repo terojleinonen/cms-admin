@@ -33,8 +33,8 @@ async function requireUserAccess(userId: string, requireAdmin = false) {
     )
   }
 
-  const isOwnProfile = session.user.id === userId
-  const isAdmin = session.user.role === UserRole.ADMIN
+  const isOwnProfile = user?.id || '' === userId
+  const isAdmin = user?.role === UserRole.ADMIN
 
   if (requireAdmin && !isAdmin) {
     return NextResponse.json(
@@ -103,7 +103,7 @@ export const GET = withApiPermissions(
 
     // Generate profile picture URL if user has one
     const profilePictureUrl = user.profilePicture 
-      ? profilePictureService.getProfilePictureUrl(user.id, 'medium')
+      ? profilePictureService.getProfilePictureUrl(user?.id || '', 'medium')
       : null
 
     return NextResponse.json({ 
@@ -224,7 +224,7 @@ export const PUT = withApiPermissions(
 
     // Generate profile picture URL if user has one
     const profilePictureUrl = user.profilePicture 
-      ? profilePictureService.getProfilePictureUrl(user.id, 'medium')
+      ? profilePictureService.getProfilePictureUrl(user?.id || '', 'medium')
       : null
 
     return NextResponse.json({ 

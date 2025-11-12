@@ -22,7 +22,7 @@ const updateApiKeySchema = z.object({
 export const GET = withApiPermissions(
   async (request: NextRequest, { user, params }) => {
     try {
-      const { id } = params || {};
+      const { id } = await params || {};
     const apiKey = await prisma.apiKey.findUnique({
       where: { id },
       select: {
@@ -66,7 +66,7 @@ export const GET = withApiPermissions(
 export const PUT = withApiPermissions(
   async (request: NextRequest, { user, params }) => {
     try {
-      const { id } = params || {};
+      const { id } = await params || {};
     const body = await request.json();
     const validatedData = updateApiKeySchema.parse(body);
 
@@ -131,7 +131,7 @@ export const PUT = withApiPermissions(
 export const DELETE = withApiPermissions(
   async (request: NextRequest, { user, params }) => {
     try {
-      const { id } = params || {};
+      const { id } = await params || {};
     // Check if API key exists
     const existingKey = await prisma.apiKey.findUnique({
       where: { id }

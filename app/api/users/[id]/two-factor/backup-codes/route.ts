@@ -35,7 +35,7 @@ export const GET = withApiPermissions(
     const userId = params.id
     
     // Check if user can access this resource
-    if (session.user.id !== userId && session.user.role !== 'ADMIN') {
+    if (user?.id || '' !== userId && user?.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -106,7 +106,7 @@ export const POST = withApiPermissions(
     const userId = params.id
     
     // Check if user can access this resource
-    if (session.user.id !== userId && session.user.role !== 'ADMIN') {
+    if (user?.id || '' !== userId && user?.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -152,12 +152,12 @@ export const POST = withApiPermissions(
     // Verify 2FA token
     if (!verifyTwoFactorToken(token, user.twoFactorSecret)) {
       await auditLog({
-        userId: session.user.id,
+        userId: user?.id || '',
         action: 'BACKUP_CODES_REGENERATE_FAILED',
         resource: 'USER_SECURITY',
         details: {
           targetUserId: userId,
-          userEmail: user.email,
+          userEmail: user?.email || '',
           reason: 'Invalid 2FA token'
         },
         request
@@ -174,12 +174,12 @@ export const POST = withApiPermissions(
     
     // Log backup codes regeneration
     await auditLog({
-      userId: session.user.id,
+      userId: user?.id || '',
       action: 'BACKUP_CODES_REGENERATED',
       resource: 'USER_SECURITY',
       details: {
         targetUserId: userId,
-        userEmail: user.email,
+        userEmail: user?.email || '',
         codesCount: newBackupCodes.length
       },
       request

@@ -34,8 +34,8 @@ export const GET = withApiPermissions(
     }
 
     const userId = params.id
-    const currentUserId = session.user.id
-    const userRole = session.user.role
+    const currentUserId = user?.id || ''
+    const userRole = user?.role
 
     // Only admins can view security monitoring for other users
     if (userId !== currentUserId && userRole !== 'ADMIN') {
@@ -97,9 +97,9 @@ export const GET = withApiPermissions(
 
     return NextResponse.json({
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
+        id: user?.id || '',
+        email: user?.email || '',
+        name: user?.name || '',
         isActive: user.isActive,
         lastLoginAt: user.lastLoginAt,
         twoFactorEnabled: user.twoFactorEnabled
@@ -138,7 +138,7 @@ export const POST = withApiPermissions(
   async (request: NextRequest, { user, params }) => {
     
   try {
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -168,7 +168,7 @@ export const POST = withApiPermissions(
         )
 
         await auditLog({
-          userId: session.user.id,
+          userId: user?.id || '',
           action: 'ADMIN_ACCOUNT_LOCKED',
           resource: 'USER_ACCOUNT',
           details: { 
@@ -192,7 +192,7 @@ export const POST = withApiPermissions(
         })
 
         await auditLog({
-          userId: session.user.id,
+          userId: user?.id || '',
           action: 'ADMIN_ACCOUNT_UNLOCKED',
           resource: 'USER_ACCOUNT',
           details: { 
@@ -215,7 +215,7 @@ export const POST = withApiPermissions(
         })
 
         await auditLog({
-          userId: session.user.id,
+          userId: user?.id || '',
           action: 'ADMIN_FORCE_LOGOUT',
           resource: 'USER_SESSION',
           details: { 

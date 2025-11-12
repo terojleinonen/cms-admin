@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
+import { auth } from '@/auth'
 
 // Check if user has admin permissions
 async function requireAdminAccess() {
@@ -19,7 +20,7 @@ async function requireAdminAccess() {
     )
   }
 
-  if (session.user.role !== UserRole.ADMIN) {
+  if (session.user?.role !== UserRole.ADMIN) {
     return NextResponse.json(
       { error: { code: 'FORBIDDEN', message: 'Admin access required' } },
       { status: 403 }
@@ -31,15 +32,15 @@ async function requireAdminAccess() {
 
 // GET /api/admin/users/[id] - Get detailed user information
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
     const authError = await requireAdminAccess()
     if (authError) return authError
 
-    const userId = params.id
+    const { id: userId } = await params || {}
 
-    const user = await prisma.user.findUnique({
+    const targetUser = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -84,14 +85,14 @@ export const GET = withApiPermissions(
       }
     })
 
-    if (!user) {
+    if (!targetUser) {
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: 'User not found' } },
         { status: 404 }
       )
     }
 
-    return createApiSuccessResponse( user )
+    return createApiSuccessResponse( targetUser )
 
   } catch (error) {
     console.error('Error fetching user details:', error)
@@ -109,16 +110,16 @@ export const GET = withApiPermissions(
 
 // DELETE /api/admin/users/[id] - Delete user
 export const DELETE = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     
   try {
     const authError = await requireAdminAccess()
     if (authError) return authError
 
-    const userId = params.id
+    const { id: userId } = await params || {}
 
     // Prevent admin from deleting themselves
-    if (session?.user?.id === userId) {
+    if ((user?.id || '') === userId) {
       return NextResponse.json(
         { error: { code: 'FORBIDDEN', message: 'Cannot delete your own account' } },
         { status: 403 }
@@ -126,7 +127,7 @@ export const DELETE = withApiPermissions(
     }
 
     // Check if user exists
-    const user = await prisma.user.findUnique({
+    const targetUser = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -136,7 +137,7 @@ export const DELETE = withApiPermissions(
       }
     })
 
-    if (!user) {
+    if (!targetUser) {
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: 'User not found' } },
         { status: 404 }
@@ -152,15 +153,15 @@ export const DELETE = withApiPermissions(
     // Create audit log for user deletion
     await prisma.auditLog.create({
       data: {
-        userId: session?.user?.id || 'system',
+        userId: user?.id || 'system',
         action: 'USER_DELETED',
         resource: 'user',
         details: {
           deletedUser: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
+            id: targetUser.id,
+            name: targetUser.name,
+            email: targetUser.email,
+            role: targetUser.role,
           },
           deletedAt: new Date(),
         },

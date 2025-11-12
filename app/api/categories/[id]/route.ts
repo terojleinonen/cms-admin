@@ -30,7 +30,7 @@ export const GET = withApiPermissions(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params || {}
     const category = await prisma.category.findUnique({
       where: { id },
       include: {
@@ -89,7 +89,7 @@ export const PUT = withApiPermissions(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params || {}
     const body = await request.json()
     const validatedData = updateCategorySchema.parse(body)
 
@@ -213,7 +213,7 @@ export const DELETE = withApiPermissions(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params || {}
     // Check if category exists
     const category = await prisma.category.findUnique({
       where: { id },

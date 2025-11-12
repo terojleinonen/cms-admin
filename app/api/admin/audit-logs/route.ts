@@ -61,8 +61,8 @@ export const GET = withApiPermissions(
       filteredLogs = result.logs.filter(log => 
         log.action.toLowerCase().includes(searchTerm) ||
         log.resource.toLowerCase().includes(searchTerm) ||
-        log.user.name.toLowerCase().includes(searchTerm) ||
-        log.user.email.toLowerCase().includes(searchTerm) ||
+        log.user?.name || ''.toLowerCase().includes(searchTerm) ||
+        log.user?.email || ''.toLowerCase().includes(searchTerm) ||
         (log.details && JSON.stringify(log.details).toLowerCase().includes(searchTerm))
       )
     }
@@ -130,7 +130,7 @@ export const POST = withApiPermissions(
 
     // Log the export action
     await auditService.logSecurity(
-      session.user.id,
+      user?.id || '',
       'DATA_EXPORT',
       {
         exportType: 'audit_logs',

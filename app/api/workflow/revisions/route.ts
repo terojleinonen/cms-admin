@@ -124,7 +124,7 @@ export const POST = withApiPermissions(
     }
 
     // Check user permissions
-    if (!user.role || !['ADMIN', 'EDITOR'].includes(user.role)) {
+    if (!user?.role || !['ADMIN', 'EDITOR'].includes(user?.role)) {
       return NextResponse.json(
         { error: 'Insufficient permissions for revision management' },
         { status: 403 }
@@ -179,7 +179,7 @@ export const POST = withApiPermissions(
           comment: validatedData.comment,
           manualRevision: true
         },
-        createdBy: session.user.id
+        createdBy: user?.id || ''
       },
       include: {
         creator: {
@@ -225,7 +225,7 @@ export const DELETE = withApiPermissions(
     }
 
     // Only admins can delete revisions
-    if (user.role !== 'ADMIN') {
+    if (user?.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Only administrators can delete revisions' },
         { status: 403 }

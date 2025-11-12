@@ -35,7 +35,7 @@ export const GET = withApiPermissions(
     const userId = params.id
     
     // Check if user can access this resource
-    if (session.user.id !== userId && session.user.role !== 'ADMIN') {
+    if (user?.id || '' !== userId && user?.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -70,16 +70,16 @@ export const GET = withApiPermissions(
     }
     
     // Generate 2FA setup data
-    const setupData = await generateTwoFactorSetup(user.id, user.email)
+    const setupData = await generateTwoFactorSetup(user?.id || '', user?.email || '')
     
     // Log the setup initiation
     await auditLog({
-      userId: session.user.id,
+      userId: user?.id || '',
       action: '2FA_SETUP_INITIATED',
       resource: 'USER_SECURITY',
       details: {
         targetUserId: userId,
-        userEmail: user.email
+        userEmail: user?.email || ''
       },
       request
     })
@@ -89,7 +89,7 @@ export const GET = withApiPermissions(
       otpauth: setupData.otpauth,
       backupCodes: setupData.backupCodes,
       setupInstructions: setupData.setupInstructions,
-      isRequired: await isTwoFactorRequired(user.role)
+      isRequired: await isTwoFactorRequired(user?.role)
     })
     
   } catch (error) {
@@ -124,7 +124,7 @@ export const POST = withApiPermissions(
     const userId = params.id
     
     // Check if user can access this resource
-    if (session.user.id !== userId && session.user.role !== 'ADMIN') {
+    if (user?.id || '' !== userId && user?.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -173,12 +173,12 @@ export const POST = withApiPermissions(
     
     // Log successful 2FA setup
     await auditLog({
-      userId: session.user.id,
+      userId: user?.id || '',
       action: '2FA_ENABLED',
       resource: 'USER_SECURITY',
       details: {
         targetUserId: userId,
-        userEmail: user.email
+        userEmail: user?.email || ''
       },
       request
     })

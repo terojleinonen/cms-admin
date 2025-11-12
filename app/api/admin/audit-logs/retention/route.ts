@@ -108,14 +108,14 @@ export const POST = withApiPermissions(
     // Log the retention action
     const auditService = await import('@/lib/audit-service')
     await auditService.getAuditService(prisma).logSystem(
-      user.id,
+      user?.id || '',
       'SETTINGS_CHANGED',
       {
         action: 'retention_action',
         retentionAction: action,
         policy,
         result,
-        executedBy: user.id,
+        executedBy: user?.id || '',
       },
       request.headers.get('x-forwarded-for') || 'unknown',
       request.headers.get('user-agent') || 'unknown'
@@ -168,14 +168,14 @@ export const PUT = withApiPermissions(
     // Log the restore action
     const auditService = await import('@/lib/audit-service')
     await auditService.getAuditService(prisma).logSystem(
-      user.id,
+      user?.id || '',
       'BACKUP_RESTORED',
       {
         action: 'archive_restore',
         archiveFilePath,
         restoredCount: result.restoredCount,
         archiveMetadata: result.archiveMetadata,
-        restoredBy: user.id,
+        restoredBy: user?.id || '',
       },
       request.headers.get('x-forwarded-for') || 'unknown',
       request.headers.get('user-agent') || 'unknown'

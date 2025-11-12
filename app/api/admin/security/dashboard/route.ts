@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check admin permission
-    if (!hasPermission(session.user as any, 'admin')) {
+    if (!hasPermission({ ...session.user, isActive: true }, 'admin')) {
       return NextResponse.json(
         { error: 'Forbidden - Admin access required' },
         { status: 403 }
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
         id: true,
         action: true,
         userId: true,
-        metadata: true,
+        details: true,
         createdAt: true
       }
     })

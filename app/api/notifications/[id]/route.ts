@@ -14,7 +14,8 @@ export const PUT = withApiPermissions(
     const action = body.action
 
     if (action === 'markAsRead') {
-      await notificationService.markNotificationAsRead(params.id, session.user.id)
+      const { id } = await params || {}
+      await notificationService.markNotificationAsRead(id, user?.id || '')
       return createApiSuccessResponse({ success: true })
     }
 
@@ -41,7 +42,8 @@ export const DELETE = withApiPermissions(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await notificationService.deleteNotification(params.id, user.id)
+    const { id } = await params || {}
+    await notificationService.deleteNotification(id, user?.id || '')
     return createApiSuccessResponse({ success: true })
   } catch (error) {
     console.error('Error deleting notification:', error)

@@ -18,7 +18,7 @@ export interface UserPreferences {
  * This middleware can be used to customize responses based on user preferences
  */
 export function applyUserPreferences(
-  request: NextRequest,
+  _request: NextRequest,
   response: NextResponse
 ): NextResponse {
   // Get user preferences from cookies or headers
@@ -107,4 +107,34 @@ export function setUserPreferences(
   }
 
   return response
+}
+
+/**
+ * Get default user preferences
+ */
+export function getDefaultPreferences(): UserPreferences {
+  return {
+    theme: 'light',
+    language: 'en',
+    timezone: 'UTC',
+    dateFormat: 'MM/DD/YYYY',
+    itemsPerPage: 25
+  }
+}
+
+/**
+ * Validate and migrate user preferences
+ */
+export function validateAndMigratePreferences(preferences: any): UserPreferences {
+  const defaults = getDefaultPreferences()
+  
+  return {
+    theme: ['light', 'dark'].includes(preferences?.theme) ? preferences.theme : defaults.theme,
+    language: typeof preferences?.language === 'string' ? preferences.language : defaults.language,
+    timezone: typeof preferences?.timezone === 'string' ? preferences.timezone : defaults.timezone,
+    dateFormat: typeof preferences?.dateFormat === 'string' ? preferences.dateFormat : defaults.dateFormat,
+    itemsPerPage: typeof preferences?.itemsPerPage === 'number' && preferences.itemsPerPage > 0 
+      ? preferences.itemsPerPage 
+      : defaults.itemsPerPage
+  }
 }

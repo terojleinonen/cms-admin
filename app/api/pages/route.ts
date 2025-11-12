@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { hasPermission } from '@/lib/permissions'
+import { hasPermission } from '@/lib/has-permission'
 
 // Validation schema for page creation/update
 const pageSchema = z.object({
@@ -153,7 +153,7 @@ export const POST = withApiPermissions(
       data: {
         ...validatedData,
         publishedAt: validatedData.publishedAt ? new Date(validatedData.publishedAt) : null,
-        createdBy: session.user.id
+        createdBy: user?.id || ''
       },
       include: {
         creator: {

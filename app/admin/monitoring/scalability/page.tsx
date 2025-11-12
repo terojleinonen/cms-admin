@@ -6,7 +6,7 @@
 import { Metadata } from 'next';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
-import { hasPermission } from '@/lib/permissions';
+import { hasPermission } from '@/lib/has-permission';
 import ScalabilityMonitoringDashboard from '@/components/admin/ScalabilityMonitoringDashboard';
 
 export const metadata: Metadata = {

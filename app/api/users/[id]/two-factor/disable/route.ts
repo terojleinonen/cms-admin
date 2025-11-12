@@ -36,7 +36,7 @@ export const POST = withApiPermissions(
     const userId = params.id
     
     // Check if user can access this resource
-    if (session.user.id !== userId && session.user.role !== 'ADMIN') {
+    if (user?.id || '' !== userId && user?.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -82,7 +82,7 @@ export const POST = withApiPermissions(
     }
     
     // Check if 2FA is required for this user role
-    if (await isTwoFactorRequired(user.role) && session.user.role !== 'ADMIN') {
+    if (await isTwoFactorRequired(user?.role) && user?.role !== 'ADMIN') {
       return NextResponse.json(
         { error: '2FA is required for this user role and cannot be disabled' },
         { status: 403 }
@@ -93,12 +93,12 @@ export const POST = withApiPermissions(
     const isPasswordValid = await verifyPassword(password, user.passwordHash)
     if (!isPasswordValid) {
       await auditLog({
-        userId: session.user.id,
+        userId: user?.id || '',
         action: '2FA_DISABLE_FAILED',
         resource: 'USER_SECURITY',
         details: {
           targetUserId: userId,
-          userEmail: user.email,
+          userEmail: user?.email || '',
           reason: 'Invalid password'
         },
         request
@@ -113,12 +113,12 @@ export const POST = withApiPermissions(
     // Verify 2FA token
     if (!user.twoFactorSecret || !await verifyTwoFactorToken(userId, token)) {
       await auditLog({
-        userId: session.user.id,
+        userId: user?.id || '',
         action: '2FA_DISABLE_FAILED',
         resource: 'USER_SECURITY',
         details: {
           targetUserId: userId,
-          userEmail: user.email,
+          userEmail: user?.email || '',
           reason: 'Invalid 2FA token'
         },
         request
@@ -135,13 +135,13 @@ export const POST = withApiPermissions(
     
     // Log successful 2FA disable
     await auditLog({
-      userId: session.user.id,
+      userId: user?.id || '',
       action: '2FA_DISABLED',
       resource: 'USER_SECURITY',
       details: {
         targetUserId: userId,
-        userEmail: user.email,
-        disabledBy: session.user.id === userId ? 'self' : 'admin'
+        userEmail: user?.email || '',
+        disabledBy: user?.id || '' === userId ? 'self' : 'admin'
       },
       request
     })

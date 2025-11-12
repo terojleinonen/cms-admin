@@ -34,8 +34,8 @@ export const GET = withApiPermissions(
     }
 
     const userId = params.id
-    const currentUserId = session.user.id
-    const userRole = session.user.role
+    const currentUserId = user?.id || ''
+    const userRole = user?.role
 
     // Users can only view their own sessions, admins can view any user's sessions
     if (userId !== currentUserId && userRole !== 'ADMIN') {
@@ -88,8 +88,8 @@ export const POST = withApiPermissions(
     }
 
     const userId = params.id
-    const currentUserId = session.user.id
-    const userRole = session.user.role
+    const currentUserId = user?.id || ''
+    const userRole = user?.role
 
     // Users can only manage their own sessions, admins can manage any user's sessions
     if (userId !== currentUserId && userRole !== 'ADMIN') {

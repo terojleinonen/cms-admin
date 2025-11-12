@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/auth'
 import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
@@ -29,7 +30,7 @@ async function requireAdminAccess() {
     )
   }
 
-  if (session.user.role !== UserRole.ADMIN) {
+  if (session.user?.role !== UserRole.ADMIN) {
     return NextResponse.json(
       { error: { code: 'FORBIDDEN', message: 'Admin access required' } },
       { status: 403 }

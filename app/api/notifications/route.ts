@@ -23,8 +23,8 @@ export const GET = withApiPermissions(
     })
 
     const [notifications, unreadCount] = await Promise.all([
-      notificationService.getUserNotifications(session.user.id, limit, offset),
-      notificationService.getUnreadNotificationCount(session.user.id)
+      notificationService.getUserNotifications(user?.id || '', limit, offset),
+      notificationService.getUnreadNotificationCount(user?.id || '')
     ])
 
     return createApiSuccessResponse({
@@ -58,7 +58,7 @@ export const PUT = withApiPermissions(
     const action = body.action
 
     if (action === 'markAllAsRead') {
-      await notificationService.markAllNotificationsAsRead(session.user.id)
+      await notificationService.markAllNotificationsAsRead(user?.id || '')
       return createApiSuccessResponse({ success: true })
     }
 

@@ -91,7 +91,10 @@ export const GET = withApiPermissions(
     
     // If not authenticated, return error response
     if (authResult instanceof Response) {
-      return authResult
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: authResult.status }
+      )
     }
 
     // Get current user details from session
@@ -112,7 +115,7 @@ export const GET = withApiPermissions(
 
     // Get full user details from database
     const fullUser = await prisma.user.findUnique({
-      where: { id: user.id },
+      where: { id: user?.id || '' },
       select: {
         id: true,
         email: true,

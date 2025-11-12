@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { AuditService } from '@/lib/audit-service'
 import { prisma as db } from '@/lib/db'
-import { hasPermission } from '@/lib/permissions'
+import { hasPermission } from '@/lib/has-permission'
 
 const auditService = new AuditService(db)
 
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Check if this is an export request
     if (body.format) {
       // Verify admin permissions for export
-      if (!await hasPermission(session.user, 'system', 'manage')) {
+      if (!hasPermission({ ...session.user, isActive: true }, 'system:manage')) {
         return NextResponse.json(
           { error: 'Insufficient permissions for audit log export' },
           { status: 403 }
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Log the audit entry
     const auditLog = await auditService.log({
-      userId: session.user.id,
+      userId: session.user?.id || '',
       action,
       resource,
       resourceId,
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check permissions for viewing audit logs
-    if (!await hasPermission(session.user, 'system', 'read')) {
+    if (!await hasPermission({ ...session.user, isActive: true }, 'system:read')) {
       return NextResponse.json(
         { error: 'Insufficient permissions to view audit logs' },
         { status: 403 }

@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { hasPermission } from '@/lib/permissions'
+import { hasPermission } from '@/lib/has-permission'
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check admin permissions
-    if (!hasPermission(session.user, 'system', 'read')) {
+    if (!hasPermission({ ...session.user, isActive: true }, 'system:read')) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 }
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check admin permissions
-    if (!hasPermission(session.user, 'system', 'manage')) {
+    if (!hasPermission({ ...session.user, isActive: true }, 'system:manage')) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 }

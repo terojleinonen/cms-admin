@@ -32,7 +32,7 @@ async function requireAdminAccess() {
     )
   }
 
-  if (session.user.role !== UserRole.ADMIN) {
+  if (session.user?.role !== UserRole.ADMIN) {
     return NextResponse.json(
       { error: { code: 'FORBIDDEN', message: 'Admin access required' } },
       { status: 403 }

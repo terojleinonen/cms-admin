@@ -33,8 +33,8 @@ async function requireUserAccess(userId: string, requireAdmin: boolean = false):
     )
   }
 
-  const isOwnProfile = session.user.id === userId
-  const isAdmin = session.user.role === UserRole.ADMIN
+  const isOwnProfile = user?.id || '' === userId
+  const isAdmin = user?.role === UserRole.ADMIN
 
   if (requireAdmin && !isAdmin) {
     return NextResponse.json(

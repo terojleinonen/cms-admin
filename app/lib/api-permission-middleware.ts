@@ -450,10 +450,10 @@ export class ApiPermissionMiddleware {
  * Higher-order function to protect API route handlers
  */
 export function withApiPermissions(
-  handler: (request: NextRequest, context: { user: User | null; params?: Record<string, string> }) => Promise<NextResponse>,
+  handler: (request: NextRequest, context: { user: User | null; params?: Promise<Record<string, string>> | Record<string, string> }) => Promise<NextResponse>,
   options: PermissionValidationOptions = {}
 ) {
-  return async (request: NextRequest, context: { params?: Record<string, string> } = {}) => {
+  return async (request: NextRequest, context: { params?: Promise<Record<string, string>> | Record<string, string> } = {}) => {
     const middleware = new ApiPermissionMiddleware();
     
     const { user, error, isAuthorized } = await middleware.validatePermissions(request, options);

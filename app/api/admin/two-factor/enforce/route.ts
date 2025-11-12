@@ -17,7 +17,7 @@ export const GET = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || user?.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -121,7 +121,7 @@ export const POST = withApiPermissions(
   async (request: NextRequest, { user }) => {
     
   try {
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || user?.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -174,10 +174,10 @@ export const POST = withApiPermissions(
     for (const user of users) {
       try {
         // Check if 2FA is required for this user
-        if (!isTwoFactorRequired(user.role)) {
+        if (!isTwoFactorRequired(user?.role)) {
           results.push({
-            userId: user.id,
-            email: user.email,
+            userId: user?.id || '',
+            email: user?.email || '',
             success: false,
             message: '2FA not required for this user role'
           })
@@ -187,8 +187,8 @@ export const POST = withApiPermissions(
         // Skip if 2FA is already enabled
         if (user.twoFactorEnabled) {
           results.push({
-            userId: user.id,
-            email: user.email,
+            userId: user?.id || '',
+            email: user?.email || '',
             success: false,
             message: '2FA already enabled'
           })
@@ -198,25 +198,25 @@ export const POST = withApiPermissions(
         if (action === 'force_logout') {
           // Deactivate all sessions for this user
           await prisma.session.updateMany({
-            where: { userId: user.id },
+            where: { userId: user?.id || '' },
             data: { isActive: false }
           })
           
           await auditLog({
-            userId: user.id,
+            userId: user?.id || '',
             action: '2FA_ENFORCEMENT_LOGOUT',
             resource: 'USER_SECURITY',
             details: {
-              targetUserId: user.id,
-              targetUserEmail: user.email,
-              enforcedBy: user.id
+              targetUserId: user?.id || '',
+              targetUserEmail: user?.email || '',
+              enforcedBy: user?.id || ''
             },
             request
           })
           
           results.push({
-            userId: user.id,
-            email: user.email,
+            userId: user?.id || '',
+            email: user?.email || '',
             success: true,
             message: 'User logged out - must enable 2FA to log back in'
           })
@@ -224,20 +224,20 @@ export const POST = withApiPermissions(
           // In a real implementation, you would send an email notification here
           // For now, we'll just log the notification
           await auditLog({
-            userId: user.id,
+            userId: user?.id || '',
             action: '2FA_ENFORCEMENT_NOTIFICATION',
             resource: 'USER_SECURITY',
             details: {
-              targetUserId: user.id,
-              targetUserEmail: user.email,
-              notifiedBy: user.id
+              targetUserId: user?.id || '',
+              targetUserEmail: user?.email || '',
+              notifiedBy: user?.id || ''
             },
             request
           })
           
           results.push({
-            userId: user.id,
-            email: user.email,
+            userId: user?.id || '',
+            email: user?.email || '',
             success: true,
             message: 'Notification sent to enable 2FA'
           })
@@ -246,10 +246,10 @@ export const POST = withApiPermissions(
         processedUsers++
         
       } catch (error) {
-        console.error(`Error processing user ${user.id}:`, error)
+        console.error(`Error processing user ${user?.id || ''}:`, error)
         results.push({
-          userId: user.id,
-          email: user.email,
+          userId: user?.id || '',
+          email: user?.email || '',
           success: false,
           message: 'Processing error'
         })

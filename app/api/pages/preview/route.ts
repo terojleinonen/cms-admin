@@ -42,9 +42,9 @@ export const POST = withApiPermissions(
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       creator: {
-        id: session.user.id,
-        name: session.user.name,
-        email: session.user.email
+        id: user?.id || '',
+        name: user?.name || '',
+        email: user?.email || ''
       }
     }
 

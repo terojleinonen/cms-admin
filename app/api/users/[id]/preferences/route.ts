@@ -27,8 +27,8 @@ async function requirePreferencesAccess(userId: string) {
     )
   }
 
-  const isOwnProfile = session.user.id === userId
-  const isAdmin = session.user.role === UserRole.ADMIN
+  const isOwnProfile = user?.id || '' === userId
+  const isAdmin = user?.role === UserRole.ADMIN
 
   if (!isAdmin && !isOwnProfile) {
     return NextResponse.json(

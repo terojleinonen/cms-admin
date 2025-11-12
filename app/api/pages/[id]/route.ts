@@ -7,7 +7,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { hasPermission } from '@/lib/permissions'
 
 const updatePageSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255, 'Title too long').optional(),
@@ -31,7 +30,7 @@ export const GET = withApiPermissions(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     
-    const { id } = params
+    const { id } = await params || {}
 
     const page = await prisma.page.findUnique({
       where: { id },
@@ -75,7 +74,7 @@ export const PUT = withApiPermissions(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     
-    const { id } = params
+    const { id } = await params || {}
 
     const body = await request.json()
     const validatedData = updatePageSchema.parse(body)
@@ -163,7 +162,7 @@ export const DELETE = withApiPermissions(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     
-    const { id } = params
+    const { id } = await params || {}
 
     // Check if page exists
     const existingPage = await prisma.page.findUnique({

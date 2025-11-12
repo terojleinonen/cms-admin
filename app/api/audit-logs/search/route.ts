@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma as db } from '@/lib/db'
-import { hasPermission } from '@/lib/permissions'
+import { hasPermission } from '@/lib/has-permission'
 import { z } from 'zod'
 
 const searchQuerySchema = z.object({
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check permissions for searching audit logs
-    if (!await hasPermission(session.user, 'system', 'read')) {
+    if (!await hasPermission({ ...session.user, isActive: true }, 'system:read')) {
       return NextResponse.json(
         { error: 'Insufficient permissions to search audit logs' },
         { status: 403 }
@@ -218,7 +218,7 @@ export async function GET(request: NextRequest) {
           GROUP BY al.action
           ORDER BY count DESC
           LIMIT 10
-        `, ...params) as Array<{ value: string; count: bigint }>,
+        `, ...params),
 
         // Top resources
         db.$queryRawUnsafe(`
@@ -229,7 +229,7 @@ export async function GET(request: NextRequest) {
           GROUP BY al.resource
           ORDER BY count DESC
           LIMIT 10
-        `, ...params) as Array<{ value: string; count: bigint }>,
+        `, ...params),
 
         // Top users
         db.$queryRawUnsafe(`
@@ -240,7 +240,7 @@ export async function GET(request: NextRequest) {
           GROUP BY al.user_id, u.name
           ORDER BY count DESC
           LIMIT 10
-        `, ...params) as Array<{ value: string; name: string; count: bigint }>,
+        `, ...params),
 
         // Severities
         db.$queryRawUnsafe(`
@@ -252,8 +252,13 @@ export async function GET(request: NextRequest) {
           ${whereClause}
           GROUP BY COALESCE(al.details->>'severity', 'low')
           ORDER BY count DESC
-        `, ...params) as Array<{ value: string; count: bigint }>
-      ])
+        `, ...params)
+      ]) as [
+        Array<{ value: string; count: bigint }>,
+        Array<{ value: string; count: bigint }>,
+        Array<{ value: string; name: string; count: bigint }>,
+        Array<{ value: string; count: bigint }>
+      ]
 
       facets = {
         actions: actionFacets.map(f => ({ value: f.value, count: Number(f.count) })),

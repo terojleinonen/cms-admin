@@ -20,7 +20,7 @@ export const GET = withApiPermissions(
     }
 
     // Users can only access their own preferences, admins can access any
-    if (session.user.id !== params.id && session.user.role !== 'ADMIN') {
+    if (user?.id || '' !== params.id && user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -57,7 +57,7 @@ export const PUT = withApiPermissions(
     }
 
     // Users can only update their own preferences, admins can update any
-    if (session.user.id !== params.id && session.user.role !== 'ADMIN') {
+    if (user?.id || '' !== params.id && user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

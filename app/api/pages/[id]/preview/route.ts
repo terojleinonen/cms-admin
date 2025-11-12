@@ -4,10 +4,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
+import { withApiPermissions } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { hasPermission } from '@/lib/permissions'
 
 const previewSchema = z.object({
   content: z.string().optional(),
@@ -27,9 +26,11 @@ export const POST = withApiPermissions(
     const body = await request.json()
     const { content, template, customFields } = previewSchema.parse(body)
 
+    const { id } = await params || {}
+
     // Get the page
     const page = await prisma.page.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         creator: {
           select: {
@@ -93,9 +94,11 @@ export const GET = withApiPermissions(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    const { id } = await params || {}
+
     // Get the page
     const page = await prisma.page.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!page) {

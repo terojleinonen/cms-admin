@@ -252,6 +252,6 @@ export const POST = withAPISecurity(
   {
     allowedMethods: ['POST'],
     requireCSRF: false, // Login doesn't require CSRF as it's the initial auth step
-    rateLimitConfig: 'auth'
+    rateLimitConfig: 'sensitive'
   }
 )

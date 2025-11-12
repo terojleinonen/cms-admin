@@ -138,7 +138,7 @@ export const GET = withApiPermissions(
         by: ['resource'],
         where: {
           createdAt: { gte: startDate, lte: now },
-          resource: { not: null },
+          resource: { not: '' },
         },
         _count: {
           id: true,

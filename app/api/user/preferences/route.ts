@@ -17,7 +17,7 @@ export const GET = withApiPermissions(
     }
 
     const preferences = await prisma.userPreferences.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: user?.id || '' },
       select: {
         theme: true,
         timezone: true,
@@ -32,7 +32,7 @@ export const GET = withApiPermissions(
       const defaultPrefs = getDefaultPreferences()
       const newPreferences = await prisma.userPreferences.create({
         data: {
-          userId: session.user.id,
+          userId: user?.id || '',
           theme: defaultPrefs.theme,
           timezone: defaultPrefs.timezone,
           language: defaultPrefs.language,
@@ -83,7 +83,7 @@ export const PUT = withApiPermissions(
     const validatedPreferences = validateAndMigratePreferences(body)
 
     const updatedPreferences = await prisma.userPreferences.upsert({
-      where: { userId: session.user.id },
+      where: { userId: user?.id || '' },
       update: {
         theme: validatedPreferences.theme,
         timezone: validatedPreferences.timezone,
@@ -92,7 +92,7 @@ export const PUT = withApiPermissions(
         dashboard: validatedPreferences.dashboard,
       },
       create: {
-        userId: session.user.id,
+        userId: user?.id || '',
         theme: validatedPreferences.theme,
         timezone: validatedPreferences.timezone,
         language: validatedPreferences.language,

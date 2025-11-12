@@ -45,7 +45,7 @@ export const POST = withApiPermissions(
       {
         backupId: validatedData.backupId
       },
-      session.user.id
+      user?.id || ''
     );
 
     return createApiSuccessResponse({

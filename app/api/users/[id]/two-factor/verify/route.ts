@@ -77,7 +77,7 @@ export const POST = withApiPermissions(
         action: '2FA_VERIFICATION_FAILED',
         resource: 'USER_SECURITY',
         details: {
-          userEmail: user.email,
+          userEmail: user?.email || '',
           tokenType: 'unknown'
         },
         request
@@ -95,7 +95,7 @@ export const POST = withApiPermissions(
       action: '2FA_VERIFICATION_SUCCESS',
       resource: 'USER_SECURITY',
       details: {
-        userEmail: user.email,
+        userEmail: user?.email || '',
         tokenType: validation.isBackupCode ? 'backup_code' : 'totp',
         isBackupCode: validation.isBackupCode
       },

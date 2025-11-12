@@ -11,7 +11,7 @@ import { ApiAuthService } from '@/lib/api-auth';
 export const GET = withApiPermissions(
   async (request: NextRequest, { user, params }) => {
     try {
-      const { id } = await params;
+      const { id } = await params || {};
 
     // Get API key statistics
     const stats = await ApiAuthService.getApiKeyStats(id);

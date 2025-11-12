@@ -66,7 +66,7 @@ export const POST = withApiPermissions(
 
     // Create API key
     const result = await ApiAuthService.createApiKey(
-      session.user.id,
+      user?.id || '',
       validatedData.name,
       validatedData.permissions
     );

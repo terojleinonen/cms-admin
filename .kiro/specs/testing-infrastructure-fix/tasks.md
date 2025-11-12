@@ -42,24 +42,24 @@
   - Validate indexes and foreign keys are properly set up
   - _Requirements: 1.5, 2.5, 3.5_
 
-- [-] 3. Commit migration and verify CI pipeline
+- [ ] 3. Commit migration and verify CI pipeline
   - Commit the new migration file to version control
   - Push changes and monitor GitHub Actions workflow
   - Verify CI pipeline successfully runs migrations and seeding
   - _Requirements: 1.1, 4.4_
 
-- [-] 3.1 Commit migration files
+- [x] 3.1 Commit migration files
   - Stage the new migration directory and SQL file
   - Commit with descriptive message about schema updates
   - _Requirements: 1.3_
 
-- [ ] 3.2 Monitor CI pipeline execution
+- [x] 3.2 Monitor CI pipeline execution
   - Push changes to trigger GitHub Actions workflow
   - Watch for successful completion of prisma generate, migrate deploy, and seed steps
   - Verify no errors in CI logs
   - _Requirements: 1.1, 1.2, 4.4_
 
-- [ ] 3.3 Validate CI test execution
+- [x] 3.3 Validate CI test execution
   - Confirm that tests run successfully after seeding
   - Check that Lighthouse performance tests can execute
   - Verify no schema-related errors in test output

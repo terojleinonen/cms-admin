@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { hasPermission } from '@/lib/permissions'
+import { hasPermission } from '@/lib/has-permission'
 import SystemHealthDashboard from '@/components/admin/SystemHealthDashboard'
 import AlertConfigurationPanel from '@/components/admin/AlertConfigurationPanel'
 import MonitoringServiceControl from '@/components/admin/MonitoringServiceControl'

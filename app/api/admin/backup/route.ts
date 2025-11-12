@@ -34,7 +34,7 @@ const backupService = new BackupService(backupConfig.backupDir);
 
 // POST /api/admin/backup - Create new backup
 export const POST = withApiPermissions(
-  async (request: NextRequest, { user: _user }) => {
+  async (request: NextRequest, { user }) => {
     try {
       const body = await request.json();
     const validatedData = createBackupSchema.parse(body);
@@ -55,7 +55,7 @@ export const POST = withApiPermissions(
         
       case 'full':
         backupId = await backupService.createFullBackup(
-          session.user.id,
+          user?.id || '',
           validatedData.description
         );
         break;

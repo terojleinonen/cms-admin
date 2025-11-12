@@ -285,8 +285,8 @@ async function findSuspiciousUsers(startDate: Date, endDate: Date) {
     }
 
     suspiciousUsers.push({
-      userId: user.id,
-      userName: user.name || 'Unknown',
+      userId: user?.id || '',
+      userName: user?.name || '' || 'Unknown',
       description: `Unusual activity pattern detected: ${userActivity._count.id} actions in 24 hours`,
       riskLevel,
       lastActivity: userLogs[0]?.createdAt || endDate,

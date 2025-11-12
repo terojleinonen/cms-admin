@@ -22,9 +22,9 @@ const backupService = new BackupService(backupConfig.backupDir);
 
 // GET /api/admin/backup/status/[id] - Get backup status
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user, params }) => {
     try {
-      const backupId = params.id;
+      const { id: backupId } = await params || {};
     const status = backupService.getBackupStatus(backupId);
 
     if (!status) {

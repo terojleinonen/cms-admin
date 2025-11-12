@@ -20,7 +20,7 @@ const updateAlertSchema = z.object({
 export const PATCH = withApiPermissions(
   async (request: NextRequest, { user, params }) => {
     try {
-      const alertId = params?.id as string
+      const { id: alertId } = await params || {}
       
       if (!alertId) {
         return NextResponse.json(
@@ -39,14 +39,14 @@ export const PATCH = withApiPermissions(
         // Log the acknowledgment action
         await prisma.auditLog.create({
           data: {
-            userId: user.id,
+            userId: user?.id || '',
             action: 'alert.acknowledged',
             resource: 'security_alert',
             details: {
               alertId,
               acknowledged,
               notes,
-              acknowledgedBy: user.name || user.email,
+              acknowledgedBy: user?.name || '' || user?.email || '',
               acknowledgedAt: new Date(),
             },
             ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
@@ -60,7 +60,7 @@ export const PATCH = withApiPermissions(
         data: {
           id: alertId,
           acknowledged: acknowledged ?? false,
-          acknowledgedBy: user.name || user.email,
+          acknowledgedBy: user?.name || '' || user?.email || '',
           acknowledgedAt: new Date(),
           notes,
         },
@@ -96,7 +96,7 @@ export const PATCH = withApiPermissions(
 export const GET = withApiPermissions(
   async (request: NextRequest, { user, params }) => {
     try {
-      const alertId = params?.id as string
+      const { id: alertId } = await params || {}
       
       if (!alertId) {
         return NextResponse.json(

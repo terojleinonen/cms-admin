@@ -12,7 +12,8 @@ const CLIENT_SECURITY_CONFIG = {
   allowedDocumentTypes: ['application/pdf', 'text/plain', 'text/csv'],
   dangerousPatterns: [
     // XSS patterns
-    /<script[^>]*>.*?<\/script>/gi,
+    // NOTE: This regex attempts to catch script tags, but must NOT be relied upon for real sanitization.
+    /<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi,
     /javascript:/gi,
     /vbscript:/gi,
     /onload\s*=/gi,

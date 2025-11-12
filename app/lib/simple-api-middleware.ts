@@ -48,11 +48,15 @@ function hasPermission(user: SimpleUser | null, resource: string, action: string
  * Basic input sanitization
  */
 function sanitizeString(input: string): string {
-  return input
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
-    .replace(/javascript:/gi, '') // Remove javascript: URLs
-    .replace(/on\w+\s*=/gi, '') // Remove event handlers
-    .trim()
+  let previous: string;
+  do {
+    previous = input;
+    input = input
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+      .replace(/javascript:/gi, '') // Remove javascript: URLs
+      .replace(/on\w+\s*=/gi, ''); // Remove event handlers
+  } while (input !== previous);
+  return input.trim();
 }
 
 function sanitizeObject(obj: any): any {

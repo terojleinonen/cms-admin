@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import { z } from 'zod'
+import sanitizeHtml from 'sanitize-html'
 
 /**
  * User type for simplified middleware
@@ -48,15 +49,9 @@ function hasPermission(user: SimpleUser | null, resource: string, action: string
  * Basic input sanitization
  */
 function sanitizeString(input: string): string {
-  let previous: string;
-  do {
-    previous = input;
-    input = input
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
-      .replace(/javascript:/gi, '') // Remove javascript: URLs
-      .replace(/on\w+\s*=/gi, ''); // Remove event handlers
-  } while (input !== previous);
-  return input.trim();
+  // Strip all HTML tags, attributes, scripts, styles, etc
+  // This defaults to keeping text content only
+  return sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} }).trim();
 }
 
 function sanitizeObject(obj: any): any {

@@ -20,7 +20,7 @@ const updateApiKeySchema = z.object({
 
 // GET /api/admin/api-keys/[id] - Get specific API key
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user, params }) => {
+  async (request: NextRequest, { params }) => {
     try {
       const { id } = await params || {};
     const apiKey = await prisma.apiKey.findUnique({
@@ -64,7 +64,7 @@ export const GET = withApiPermissions(
 
 // PUT /api/admin/api-keys/[id] - Update API key
 export const PUT = withApiPermissions(
-  async (request: NextRequest, { user, params }) => {
+  async (request: NextRequest, { params }) => {
     try {
       const { id } = await params || {};
     const body = await request.json();
@@ -129,7 +129,7 @@ export const PUT = withApiPermissions(
 
 // DELETE /api/admin/api-keys/[id] - Delete API key
 export const DELETE = withApiPermissions(
-  async (request: NextRequest, { user, params }) => {
+  async (request: NextRequest, { params }) => {
     try {
       const { id } = await params || {};
     // Check if API key exists

@@ -6,7 +6,6 @@
 import { Metadata } from 'next'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { hasPermission } from '@/lib/has-permission'
 import ProductionMonitoringDashboard from '@/components/admin/ProductionMonitoringDashboard'
 
 export const metadata: Metadata = {

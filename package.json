@@ -36,6 +36,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:security:ci": "jest --ci --testPathPattern=security --watchAll=false",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "deps:audit": "npm audit --audit-level=moderate",
     "deps:validate": "npm run deps:audit",

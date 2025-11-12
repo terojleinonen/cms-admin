@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import { auth } from '@/auth';
-import { permissionService } from '../../../lib/permissions';
 import { redirect } from 'next/navigation';
 import PermissionPerformanceDashboard from '../../../components/admin/PermissionPerformanceDashboard';
 

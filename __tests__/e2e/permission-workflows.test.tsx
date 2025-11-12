@@ -8,10 +8,10 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { SessionProvider } from 'next-auth/react'
 import { PermissionProvider } from '../../app/components/providers/PermissionProvider'
-import { testUtils } from '../helpers/test-helpers'
 import { createMockSession } from '../helpers/permission-test-utils'
 import { UserRole } from '../../app/lib/types'
 import React from 'react'
+import Link from 'next/link'
 
 // Mock viewport utilities for responsive testing
 const mockViewport = {
@@ -51,9 +51,9 @@ const MockDashboard = () => {
   return (
     <div data-testid="dashboard">
       <nav data-testid="navigation">
-        <a href="/admin/products" data-testid="products-link">Products</a>
-        <a href="/admin/users" data-testid="users-link">Users</a>
-        <a href="/admin/analytics" data-testid="analytics-link">Analytics</a>
+        <Link href="/admin/products" data-testid="products-link">Products</Link>
+        <Link href="/admin/users" data-testid="users-link">Users</Link>
+        <Link href="/admin/analytics" data-testid="analytics-link">Analytics</Link>
       </nav>
       <main data-testid="main-content">
         <button data-testid="create-product-btn">Create Product</button>

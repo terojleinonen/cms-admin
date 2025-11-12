@@ -517,16 +517,12 @@ describe('Form and Interaction Permission Workflows', () => {
     it('should handle complex multi-form workflows', async () => {
       const MultiFormWorkflow = () => {
         const [currentStep, setCurrentStep] = React.useState(1)
-        const [productData, setProductData] = React.useState<any>(null)
-        const [userAssignment, setUserAssignment] = React.useState<any>(null)
 
-        const handleProductSubmit = (data: any) => {
-          setProductData(data)
+        const handleProductSubmit = () => {
           setCurrentStep(2)
         }
 
-        const handleUserAssignment = (data: any) => {
-          setUserAssignment(data)
+        const handleUserAssignment = () => {
           setCurrentStep(3)
         }
 
@@ -540,7 +536,7 @@ describe('Form and Interaction Permission Workflows', () => {
               <div data-testid="step-1">
                 <MockProductForm mode="create" />
                 <button
-                  onClick={() => handleProductSubmit({ name: 'Test Product' })}
+                  onClick={() => handleProductSubmit()}
                   data-testid="proceed-to-step-2"
                 >
                   Create Product & Continue
@@ -553,7 +549,7 @@ describe('Form and Interaction Permission Workflows', () => {
                 <h3>Assign Product Manager</h3>
                 <MockUserForm mode="create" />
                 <button
-                  onClick={() => handleUserAssignment({ email: 'manager@test.com' })}
+                  onClick={() => handleUserAssignment()}
                   data-testid="proceed-to-step-3"
                 >
                   Assign Manager & Continue

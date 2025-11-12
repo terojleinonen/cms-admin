@@ -187,7 +187,7 @@ describe('Navigation Permission Workflows', () => {
 
     it('should provide full navigation access for admin users', async () => {
       const NavigationApp = () => {
-        const [currentPath, setCurrentPath] = React.useState('/admin')
+        const [, setCurrentPath] = React.useState('/admin')
         const [currentPage, setCurrentPage] = React.useState('dashboard')
 
         const handleNavigation = (path: string, page: string) => {
@@ -484,7 +484,7 @@ describe('Navigation Permission Workflows', () => {
 
       const IntegratedApp = () => {
         const [currentPath, setCurrentPath] = React.useState('/admin')
-        const [notifications, setNotifications] = React.useState([
+        const [notifications] = React.useState([
           { id: 1, message: 'New user registered', type: 'user' },
           { id: 2, message: 'Product updated', type: 'product' },
           { id: 3, message: 'System alert', type: 'system' }
@@ -492,12 +492,6 @@ describe('Navigation Permission Workflows', () => {
 
         const handleNavigation = (path: string) => {
           setCurrentPath(path)
-          // Filter notifications based on current context
-          if (path.includes('users')) {
-            setNotifications(prev => prev.filter(n => n.type === 'user' || n.type === 'system'))
-          } else if (path.includes('products')) {
-            setNotifications(prev => prev.filter(n => n.type === 'product' || n.type === 'system'))
-          }
         }
 
         return (
@@ -552,7 +546,7 @@ describe('Navigation Permission Workflows', () => {
     })
 
     it('should handle dynamic permission changes during navigation', async () => {
-      let currentSession = createMockSession({
+      const currentSession = createMockSession({
         id: 'user-1',
         email: 'user@test.com',
         role: UserRole.VIEWER,
@@ -561,7 +555,7 @@ describe('Navigation Permission Workflows', () => {
 
       const DynamicPermissionApp = () => {
         const [session, setSession] = React.useState(currentSession)
-        const [currentPath, setCurrentPath] = React.useState('/admin')
+        const [, setCurrentPath] = React.useState('/admin')
 
         const upgradeToEditor = () => {
           const newSession = createMockSession({

@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { hasPermission } from '@/lib/has-permission'
 import SystemHealthDashboard from '@/components/admin/SystemHealthDashboard'
 import AlertConfigurationPanel from '@/components/admin/AlertConfigurationPanel'
 import MonitoringServiceControl from '@/components/admin/MonitoringServiceControl'
@@ -56,7 +55,7 @@ export default async function SystemHealthPage() {
           ) : (
             <div className="bg-white shadow rounded-lg p-6 text-center">
               <p className="text-gray-500">
-                You don't have permission to manage monitoring service.
+                You don&apos;t have permission to manage monitoring service.
               </p>
             </div>
           )}
@@ -68,7 +67,7 @@ export default async function SystemHealthPage() {
           ) : (
             <div className="bg-white shadow rounded-lg p-6 text-center">
               <p className="text-gray-500">
-                You don't have permission to manage alert configurations.
+                You don&apos;t have permission to manage alert configurations.
               </p>
             </div>
           )}

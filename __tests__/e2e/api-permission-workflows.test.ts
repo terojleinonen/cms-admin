@@ -6,7 +6,6 @@
  */
 
 import { NextRequest } from 'next/server'
-import { testUtils } from '@/__tests__/helpers/test-helpers'
 import { createMockSession } from '@/__tests__/helpers/permission-test-utils'
 import { UserRole } from '@/app/lib/types'
 

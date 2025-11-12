@@ -418,8 +418,14 @@ export class XSSPrevention {
     }
 
     // Simple XSS sanitization - remove all HTML tags and dangerous content
-    return input
-      .replace(/<[^>]*>/g, '') // Remove all HTML tags
+    // Repeat tag removal until fully sanitized
+    let sanitized = input;
+    let previous;
+    do {
+      previous = sanitized;
+      sanitized = sanitized.replace(/<[^>]*>/g, '');
+    } while (sanitized !== previous);
+    return sanitized
       .replace(/javascript:/gi, '')
       .replace(/vbscript:/gi, '')
       .replace(/data:/gi, '')

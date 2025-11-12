@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
+import { withApiPermissions } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { createRetentionManager } from '@/lib/audit-retention'
 import { z } from 'zod'
@@ -23,7 +23,7 @@ const restoreSchema = z.object({
  * Get retention statistics and policies
  */
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (_request: NextRequest, { user: _user }) => {
     try {
 
     const retentionManager = createRetentionManager(prisma, { autoSchedule: false })

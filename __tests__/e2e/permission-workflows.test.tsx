@@ -133,7 +133,7 @@ describe('Comprehensive End-to-End Permission Workflows', () => {
 
     it('should allow admin to access all features and perform all actions', async () => {
       // Test dashboard access
-      const { rerender } = render(
+      const { rerender: _rerender } = render(
         <TestWrapper session={adminSession}>
           <MockDashboard />
         </TestWrapper>
@@ -150,7 +150,7 @@ describe('Comprehensive End-to-End Permission Workflows', () => {
       expect(screen.getByTestId('view-analytics-btn')).toBeInTheDocument()
 
       // Test product management workflow
-      rerender(
+      _rerender(
         <TestWrapper session={adminSession}>
           <MockProductManagement />
         </TestWrapper>
@@ -167,7 +167,7 @@ describe('Comprehensive End-to-End Permission Workflows', () => {
       // In real E2E, this would navigate to create form
 
       // Test user management workflow
-      rerender(
+      _rerender(
         <TestWrapper session={adminSession}>
           <MockUserManagement />
         </TestWrapper>
@@ -180,7 +180,7 @@ describe('Comprehensive End-to-End Permission Workflows', () => {
       })
 
       // Test analytics access
-      rerender(
+      _rerender(
         <TestWrapper session={adminSession}>
           <MockAnalytics />
         </TestWrapper>
@@ -1063,17 +1063,17 @@ describe('Comprehensive End-to-End Permission Workflows', () => {
                     </button>
                     {mobileMenuOpen && (
                       <div data-testid="mobile-menu">
-                        <a href="/admin/products" data-testid="mobile-nav-products">Products</a>
-                        <a href="/admin/analytics" data-testid="mobile-nav-analytics">Analytics</a>
+                        <Link href="/admin/products" data-testid="mobile-nav-products">Products</Link>
+                        <Link href="/admin/analytics" data-testid="mobile-nav-analytics">Analytics</Link>
                       </div>
                     )}
                   </div>
                 ) : (
                   <div data-testid="desktop-navigation">
                     <nav data-testid="desktop-nav">
-                      <a href="/admin/products" data-testid="desktop-nav-products">Products</a>
-                      <a href="/admin/users" data-testid="desktop-nav-users">Users</a>
-                      <a href="/admin/analytics" data-testid="desktop-nav-analytics">Analytics</a>
+                      <Link href="/admin/products" data-testid="desktop-nav-products">Products</Link>
+                      <Link href="/admin/users" data-testid="desktop-nav-users">Users</Link>
+                      <Link href="/admin/analytics" data-testid="desktop-nav-analytics">Analytics</Link>
                     </nav>
                   </div>
                 )}
@@ -1202,8 +1202,8 @@ describe('Comprehensive End-to-End Permission Workflows', () => {
             ) : (
               <nav aria-label="Main navigation" data-testid="desktop-nav">
                 <ul role="list">
-                  <li><a href="/admin/products" aria-label="Manage products">Products</a></li>
-                  <li><a href="/admin/users" aria-label="Manage users">Users</a></li>
+                  <li><Link href="/admin/products" aria-label="Manage products">Products</Link></li>
+                  <li><Link href="/admin/users" aria-label="Manage users">Users</Link></li>
                 </ul>
               </nav>
             )}
@@ -1235,7 +1235,7 @@ describe('Comprehensive End-to-End Permission Workflows', () => {
 
       // Test mobile accessibility
       mockViewport.mobile()
-      const { rerender } = render(
+      const { rerender: _rerender2 } = render(
         <TestWrapper session={adminSession}>
           <AccessiblePermissionComponent />
         </TestWrapper>

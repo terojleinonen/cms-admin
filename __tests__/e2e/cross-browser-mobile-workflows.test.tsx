@@ -279,7 +279,7 @@ const TouchOptimizedForm = ({ userRole }: { userRole: UserRole }) => {
         )}
         {!canEdit && (
           <div data-testid="readonly-message">
-            You don't have permission to edit this form
+            You don&apos;t have permission to edit this form
           </div>
         )}
       </div>

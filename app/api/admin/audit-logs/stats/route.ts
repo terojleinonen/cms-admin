@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { withApiPermissions, createApiSuccessResponse } from '@/lib/api-permission-middleware'
+import { withApiPermissions } from '@/lib/api-permission-middleware'
 import { prisma } from '@/lib/db'
 import { getAuditService } from '@/lib/audit-service'
 import { z } from 'zod'
@@ -18,7 +18,7 @@ const statsFiltersSchema = z.object({
  * Get audit log statistics and analytics
  */
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (request: NextRequest, { user: _user }) => {
     try {
       const { searchParams } = new URL(request.url)
     const params = Object.fromEntries(searchParams.entries())

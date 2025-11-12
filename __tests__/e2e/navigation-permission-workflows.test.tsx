@@ -187,7 +187,7 @@ describe('Navigation Permission Workflows', () => {
 
     it('should provide full navigation access for admin users', async () => {
       const NavigationApp = () => {
-        const [, setCurrentPath] = React.useState('/admin')
+        const [currentPath, setCurrentPath] = React.useState('/admin')
         const [currentPage, setCurrentPage] = React.useState('dashboard')
 
         const handleNavigation = (path: string, page: string) => {
@@ -483,7 +483,7 @@ describe('Navigation Permission Workflows', () => {
       })
 
       const IntegratedApp = () => {
-        const [currentPath, setCurrentPath] = React.useState('/admin')
+        const [_currentPath, setCurrentPath] = React.useState('/admin')
         const [notifications] = React.useState([
           { id: 1, message: 'New user registered', type: 'user' },
           { id: 2, message: 'Product updated', type: 'product' },
@@ -496,7 +496,7 @@ describe('Navigation Permission Workflows', () => {
 
         return (
           <div>
-            <MockLayout currentPath={currentPath} user={adminSession.user}>
+            <MockLayout currentPath={_currentPath} user={adminSession.user}>
               <div>
                 <div data-testid="context-notifications">
                   {notifications.map(notification => (
@@ -555,7 +555,7 @@ describe('Navigation Permission Workflows', () => {
 
       const DynamicPermissionApp = () => {
         const [session, setSession] = React.useState(currentSession)
-        const [, setCurrentPath] = React.useState('/admin')
+        const [currentPath, setCurrentPath] = React.useState('/admin')
 
         const upgradeToEditor = () => {
           const newSession = createMockSession({
@@ -583,7 +583,7 @@ describe('Navigation Permission Workflows', () => {
         )
       }
 
-      const { rerender } = render(<DynamicPermissionApp />)
+      const { rerender: _rerender } = render(<DynamicPermissionApp />)
 
       // Initial viewer state
       expect(screen.getByText('Current Role: VIEWER')).toBeInTheDocument()

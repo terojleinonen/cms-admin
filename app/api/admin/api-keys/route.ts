@@ -20,7 +20,7 @@ const createApiKeySchema = z.object({
 
 // GET /api/admin/api-keys - List API keys
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user }) => {
+  async (_request: NextRequest, { user: _user }) => {
     try {
       const apiKeys = await prisma.apiKey.findMany({
       select: {

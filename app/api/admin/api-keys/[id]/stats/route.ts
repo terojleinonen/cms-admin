@@ -9,7 +9,7 @@ import { ApiAuthService } from '@/lib/api-auth';
 
 // GET /api/admin/api-keys/[id]/stats - Get API key usage statistics
 export const GET = withApiPermissions(
-  async (request: NextRequest, { user, params }) => {
+  async (_request: NextRequest, { user: _user, params }) => {
     try {
       const { id } = await params || {};
 

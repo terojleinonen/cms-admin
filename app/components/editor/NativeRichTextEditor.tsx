@@ -315,9 +315,16 @@ export default function NativeRichTextEditor({
   )
 }
 
-// Utility function to extract plain text from HTML
+// Utility function to extract plain text from HTML using native DOM parsing
 export function getPlainText(html: string): string {
-  return html.replace(/<[^>]*>/g, '').trim()
+  if (typeof window !== "undefined") {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+    return (tempDiv.textContent || "").trim();
+  } else {
+    // Basic fallback for SSR environments (remove tags via regex)
+    return html.replace(/<[^>]*>/g, '').trim();
+  }
 }
 
 // Utility function to truncate HTML content

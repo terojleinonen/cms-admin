@@ -94,15 +94,19 @@ export class AdvancedInputSanitizer {
       // Remove dangerous protocols
       .replace(/javascript:/gi, '')
       .replace(/data:/gi, '')
-      .replace(/vbscript:/gi, '')
-      // Remove potential XSS vectors
-      .replace(/on\w+\s*=/gi, '')
-      // Remove SQL injection attempts
+      .replace(/vbscript:/gi, '');
+    // Remove potential XSS vectors (repeatedly until gone)
+    let previousSanitized;
+    do {
+      previousSanitized = sanitized;
+      sanitized = sanitized.replace(/on\w+\s*=/gi, '');
+    } while (sanitized !== previousSanitized);
+    // Remove SQL injection attempts
+    sanitized = sanitized
       .replace(/['";\\]/g, '')
       .replace(/--/g, '')
       .replace(/\/\*/g, '')
-      .replace(/\*\//g, '')
-      // Remove path traversal attempts (repeatedly until gone)
+      .replace(/\*\//g, '');
     // Path sanitization using sanitize-filename
     sanitized = AdvancedInputSanitizer.sanitizePathFragment(sanitized);
     // Normalize whitespace

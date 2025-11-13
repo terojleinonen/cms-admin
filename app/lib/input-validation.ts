@@ -6,6 +6,7 @@
 
 import { z } from 'zod'
 import { NextRequest } from 'next/server'
+import sanitize from 'sanitize-filename'
 // Using built-in validation instead of external dependencies
 
 // Security configuration for input validation
@@ -42,6 +43,14 @@ export const INPUT_VALIDATION_CONFIG = {
  * Advanced input sanitization utilities
  */
 export class AdvancedInputSanitizer {
+
+  /**
+   * Helper: Sanitize a path fragment using sanitize-filename npm package.
+   */
+  private static sanitizePathFragment(input: string): string {
+    return sanitize(input);
+  }
+
   /**
    * Sanitize HTML content with strict rules
    */
@@ -94,12 +103,8 @@ export class AdvancedInputSanitizer {
       .replace(/\/\*/g, '')
       .replace(/\*\//g, '')
       // Remove path traversal attempts (repeatedly until gone)
-    // Repeat removal of path traversal patterns until no more matches
-    let prevSanitized;
-    do {
-      prevSanitized = sanitized;
-      sanitized = sanitized.replace(/\.\.\//g, '').replace(/\.\.\\/g, '');
-    } while (sanitized !== prevSanitized);
+    // Path sanitization using sanitize-filename
+    sanitized = AdvancedInputSanitizer.sanitizePathFragment(sanitized);
     // Normalize whitespace
     sanitized = sanitized.replace(/\s+/g, ' ').trim()
 

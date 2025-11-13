@@ -11,13 +11,19 @@ import { rateLimit, rateLimitConfigs } from './rate-limit'
 // Server-safe HTML sanitization
 let DOMPurify: any = null;
 
-// Only import DOMPurify on the server side
+// Only import DOMPurify (or sanitize-html fallback) on the server side
 if (typeof window === 'undefined') {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     DOMPurify = require('isomorphic-dompurify');
   } catch (error) {
-    console.warn('DOMPurify not available, using basic sanitization');
+    console.warn('DOMPurify not available, trying sanitize-html fallback');
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      DOMPurify = require('sanitize-html');
+    } catch (fallbackError) {
+      console.warn('Neither DOMPurify nor sanitize-html is available, using most strict fallback');
+    }
   }
 }
 
@@ -71,7 +77,8 @@ export class InputSanitizer {
    * Sanitize HTML content
    */
   static sanitizeHTML(input: string): string {
-    if (DOMPurify) {
+    // Server: Prefer DOMPurify (isomorphic-dompurify) if available
+    if (DOMPurify && DOMPurify.sanitize) {
       return DOMPurify.sanitize(input, {
         ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
         ALLOWED_ATTR: ['href', 'target', 'rel'],
@@ -79,26 +86,48 @@ export class InputSanitizer {
         ALLOW_UNKNOWN_PROTOCOLS: false,
       });
     }
-    
-    // Fallback: basic HTML sanitization
-    return input
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
-      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '') // Remove iframe tags
-      .replace(/javascript:/gi, '') // Remove javascript: URLs
-      .replace(/on\w+\s*=/gi, '') // Remove event handlers
-      .trim();
+    // Server: use sanitize-html fallback if available
+    if (DOMPurify && typeof DOMPurify === 'function') {
+      // sanitize-html API
+      return DOMPurify(input, {
+        allowedTags: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+        allowedAttributes: {
+          'a': ['href', 'target', 'rel']
+        },
+        allowDataAttr: false,
+        allowProtocolRelative: false
+      }).trim();
+    }
+    // Last-resort strict: Remove all angle brackets and dangerous protocols
+    let sanitized = input;
+    let previous;
+    do {
+      previous = sanitized;
+      sanitized = sanitized
+        .replace(/[<>]/g, '') // Remove all angle brackets
+        .replace(/javascript:/gi, '') // Remove javascript: URLs
+        .replace(/data:/gi, '')      // Remove data: URLs
+        .replace(/vbscript:/gi, '');  // Remove vbscript: URLs
+    } while (sanitized !== previous);
+    return sanitized.trim();
   }
 
   /**
    * Sanitize plain text
    */
   static sanitizeText(input: string): string {
-    return input
-      .replace(/<[^>]*>/g, '') // Remove HTML tags completely
-      .replace(/javascript:/gi, '') // Remove javascript: URLs
-      .replace(/data:/gi, '') // Remove data: URLs
-      .replace(/vbscript:/gi, '') // Remove vbscript: URLs
-      .trim()
+    // Repeatedly apply replacements until the string stabilizes (prevents incomplete multi-character sanitization)
+    let sanitized = input;
+    let previous;
+    do {
+      previous = sanitized;
+      sanitized = sanitized
+        .replace(/[<>]/g, '') // Remove all angle brackets to prevent incomplete tag removal
+        .replace(/javascript:/gi, '') // Remove javascript: URLs
+        .replace(/data:/gi, '') // Remove data: URLs
+        .replace(/vbscript:/gi, ''); // Remove vbscript: URLs
+    } while (sanitized !== previous);
+    return sanitized.trim();
   }
 
   /**

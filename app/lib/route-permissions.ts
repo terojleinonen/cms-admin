@@ -799,6 +799,13 @@ export class RoutePermissionResolver {
   }
 
   /**
+   * Escape all regex meta-characters in a string, including backslashes.
+   */
+  private escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  
+  /**
    * Find matching route configuration
    */
   findRouteConfig(pathname: string, method?: string): RoutePermissionConfig | null {
@@ -847,7 +854,7 @@ export class RoutePermissionResolver {
    */
   private matchRoutePattern(pattern: string, route: string): boolean {
     // Convert Next.js dynamic route pattern to regex
-    const regexPattern = pattern
+    const regexPattern = this.escapeRegExp(pattern)
       .replace(/\[([^\]]+)\]/g, '([^/]+)') // [id] -> ([^/]+)
       .replace(/\[\.\.\.([^\]]+)\]/g, '(.*)') // [...slug] -> (.*)
       .replace(/\//g, '\\/'); // Escape forward slashes

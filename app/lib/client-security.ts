@@ -110,10 +110,12 @@ class ClientInputSanitizer {
 
     let sanitized = input
     let previous: string
-    // Repeatedly remove dangerous patterns until no changes
+    // Repeatedly remove dangerous patterns and tags until input is stable
     do {
       previous = sanitized
       sanitized = sanitized
+        // Remove <script> tags and their content (applies repeatedly)
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, '')
         // Remove HTML tags completely
         .replace(/<[^>]*>/g, '')
         // Remove dangerous protocols

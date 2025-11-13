@@ -114,10 +114,8 @@ class ClientInputSanitizer {
     do {
       previous = sanitized
       sanitized = sanitized
-        // Remove <script> tags and their content (applies repeatedly)
-        .replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, '')
-        // Remove HTML tags completely
-        .replace(/<[^>]*>/g, '')
+        // Remove all angle brackets to eliminate HTML tags entirely
+        .replace(/[<>]/g, '')
         // Remove dangerous protocols
         .replace(/javascript:/gi, '')
         .replace(/data:/gi, '')

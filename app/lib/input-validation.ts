@@ -74,7 +74,12 @@ export class AdvancedInputSanitizer {
     
     // If no tags are allowed, strip all HTML
     if (allowed.length === 0) {
-      sanitized = sanitized.replace(/<[^>]*>/g, '')
+      // Repeat until all tag fragments are removed (handle nested/overlapping)
+      let prev;
+      do {
+        prev = sanitized;
+        sanitized = sanitized.replace(/<[^>]*>/g, '');
+      } while (sanitized !== prev);
     }
     
     return sanitized.trim()

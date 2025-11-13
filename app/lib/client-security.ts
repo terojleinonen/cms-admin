@@ -3,6 +3,7 @@
  * Provides input validation, sanitization, and security measures for the frontend
  */
 
+import sanitizeHtml from 'sanitize-html';
 // Security configuration for client-side validation
 const CLIENT_SECURITY_CONFIG = {
   maxStringLength: 10000,
@@ -108,24 +109,15 @@ class ClientInputSanitizer {
       return String(input)
     }
 
-    let sanitized = input
-    let previous: string
-    // Repeatedly remove dangerous patterns and tags until input is stable
-    do {
-      previous = sanitized
-      sanitized = sanitized
-        // Remove all angle brackets to eliminate HTML tags entirely
-        .replace(/[<>]/g, '')
-        // Remove dangerous protocols
-        .replace(/javascript:/gi, '')
-        .replace(/data:/gi, '')
-        .replace(/vbscript:/gi, '')
-        // Remove potential XSS vectors
-        .replace(/on\w+\s*=/gi, '')
-        // Normalize whitespace
-        .replace(/\s+/g, ' ')
-        .trim()
-    } while (sanitized !== previous)
+    // Use sanitize-html to strip all HTML tags and event handler attributes
+    let sanitized = sanitizeHtml(input, {
+      allowedTags: [], // No tags allowed – remove all tags
+      allowedAttributes: {}, // Remove all attributes
+      allowedSchemes: ['http', 'https', 'mailto'], // Only allow safe URL schemes
+    });
+    
+    // Normalize whitespace and trim
+    sanitized = sanitized.replace(/\s+/g, ' ').trim();
 
     // Check for suspicious patterns
     for (const pattern of CLIENT_SECURITY_CONFIG.dangerousPatterns) {

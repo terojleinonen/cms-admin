@@ -425,11 +425,18 @@ export class XSSPrevention {
       previous = sanitized;
       sanitized = sanitized.replace(/<[^>]*>/g, '');
     } while (sanitized !== previous);
-    return sanitized
+    // Remove dangerous protocols
+    sanitized = sanitized
       .replace(/javascript:/gi, '')
       .replace(/vbscript:/gi, '')
-      .replace(/data:/gi, '')
-      .replace(/on\w+\s*=/gi, '')
+      .replace(/data:/gi, '');
+    // Repeat removal of dangerous attributes until all are gone
+    let attrPrev;
+    do {
+      attrPrev = sanitized;
+      sanitized = sanitized.replace(/on\w+\s*=/gi, '');
+    } while (sanitized !== attrPrev);
+    return sanitized;
   }
 }
 

@@ -7,6 +7,7 @@
 import { z } from 'zod'
 import { NextRequest } from 'next/server'
 import sanitize from 'sanitize-filename'
+import sanitizeHtml from 'sanitize-html'
 // Using built-in validation instead of external dependencies
 
 // Security configuration for input validation
@@ -59,30 +60,16 @@ export class AdvancedInputSanitizer {
     const allowed = allowedTags || defaultAllowedTags
     
     // Simple HTML sanitization - remove all tags except allowed ones
-    let sanitized = input
-      // Remove script tags and content
-      .replace(/<script[^>]*>.*?<\/script>/gi, '')
-      // Remove dangerous tags
-      .replace(/<(object|embed|iframe|form|input|meta|link)[^>]*>/gi, '')
-      // Remove event handlers
-      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-      // Remove javascript: and data: protocols
-      .replace(/javascript:/gi, '')
-      .replace(/data:/gi, '')
-      // Remove style attributes
-      .replace(/style\s*=\s*["'][^"']*["']/gi, '')
-    
-    // If no tags are allowed, strip all HTML
-    if (allowed.length === 0) {
-      // Repeat until all tag fragments are removed (handle nested/overlapping)
-      let prev;
-      do {
-        prev = sanitized;
-        sanitized = sanitized.replace(/<[^>]*>/g, '');
-      } while (sanitized !== prev);
-    }
-    
-    return sanitized.trim()
+    // Use sanitize-html to robustly sanitize the HTML content
+    const sanitized = sanitizeHtml(input, {
+      allowedTags: allowed,
+      allowedAttributes: false, // Disallow all attributes by default
+      allowedSchemes: [ 'http', 'https', 'ftp', 'mailto', 'tel' ], // Only safe URL schemes
+      allowedSchemesByTag: {}, // No overrides
+      // Optionally adjust allowedAttributes for e.g. 'a' if you want to allow hrefs, etc.
+    });
+
+    return sanitized.trim();
   }
 
   /**

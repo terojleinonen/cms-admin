@@ -109,17 +109,23 @@ class ClientInputSanitizer {
     }
 
     let sanitized = input
-      // Remove HTML tags completely
-      .replace(/<[^>]*>/g, '')
-      // Remove dangerous protocols
-      .replace(/javascript:/gi, '')
-      .replace(/data:/gi, '')
-      .replace(/vbscript:/gi, '')
-      // Remove potential XSS vectors
-      .replace(/on\w+\s*=/gi, '')
-      // Normalize whitespace
-      .replace(/\s+/g, ' ')
-      .trim()
+    let previous: string
+    // Repeatedly remove dangerous patterns until no changes
+    do {
+      previous = sanitized
+      sanitized = sanitized
+        // Remove HTML tags completely
+        .replace(/<[^>]*>/g, '')
+        // Remove dangerous protocols
+        .replace(/javascript:/gi, '')
+        .replace(/data:/gi, '')
+        .replace(/vbscript:/gi, '')
+        // Remove potential XSS vectors
+        .replace(/on\w+\s*=/gi, '')
+        // Normalize whitespace
+        .replace(/\s+/g, ' ')
+        .trim()
+    } while (sanitized !== previous)
 
     // Check for suspicious patterns
     for (const pattern of CLIENT_SECURITY_CONFIG.dangerousPatterns) {

@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import DOMPurify from 'dompurify'
+import { htmlToText } from 'html-to-text'
 import { 
   PhotoIcon,
   LinkIcon,
@@ -322,8 +323,8 @@ export function getPlainText(html: string): string {
     tempDiv.innerHTML = html;
     return (tempDiv.textContent || "").trim();
   } else {
-    // Basic fallback for SSR environments (remove tags via regex)
-    return html.replace(/<[^>]*>/g, '').trim();
+    // Use html-to-text for SSR environments (safe and robust)
+    return htmlToText(html, { wordwrap: false, selectors: [{ selector: 'img', format: 'skip' }] }).trim();
   }
 }
 

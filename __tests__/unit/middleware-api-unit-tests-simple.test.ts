@@ -384,12 +384,17 @@ describe('Middleware and API Route Unit Tests', () => {
 
     it('should test input validation scenarios', () => {
       const validateInput = (input: string): { isValid: boolean; sanitized: string } => {
-        // Basic XSS prevention
-        const sanitized = input
-          .replace(/<script[^>]*>.*?<\/script>/gi, '')
-          .replace(/<[^>]*>/g, '')
-          .replace(/javascript:/gi, '')
-          .replace(/on\w+=/gi, '')
+        // Basic XSS prevention, apply replace sequence repeatedly until fixed point
+        let sanitized = input
+        let previous
+        do {
+          previous = sanitized
+          sanitized = sanitized
+            .replace(/<script[^>]*>.*?<\/script>/gi, '')
+            .replace(/<[^>]*>/g, '')
+            .replace(/javascript:/gi, '')
+            .replace(/on\w+=/gi, '')
+        } while (sanitized !== previous)
 
         const isValid = sanitized === input
 

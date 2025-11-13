@@ -5,7 +5,7 @@
  */
 
 import { UserRole } from '@prisma/client'
-
+import sanitizeHtml from 'sanitize-html';
 // Mock next-auth/jwt
 jest.mock('next-auth/jwt', () => ({
   getToken: jest.fn(),
@@ -384,21 +384,10 @@ describe('Middleware and API Route Unit Tests', () => {
 
     it('should test input validation scenarios', () => {
       const validateInput = (input: string): { isValid: boolean; sanitized: string } => {
-        // Basic XSS prevention, apply replace sequence repeatedly until fixed point
-        let sanitized = input
-        let previous
-        do {
-          previous = sanitized
-          sanitized = sanitized
-            .replace(/<script[^>]*>.*?<\/script>/gi, '')
-            .replace(/<[^>]*>/g, '')
-            .replace(/javascript:/gi, '')
-            .replace(/on\w+=/gi, '')
-        } while (sanitized !== previous)
-
-        const isValid = sanitized === input
-
-        return { isValid, sanitized }
+        // Use a trusted library (`sanitize-html`) for XSS prevention
+        const sanitized = sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} });
+        const isValid = sanitized === input;
+        return { isValid, sanitized };
       }
 
       // Test XSS attempts

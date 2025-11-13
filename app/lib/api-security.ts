@@ -80,12 +80,12 @@ export class InputSanitizer {
       });
     }
     
-    // Fallback: basic HTML sanitization
+    // Fallback: remove all HTML tags and potentially dangerous protocols (strict fallback)
     return input
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
-      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '') // Remove iframe tags
+      .replace(/<[^>]*>/g, '') // Remove all HTML tags
       .replace(/javascript:/gi, '') // Remove javascript: URLs
-      .replace(/on\w+\s*=/gi, '') // Remove event handlers
+      .replace(/data:/gi, '')      // Remove data: URLs
+      .replace(/vbscript:/gi, '')  // Remove vbscript: URLs
       .trim();
   }
 

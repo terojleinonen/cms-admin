@@ -81,24 +81,36 @@ export class InputSanitizer {
     }
     
     // Fallback: remove all HTML tags and potentially dangerous protocols (strict fallback)
-    return input
-      .replace(/<[^>]*>/g, '') // Remove all HTML tags
-      .replace(/javascript:/gi, '') // Remove javascript: URLs
-      .replace(/data:/gi, '')      // Remove data: URLs
-      .replace(/vbscript:/gi, '')  // Remove vbscript: URLs
-      .trim();
+    // Repeatedly apply replacements until the string stabilizes (prevents incomplete multi-character sanitization)
+    let sanitized = input;
+    let previous;
+    do {
+      previous = sanitized;
+      sanitized = sanitized
+        .replace(/<[^>]*>/g, '') // Remove all HTML tags
+        .replace(/javascript:/gi, '') // Remove javascript: URLs
+        .replace(/data:/gi, '')      // Remove data: URLs
+        .replace(/vbscript:/gi, '');  // Remove vbscript: URLs
+    } while (sanitized !== previous);
+    return sanitized.trim();
   }
 
   /**
    * Sanitize plain text
    */
   static sanitizeText(input: string): string {
-    return input
-      .replace(/<[^>]*>/g, '') // Remove HTML tags completely
-      .replace(/javascript:/gi, '') // Remove javascript: URLs
-      .replace(/data:/gi, '') // Remove data: URLs
-      .replace(/vbscript:/gi, '') // Remove vbscript: URLs
-      .trim()
+    // Repeatedly apply replacements until the string stabilizes (prevents incomplete multi-character sanitization)
+    let sanitized = input;
+    let previous;
+    do {
+      previous = sanitized;
+      sanitized = sanitized
+        .replace(/<[^>]*>/g, '') // Remove HTML tags completely
+        .replace(/javascript:/gi, '') // Remove javascript: URLs
+        .replace(/data:/gi, '') // Remove data: URLs
+        .replace(/vbscript:/gi, ''); // Remove vbscript: URLs
+    } while (sanitized !== previous);
+    return sanitized.trim();
   }
 
   /**

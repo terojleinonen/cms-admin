@@ -93,12 +93,15 @@ export class AdvancedInputSanitizer {
       .replace(/--/g, '')
       .replace(/\/\*/g, '')
       .replace(/\*\//g, '')
-      // Remove path traversal attempts
-      .replace(/\.\.\//g, '')
-      .replace(/\.\.\\/g, '')
-      // Normalize whitespace
-      .replace(/\s+/g, ' ')
-      .trim()
+      // Remove path traversal attempts (repeatedly until gone)
+    // Repeat removal of path traversal patterns until no more matches
+    let prevSanitized;
+    do {
+      prevSanitized = sanitized;
+      sanitized = sanitized.replace(/\.\.\//g, '').replace(/\.\.\\/g, '');
+    } while (sanitized !== prevSanitized);
+    // Normalize whitespace
+    sanitized = sanitized.replace(/\s+/g, ' ').trim()
 
     // Check for suspicious patterns
     for (const pattern of INPUT_VALIDATION_CONFIG.dangerousPatterns) {

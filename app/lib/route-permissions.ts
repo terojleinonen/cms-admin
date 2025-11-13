@@ -874,7 +874,8 @@ export class RoutePermissionResolver {
     if (paramNames.length === 0) return params;
     
     // Create regex to extract values
-    const regexPattern = pattern
+    const escapedPattern = pattern.replace(/\\/g, '\\\\');
+    const regexPattern = escapedPattern
       .replace(/\[([^\]]+)\]/g, '([^/]+)')
       .replace(/\[\.\.\.([^\]]+)\]/g, '(.*)')
       .replace(/\//g, '\\/');

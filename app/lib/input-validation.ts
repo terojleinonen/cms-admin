@@ -369,7 +369,7 @@ export class SQLInjectionPrevention {
  */
 export class XSSPrevention {
   private static xssPatterns = [
-    /<script[^>]*>.*?<\/script>/gi,
+    /<script\b[^>]*>[\s\S]*?<\/script\s*[^>]*>/gi,
     /<iframe[^>]*>.*?<\/iframe>/gi,
     /<object[^>]*>.*?<\/object>/gi,
     /<embed[^>]*>/gi,

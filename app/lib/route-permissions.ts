@@ -864,6 +864,13 @@ export class RoutePermissionResolver {
   }
 
   /**
+   * Escape RegExp meta-characters in a string, including backslash
+   */
+  private escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /**
    * Extract parameters from dynamic route
    */
   private extractRouteParams(pattern: string, route: string): Record<string, string> {

@@ -39,6 +39,7 @@
     "test:security:ci": "jest --ci --testPathPatterns=security --watchAll=false",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "deps:audit": "npm audit --audit-level=moderate",
+    "deps:check-deprecated": "tsx scripts/analyze-deprecated-deps.ts",
     "deps:validate": "npm run deps:audit",
     "ci:validate": "npm run lint && npm run type-check && npm run deps:validate && npm run test:ci"
   },

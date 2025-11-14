@@ -420,27 +420,13 @@ export class XSSPrevention {
     if (this.containsXSS(input)) {
       throw new ValidationError('Input contains potential XSS', 'XSS_DETECTED')
     }
-
-    // Simple XSS sanitization - remove all HTML tags and dangerous content
-    // Repeat tag removal until fully sanitized
-    let sanitized = input;
-    let previous;
-    do {
-      previous = sanitized;
-      sanitized = sanitized.replace(/<[^>]*>/g, '');
-    } while (sanitized !== previous);
-    // Remove dangerous protocols
-    sanitized = sanitized
-      .replace(/javascript:/gi, '')
-      .replace(/vbscript:/gi, '')
-      .replace(/data:/gi, '');
-    // Repeat removal of dangerous attributes until all are gone
-    let attrPrev;
-    do {
-      attrPrev = sanitized;
-      sanitized = sanitized.replace(/on\w+\s*=/gi, '');
-    } while (sanitized !== attrPrev);
-    return sanitized;
+    // Use sanitize-html to robustly sanitize input from XSS payloads.
+    // Configure sanitize-html to allow no tags and no attributes.
+    return sanitizeHtml(input, {
+      allowedTags: [],
+      allowedAttributes: {},
+      allowedSchemes: [], // Prevent javascript:, data:, vbscript: etc.
+    });
   }
 }
 

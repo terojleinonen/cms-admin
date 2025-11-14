@@ -251,6 +251,7 @@ export class ClientPermissionService {
   private matchRoute(pattern: string, route: string): boolean {
     // Convert Next.js dynamic route pattern to regex
     const regexPattern = pattern
+      .replace(/\\/g, '\\\\') // Escape all backslashes first
       .replace(/\[([^\]]+)\]/g, '([^/]+)') // [id] -> ([^/]+)
       .replace(/\//g, '\\/'); // Escape forward slashes
     

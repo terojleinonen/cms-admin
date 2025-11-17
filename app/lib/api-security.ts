@@ -127,6 +127,8 @@ export class InputSanitizer {
         .replace(/data:/gi, '') // Remove data: URLs
         .replace(/vbscript:/gi, ''); // Remove vbscript: URLs
     } while (sanitized !== previous);
+    // Remove any remaining < or > characters to prevent incomplete tag injection
+    sanitized = sanitized.replace(/</g, '').replace(/>/g, '');
     return sanitized.trim();
   }
 

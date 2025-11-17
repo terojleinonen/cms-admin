@@ -1,5 +1,3 @@
-const { jest } = require('@jest/globals')
-
 const useSession = jest.fn(() => ({
   data: null,
   status: 'unauthenticated',

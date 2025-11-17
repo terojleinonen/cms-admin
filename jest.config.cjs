@@ -1,4 +1,5 @@
 module.exports = {
+  coverageProvider: 'v8',
   projects: [
     {
       displayName: 'unit',

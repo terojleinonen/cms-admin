@@ -4,6 +4,9 @@
  * Requirements: 4.1, 4.5
  */
 
+// Unmock the permissions module for this test file
+jest.unmock('@/lib/permissions');
+
 import { UserRole } from '@prisma/client';
 import { 
   PermissionService, 

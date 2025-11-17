@@ -1,0 +1,46 @@
+
+> kin-workspace-cms@0.1.0 test:ci
+> jest --ci --coverage --watchAll=false
+
+TypeError: Cannot read properties of undefined (reading 'onlyChanged')
+    at _default (/Users/teroleinonen/software projects/cms-admin/node_modules/@jest/core/build/getChangedFilesPromise.js:49:20)
+    at _run (/Users/teroleinonen/software projects/cms-admin/node_modules/@jest/core/build/cli/index.js:234:67)
+    at runCLI (/Users/teroleinonen/software projects/cms-admin/node_modules/@jest/core/build/cli/index.js:146:9)
+    at Object.run (/Users/teroleinonen/software projects/cms-admin/node_modules/jest-cli/build/cli/index.js:191:62)
+    at Object.<anonymous> (/Users/teroleinonen/software projects/cms-admin/node_modules/jest-cli/bin/jest.js:16:27)
+    at Module._compile (node:internal/modules/cjs/loader:1734:14)
+    at Object..js (node:internal/modules/cjs/loader:1899:10)
+    at Module.load (node:internal/modules/cjs/loader:1469:32)
+    at Module._load (node:internal/modules/cjs/loader:1286:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+npm notice
+npm notice New minor version of npm available! 11.4.2 -> 11.6.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.2
+npm notice To update run: npm install -g npm@11.6.2
+npm notice
+
+> kin-workspace-cms@0.1.0 test:unit
+> jest --selectProjects unit
+
+● Unrecognized CLI Parameter:
+
+  Unrecognized option "selectProjects".
+
+  CLI Options Documentation:
+  https://jestjs.io/docs/en/cli.html
+
+
+> kin-workspace-cms@0.1.0 test
+> NODE_OPTIONS=--experimental-vm-modules jest --listTests
+
+TypeError: Cannot read properties of undefined (reading 'onlyChanged')
+    at _default (/Users/teroleinonen/software projects/cms-admin/node_modules/@jest/core/build/getChangedFilesPromise.js:49:20)
+    at _run (/Users/teroleinonen/software projects/cms-admin/node_modules/@jest/core/build/cli/index.js:234:67)
+    at runCLI (/Users/teroleinonen/software projects/cms-admin/node_modules/@jest/core/build/cli/index.js:146:9)
+    at Object.run (/Users/teroleinonen/software projects/cms-admin/node_modules/jest-cli/build/cli/index.js:191:62)
+    at Object.<anonymous> (/Users/teroleinonen/software projects/cms-admin/node_modules/jest-cli/bin/jest.js:16:27)
+    at Module._compile (node:internal/modules/cjs/loader:1734:14)
+    at Object..js (node:internal/modules/cjs/loader:1899:10)
+    at Module.load (node:internal/modules/cjs/loader:1469:32)
+    at Module._load (node:internal/modules/cjs/loader:1286:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)

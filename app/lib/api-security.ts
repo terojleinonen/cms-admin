@@ -122,7 +122,7 @@ export class InputSanitizer {
     do {
       previous = sanitized;
       sanitized = sanitized
-        .replace(/[<>]/g, '') // Remove all angle brackets to prevent incomplete tag removal
+        .replace(/<[^>]*>/g, '') // Remove HTML tags completely
         .replace(/javascript:/gi, '') // Remove javascript: URLs
         .replace(/data:/gi, '') // Remove data: URLs
         .replace(/vbscript:/gi, ''); // Remove vbscript: URLs
